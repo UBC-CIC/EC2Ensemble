@@ -1,3 +1,4 @@
+# From https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html
 AWSTemplateFormatVersion: 2010-09-09
 Description: Configure the AWSCloudFormationStackSetAdministrationRole to enable use of AWS CloudFormation StackSets.
 

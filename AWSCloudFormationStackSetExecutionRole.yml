@@ -1,3 +1,5 @@
+# From https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html
+
 AWSTemplateFormatVersion: 2010-09-09
 Description: Configure the AWSCloudFormationStackSetExecutionRole to enable use of your account as a target account in AWS CloudFormation StackSets.
 

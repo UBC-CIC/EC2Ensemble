@@ -1,6 +1,6 @@
 Transform: AWS::Serverless-2016-10-31
 Description:
-  "CloudFormation Template for PCMA-CIC challenge"
+  "CloudFormation Template for instantiating Jacktrip servers in AWS"
 
 Parameters:
   JacktripEventSource:
@@ -46,7 +46,7 @@ Resources:
   JacktripServerRule:
     Type: AWS::Events::Rule
     Properties:
-      Description: 'Rule matching PCMA events'
+      Description: 'Rule matching Jacktrip events'
       EventPattern:
         source: 
           - !Ref JacktripEventSource

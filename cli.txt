@@ -14,6 +14,3 @@ aws cloudformation deploy --stack-name stackset-admin-role --template-file AWSCl
 # CLI create stackset target execution role (TODO: need to limit permissions)
 aws cloudformation deploy --stack-name stackset-target-execution-role --template-file AWSCloudFormationStackSetExecutionRole.yml --capabilities CAPABILITY_NAMED_IAM \
 --parameter-overrides AdministratorAccountId=173513177120 --profile pcma-cic-challenge-sso 
-
-aws cloudformation deploy --stack-name stackset-target-execution-role --template-file AWSCloudFormationStackSetExecutionRole.yml --capabilities CAPABILITY_NAMED_IAM \
---parameter-overrides AdministratorAccountId=362470762865 --profile pcma-cic-challenge-sso 
