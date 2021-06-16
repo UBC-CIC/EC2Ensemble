@@ -28,6 +28,21 @@ Resources:
       CodeUri: ./src/backend/functions
       Runtime: nodejs14.x
       Handler: terminateServer.handler
+  
+  # DynamoDB
+  ServerTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: user
+          AttributeType: S
+        - AttributeName: server_name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user
+          KeyType: HASH
+        - AttributeName: server_name
+          KeyType: RANGE
       
   # EventBridge
   JacktripBus:
