@@ -1,0 +1,137 @@
+Transform: AWS::Serverless-2016-10-31
+Description: CloudFormation Template for instantiating Jacktrip servers in AWS
+Parameters:
+  JacktripEventSource:
+    Description: Event source name for the web portal
+    Type: String
+    Default: web_portal
+  JacktripEventDetailType:
+    Description: Detail type for Jacktrip events
+    Type: String
+    Default: Jacktrip Server Event Notification
+Resources:
+  CreateServerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://code-bucket-pcma-cic/cd9d0bd9bda929022e21903abef7619c
+      Runtime: nodejs14.x
+      Handler: createServer.handler
+  TerminateServerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://code-bucket-pcma-cic/cd9d0bd9bda929022e21903abef7619c
+      Runtime: nodejs14.x
+      Handler: terminateServer.handler
+  JacktripBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name:
+        Fn::Sub: JacktripEventBus-${AWS::Region}
+  JacktripBusPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      StatementId:
+        Fn::Sub: ${JacktripBus}-Policy
+      Action: events:PutEvents
+      Principal:
+        Ref: AWS::AccountId
+      EventBusName:
+        Ref: JacktripBus
+  JacktripServerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Rule matching Jacktrip events
+      EventPattern:
+        source:
+        - Ref: JacktripEventSource
+        detail-type:
+        - Ref: JacktripEventDetailType
+      EventBusName:
+        Ref: JacktripBus
+      Targets:
+      - Arn:
+          Ref: JacktripStateMachine
+        Id: JacktripStateMachine
+        InputPath: $.detail
+        RoleArn:
+          Ref: EventRuleStateMachineRole
+  JacktripStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri:
+        Bucket: code-bucket-pcma-cic
+        Key: b5cd24da42ee19a6fa50782dc27ade6d
+      DefinitionSubstitutions:
+        CreateServerFunctionArn:
+          Fn::GetAtt:
+          - CreateServerFunction
+          - Arn
+        TerminateServerFunctionArn:
+          Fn::GetAtt:
+          - TerminateServerFunction
+          - Arn
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+        - CloudWatchLogsLogGroup:
+            LogGroupArn:
+              Fn::GetAtt:
+              - StateMachineLogGroup
+              - Arn
+      Role:
+        Ref: JacktripStateMachineRole
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:
+        Fn::Sub: ${AWS::StackName}-StateMachine-LogGroup
+  JacktripStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role used by the Step Functions State Machine
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: states.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: Jacktrip_State_Machine_Role
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource:
+            - Fn::GetAtt:
+              - CreateServerFunction
+              - Arn
+            - Fn::GetAtt:
+              - TerminateServerFunction
+              - Arn
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+  EventRuleStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role used by Event Rule to invoke Step Functions
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: events.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: InvokeJacktripStepFunctions
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - states:StartExecution
+            Resource:
+              Ref: JacktripStateMachine
