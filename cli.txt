@@ -1,0 +1,19 @@
+# CLI create CloudFormation Stack Sets
+aws cloudformation create-stack-set --stack-set-name jacktrip-stackset --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM --template-body file://template.yaml --profile pcma-cic-challenge-sso
+
+# CLI update CloudFormation Stack Sets
+aws cloudformation update-stack-set --stack-set-name jacktrip-stackset --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM --template-body file://template.yaml \
+--execution-role-name stacksets-exec-7bf7740e2be3b48ec4feb70c0549f1eb --profile pcma-cic-challenge-sso
+
+# CLI create stack instances
+aws cloudformation create-stack-instances --stack-set-name jacktrip-stackset --accounts 173513177120 --regions ca-central-1 us-west-2 --profile pcma-cic-challenge-sso
+
+# CLI create stackset admin role
+aws cloudformation deploy --stack-name stackset-admin-role --template-file AWSCloudFormationStackSetAdministrationRole.yml --capabilities CAPABILITY_NAMED_IAM --profile pcma-cic-challenge-sso 
+
+# CLI create stackset target execution role (TODO: need to limit permissions)
+aws cloudformation deploy --stack-name stackset-target-execution-role --template-file AWSCloudFormationStackSetExecutionRole.yml --capabilities CAPABILITY_NAMED_IAM \
+--parameter-overrides AdministratorAccountId=173513177120 --profile pcma-cic-challenge-sso 
+
+aws cloudformation deploy --stack-name stackset-target-execution-role --template-file AWSCloudFormationStackSetExecutionRole.yml --capabilities CAPABILITY_NAMED_IAM \
+--parameter-overrides AdministratorAccountId=362470762865 --profile pcma-cic-challenge-sso 

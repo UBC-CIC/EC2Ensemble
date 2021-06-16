@@ -1,0 +1,128 @@
+Transform: AWS::Serverless-2016-10-31
+Description:
+  "CloudFormation Template for PCMA-CIC challenge"
+
+Parameters:
+  JacktripEventSource:
+    Description: 'Event source name for the web portal'
+    Type: String
+    Default: 'web_portal'
+
+  JacktripEventDetailType:
+    Description: 'Detail type for Jacktrip events'
+    Type: String
+    Default: 'Jacktrip Server Event Notification'
+
+Resources:
+  # Lambdas
+  CreateServerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/backend/functions
+      Runtime: nodejs14.x
+      Handler: createServer.handler
+
+  TerminateServerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./src/backend/functions
+      Runtime: nodejs14.x
+      Handler: terminateServer.handler
+      
+  # EventBridge
+  JacktripBus:
+    Type: AWS::Events::EventBus
+    Properties: 
+      Name: !Sub 'JacktripEventBus-${AWS::Region}'
+
+  JacktripBusPolicy:
+    Type: AWS::Events::EventBusPolicy
+    Properties:
+      StatementId: !Sub '${JacktripBus}-Policy'
+      Action: events:PutEvents
+      Principal: !Ref AWS::AccountId
+      EventBusName: !Ref JacktripBus
+
+  JacktripServerRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 'Rule matching PCMA events'
+      EventPattern:
+        source: 
+          - !Ref JacktripEventSource
+        detail-type:
+          - !Ref JacktripEventDetailType
+      EventBusName: !Ref JacktripBus
+      Targets:
+        - Arn: !Ref JacktripStateMachine
+          Id: 'JacktripStateMachine'
+          InputPath: $.detail
+          RoleArn: !Ref EventRuleStateMachineRole
+      
+  # Step Functions
+  JacktripStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: state_machine.asl.json
+      DefinitionSubstitutions:
+        CreateServerFunctionArn: !GetAtt CreateServerFunction.Arn
+        TerminateServerFunctionArn: !GetAtt TerminateServerFunction.Arn
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Role: !Ref JacktripStateMachineRole
+  
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${AWS::StackName}-StateMachine-LogGroup'
+
+  # IAM Roles
+  JacktripStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: 'Role used by the Step Functions State Machine'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: 
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: Jacktrip_State_Machine_Role
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: 
+                  - !GetAtt CreateServerFunction.Arn
+                  - !GetAtt TerminateServerFunction.Arn
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        
+  EventRuleStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: 'Role used by Event Rule to invoke Step Functions'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: 
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeJacktripStepFunctions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                Resource: !Ref JacktripStateMachine
