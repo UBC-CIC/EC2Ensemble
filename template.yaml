@@ -1,6 +1,5 @@
 Transform: AWS::Serverless-2016-10-31
-Description:
-  "CloudFormation Template for instantiating Jacktrip servers in AWS"
+Description: 'CloudFormation Template for instantiating Jacktrip servers in AWS'
 
 Parameters:
   JacktripEventSource:
@@ -18,17 +17,17 @@ Resources:
   CreateServerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./src/backend/functions
+      CodeUri: ./backend/functions
       Runtime: nodejs14.x
       Handler: createServer.handler
 
   TerminateServerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./src/backend/functions
+      CodeUri: ./backend/functions
       Runtime: nodejs14.x
       Handler: terminateServer.handler
-  
+
   # DynamoDB
   ServerTable:
     Type: AWS::DynamoDB::Table
@@ -43,11 +42,14 @@ Resources:
           KeyType: HASH
         - AttributeName: server_name
           KeyType: RANGE
-      
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
   # EventBridge
   JacktripBus:
     Type: AWS::Events::EventBus
-    Properties: 
+    Properties:
       Name: !Sub 'JacktripEventBus-${AWS::Region}'
 
   JacktripBusPolicy:
@@ -63,7 +65,7 @@ Resources:
     Properties:
       Description: 'Rule matching Jacktrip events'
       EventPattern:
-        source: 
+        source:
           - !Ref JacktripEventSource
         detail-type:
           - !Ref JacktripEventDetailType
@@ -73,12 +75,12 @@ Resources:
           Id: 'JacktripStateMachine'
           InputPath: $.detail
           RoleArn: !Ref EventRuleStateMachineRole
-      
+
   # Step Functions
   JacktripStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
-      DefinitionUri: state_machine.asl.json
+      DefinitionUri: ./backend/state_machine/state_machine.asl.json
       DefinitionSubstitutions:
         CreateServerFunctionArn: !GetAtt CreateServerFunction.Arn
         TerminateServerFunctionArn: !GetAtt TerminateServerFunction.Arn
@@ -89,7 +91,7 @@ Resources:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
       Role: !Ref JacktripStateMachineRole
-  
+
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -104,7 +106,7 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Principal: 
+            Principal:
               Service: states.amazonaws.com
             Action: sts:AssumeRole
       Policies:
@@ -115,12 +117,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                Resource: 
+                Resource:
                   - !GetAtt CreateServerFunction.Arn
                   - !GetAtt TerminateServerFunction.Arn
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
-        
+
   EventRuleStateMachineRole:
     Type: AWS::IAM::Role
     Properties:
@@ -129,7 +131,7 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Principal: 
+            Principal:
               Service: events.amazonaws.com
             Action: sts:AssumeRole
       Policies:
