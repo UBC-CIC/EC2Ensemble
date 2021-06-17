@@ -17,16 +17,16 @@ Resources:
   CreateServerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions
+      CodeUri: ./backend
       Runtime: nodejs14.x
-      Handler: createServer.handler
+      Handler: functions/createServer.handler
 
   TerminateServerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions
+      CodeUri: ./backend
       Runtime: nodejs14.x
-      Handler: terminateServer.handler
+      Handler: functions/terminateServer.handler
 
   # DynamoDB
   ServerTable:
