@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template for Global resources
+
+Resources:
+  # IAM Roles
+  JacktripStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role used by the Step Functions State Machine
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: Jacktrip_State_Machine_Role
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:Jacktrip*
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+  JacktripEventRuleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Role used by Event Rule to invoke Step Functions
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeJacktripStepFunctions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - states:StartExecution
+                Resource:
+                  Fn::Sub: arn:*:states:*:${AWS::AccountId}:stateMachine:*
+
+  JacktripStateMachineRoleSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripStateMachineRole
+      Description: ARN of JacktripStateMachineRole used by state machines
+      Type: text
+      Value: !GetAtt JacktripStateMachineRole.Arn
+
+  JacktripEventRuleRoleSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripEventRuleRole
+      Description: ARN of JacktripEventRuleRole used by event rules
+      Type: text
+      Value: !GetAtt JacktripEventRuleRole.Arn

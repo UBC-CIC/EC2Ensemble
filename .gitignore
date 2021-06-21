@@ -1,2 +1,5 @@
 cli.txt
 .aws-sam/
+stacksetpolicy.json
+AWSCloudFormationStackSet*.yml
+packaged.yaml

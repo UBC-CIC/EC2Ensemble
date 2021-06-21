@@ -14,37 +14,19 @@ Parameters:
 
 Resources:
   # Lambdas
-  CreateServerFunction:
+  JacktripCreateServer:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend
       Runtime: nodejs14.x
       Handler: functions/createServer.handler
 
-  TerminateServerFunction:
+  JacktripTerminateServer:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend
       Runtime: nodejs14.x
       Handler: functions/terminateServer.handler
-
-  # DynamoDB
-  ServerTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: user
-          AttributeType: S
-        - AttributeName: server_name
-          AttributeType: S
-      KeySchema:
-        - AttributeName: user
-          KeyType: HASH
-        - AttributeName: server_name
-          KeyType: RANGE
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
 
   # EventBridge
   JacktripBus:
@@ -60,21 +42,30 @@ Resources:
       Principal: !Ref AWS::AccountId
       EventBusName: !Ref JacktripBus
 
-  JacktripServerRule:
+  # CentralEventRule:
+  #   Condition: IsCentral
+  #   Type: AWS::Events::Rule
+  #   Properties:
+  #     Description: "Rule in central region sending events to other regions"
+  #     EventPattern:
+  RegionalEventRule:
     Type: AWS::Events::Rule
     Properties:
-      Description: 'Rule matching Jacktrip events'
+      Description: 'Rule in each region matching Jacktrip events'
       EventPattern:
         source:
           - !Ref JacktripEventSource
         detail-type:
           - !Ref JacktripEventDetailType
+        detail:
+          region:
+            - !Ref AWS::Region
       EventBusName: !Ref JacktripBus
       Targets:
         - Arn: !Ref JacktripStateMachine
           Id: 'JacktripStateMachine'
           InputPath: $.detail
-          RoleArn: !Ref EventRuleStateMachineRole
+          RoleArn: '{{resolve:ssm:JacktripEventRuleRole}}'
 
   # Step Functions
   JacktripStateMachine:
@@ -82,64 +73,17 @@ Resources:
     Properties:
       DefinitionUri: ./backend/state_machine/state_machine.asl.json
       DefinitionSubstitutions:
-        CreateServerFunctionArn: !GetAtt CreateServerFunction.Arn
-        TerminateServerFunctionArn: !GetAtt TerminateServerFunction.Arn
+        CreateServerFunctionArn: !GetAtt JacktripCreateServer.Arn
+        TerminateServerFunctionArn: !GetAtt JacktripTerminateServer.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true
         Destinations:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
-      Role: !Ref JacktripStateMachineRole
+      Role: '{{resolve:ssm:JacktripStateMachineRole}}'
 
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub '${AWS::StackName}-StateMachine-LogGroup'
-
-  # IAM Roles
-  JacktripStateMachineRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Description: 'Role used by the Step Functions State Machine'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: states.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: Jacktrip_State_Machine_Role
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource:
-                  - !GetAtt CreateServerFunction.Arn
-                  - !GetAtt TerminateServerFunction.Arn
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
-
-  EventRuleStateMachineRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Description: 'Role used by Event Rule to invoke Step Functions'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: events.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: InvokeJacktripStepFunctions
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - states:StartExecution
-                Resource: !Ref JacktripStateMachine
+      LogGroupName: !Sub 'Jacktrip-StateMachine-LogGroup-${AWS::Region}'
