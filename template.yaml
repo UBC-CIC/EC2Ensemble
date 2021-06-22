@@ -12,21 +12,37 @@ Parameters:
     Type: String
     Default: 'Jacktrip Server Event Notification'
 
+Globals:
+  Function:
+    Runtime: nodejs14.x
+
 Resources:
   # Lambdas
   JacktripCreateServer:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend
-      Runtime: nodejs14.x
       Handler: functions/createServer.handler
 
   JacktripTerminateServer:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend
-      Runtime: nodejs14.x
       Handler: functions/terminateServer.handler
+
+  SqsConsumerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend
+      Handler: functions/sqsConsumer.handler
+      Events:
+        SqsEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt JacktripSqsQueue.Arn
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt JacktripStateMachine.Name
 
   # EventBridge
   JacktripBus:
@@ -42,12 +58,6 @@ Resources:
       Principal: !Ref AWS::AccountId
       EventBusName: !Ref JacktripBus
 
-  # CentralEventRule:
-  #   Condition: IsCentral
-  #   Type: AWS::Events::Rule
-  #   Properties:
-  #     Description: "Rule in central region sending events to other regions"
-  #     EventPattern:
   RegionalEventRule:
     Type: AWS::Events::Rule
     Properties:
@@ -66,6 +76,23 @@ Resources:
           Id: 'JacktripStateMachine'
           InputPath: $.detail
           RoleArn: '{{resolve:ssm:JacktripEventRuleRole}}'
+
+  # SNS Subscription and SQS
+  JacktripSqsSnsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: '{{resolve:ssm:JacktripSnsTopic}}'
+      Protocol: sqs
+      Endpoint: !GetAtt JacktripSqsQueue.Arn
+      Region: '{{resolve:ssm:JacktripCentralRegion}}'
+      FilterPolicy:
+        region:
+          - !Ref AWS::Region
+
+  JacktripSqsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
 
   # Step Functions
   JacktripStateMachine:

@@ -1,7 +1,45 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Template for Global resources
 
+Parameters:
+  JacktripEventSource:
+    Description: 'Event source name for the web portal'
+    Type: String
+    Default: 'web_portal'
+
 Resources:
+  CentralEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: 'Rule in central region sending events to other regions'
+      EventPattern:
+        source:
+          - !Ref JacktripEventSource
+      Targets:
+        - Arn: !Ref JacktripSnsTopic
+          Id: JacktripSnsTopic
+
+  # SNS
+  JacktripSnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: JacktripSnsTopic
+      FifoTopic: true
+      ContentBasedDeduplication: true
+
+  EventBridgeToSnsPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref JacktripSnsTopic
+      Topics:
+        - !Ref JacktripSnsTopic
+
   # IAM Roles
   JacktripStateMachineRole:
     Type: AWS::IAM::Role
@@ -49,6 +87,14 @@ Resources:
                 Resource:
                   Fn::Sub: arn:*:states:*:${AWS::AccountId}:stateMachine:*
 
+  # SSM Parameters
+  JakctripCentralRegionSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripCentralRegion
+      Description: 'Central region of the Jacktrip architecture'
+      Type: text
+      Value: !Ref AWS::Region
   JacktripStateMachineRoleSSM:
     Type: AWS::SSM::Parameter
     Properties:
@@ -56,7 +102,6 @@ Resources:
       Description: ARN of JacktripStateMachineRole used by state machines
       Type: text
       Value: !GetAtt JacktripStateMachineRole.Arn
-
   JacktripEventRuleRoleSSM:
     Type: AWS::SSM::Parameter
     Properties:
@@ -64,3 +109,10 @@ Resources:
       Description: ARN of JacktripEventRuleRole used by event rules
       Type: text
       Value: !GetAtt JacktripEventRuleRole.Arn
+  JacktripSnsTopicSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripSnsTopic
+      Description: ARN of JacktripSnsTopic
+      Type: text
+      Value: !Ref JacktripSnsTopic
