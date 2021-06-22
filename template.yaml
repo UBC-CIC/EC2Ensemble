@@ -1,16 +1,16 @@
 Transform: AWS::Serverless-2016-10-31
 Description: 'CloudFormation Template for instantiating Jacktrip servers in AWS'
 
-Parameters:
-  JacktripEventSource:
-    Description: 'Event source name for the web portal'
-    Type: String
-    Default: 'web_portal'
+# Parameters:
+# JacktripEventSource:
+#   Description: 'Event source name for the web portal'
+#   Type: String
+#   Default: 'web_portal'
 
-  JacktripEventDetailType:
-    Description: 'Detail type for Jacktrip events'
-    Type: String
-    Default: 'Jacktrip Server Event Notification'
+# JacktripEventDetailType:
+#   Description: 'Detail type for Jacktrip events'
+#   Type: String
+#   Default: 'Jacktrip Server Event Notification'
 
 Globals:
   Function:
@@ -45,37 +45,37 @@ Resources:
             StateMachineName: !GetAtt JacktripStateMachine.Name
 
   # EventBridge
-  JacktripBus:
-    Type: AWS::Events::EventBus
-    Properties:
-      Name: !Sub 'JacktripEventBus-${AWS::Region}'
+  # JacktripBus:
+  #   Type: AWS::Events::EventBus
+  #   Properties:
+  #     Name: !Sub 'JacktripEventBus-${AWS::Region}'
 
-  JacktripBusPolicy:
-    Type: AWS::Events::EventBusPolicy
-    Properties:
-      StatementId: !Sub '${JacktripBus}-Policy'
-      Action: events:PutEvents
-      Principal: !Ref AWS::AccountId
-      EventBusName: !Ref JacktripBus
+  # JacktripBusPolicy:
+  #   Type: AWS::Events::EventBusPolicy
+  #   Properties:
+  #     StatementId: !Sub '${JacktripBus}-Policy'
+  #     Action: events:PutEvents
+  #     Principal: !Ref AWS::AccountId
+  #     EventBusName: !Ref JacktripBus
 
-  RegionalEventRule:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: 'Rule in each region matching Jacktrip events'
-      EventPattern:
-        source:
-          - !Ref JacktripEventSource
-        detail-type:
-          - !Ref JacktripEventDetailType
-        detail:
-          region:
-            - !Ref AWS::Region
-      EventBusName: !Ref JacktripBus
-      Targets:
-        - Arn: !Ref JacktripStateMachine
-          Id: 'JacktripStateMachine'
-          InputPath: $.detail
-          RoleArn: '{{resolve:ssm:JacktripEventRuleRole}}'
+  # RegionalEventRule:
+  #   Type: AWS::Events::Rule
+  #   Properties:
+  #     Description: 'Rule in each region matching Jacktrip events'
+  #     EventPattern:
+  #       source:
+  #         - !Ref JacktripEventSource
+  #       detail-type:
+  #         - !Ref JacktripEventDetailType
+  #       detail:
+  #         region:
+  #           - !Ref AWS::Region
+  #     EventBusName: !Ref JacktripBus
+  #     Targets:
+  #       - Arn: !Ref JacktripStateMachine
+  #         Id: 'JacktripStateMachine'
+  #         InputPath: $.detail
+  #         RoleArn: '{{resolve:ssm:JacktripEventRuleRole}}'
 
   # SNS Subscription and SQS
   JacktripSqsSnsSubscription:
