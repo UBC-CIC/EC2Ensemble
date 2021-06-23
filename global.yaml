@@ -31,15 +31,17 @@ Resources:
         Variables:
           snsTopicArn: !Ref JacktripSnsTopic
 
-  JacktripCodeCentralBucket:
+  JacktripCodeBucketCentral:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName: jacktrip-code-bucket-central
+      BucketName: !Sub jacktrip-code-bucket-central
       # ReplicationConfiguration:
       #   Role: !GetAtt JacktripBucketReplicationRole
       #   Rules:
       #     - Status: Enabled
+      #       Destination:
+      #         Bucket:
 
   # SNS
   JacktripSnsTopic:
@@ -129,13 +131,13 @@ Resources:
                 Action:
                   - 's3:GetReplicationConfiguration'
                   - 's3:ListBucket'
-                Resource: !GetAtt JacktripCodeCentralBucket.Arn
+                Resource: !GetAtt JacktripCodeBucketCentral.Arn
               - Effect: 'Allow'
                 Action:
                   - 's3:GetObjectVersionForReplication'
                   - 's3:GetObjectVersionAcl'
                   - 's3:GetObjectVersionTagging'
-                Resource: !Sub '${JacktripCodeCentralBucket.Arn}/*'
+                Resource: !Sub '${JacktripCodeBucketCentral.Arn}/*'
               - Effect: 'Allow'
                 Action:
                   - 's3:ReplicateObject'
@@ -143,13 +145,18 @@ Resources:
                   - 's3:ReplicateTags'
                 Resource: '*'
   # SSM Parameters
-  JakctripCentralRegionSSM:
+  JacktripCentralRegionSSM:
     Type: AWS::SSM::Parameter
     Properties:
       Name: JacktripCentralRegion
       Description: 'Central region of the Jacktrip architecture'
       Type: String
       Value: !Ref AWS::Region
+  JacktripCentralCodeBucketSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Value: !Ref JacktripCodeBucketCentral
   JacktripStateMachineRoleSSM:
     Type: AWS::SSM::Parameter
     Properties:
