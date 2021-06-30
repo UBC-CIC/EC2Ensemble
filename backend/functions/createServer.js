@@ -12,6 +12,7 @@ exports.handler = async (event) => {
 			server_name: serverName,
 		},
 	};
+	console.log(event);
 	console.log(params);
 
 	try {

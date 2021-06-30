@@ -14,6 +14,7 @@ exports.handler = async (event) => {
 		Message: JSON.stringify(message),
 		TopicArn: process.env.snsTopicArn,
 	};
+	console.log(event);
 
 	try {
 		const res = await sns.publish(params).promise();

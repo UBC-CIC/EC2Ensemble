@@ -2,24 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Template for Global resources
 
-# Parameters:
-#   JacktripEventSource:
-#     Description: 'Event source name for the web portal'
-#     Type: String
-#     Default: 'web_portal'
-
 Resources:
-  # CentralEventRule:
-  #   Type: AWS::Events::Rule
-  #   Properties:
-  #     Description: 'Rule in central region sending events to other regions'
-  #     EventPattern:
-  #       source:
-  #         - !Ref JacktripEventSource
-  #     Targets:
-  #       - Arn: !Ref JacktripSnsTopic
-  #         Id: JacktripSnsTopic
-
   # Lambdas
   PublishToSnsFunction:
     Type: AWS::Serverless::Function
@@ -31,18 +14,6 @@ Resources:
         Variables:
           snsTopicArn: !Ref JacktripSnsTopic
 
-  JacktripCodeBucketCentral:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub jacktrip-code-bucket-central
-      # ReplicationConfiguration:
-      #   Role: !GetAtt JacktripBucketReplicationRole
-      #   Rules:
-      #     - Status: Enabled
-      #       Destination:
-      #         Bucket:
-
   # SNS
   JacktripSnsTopic:
     Type: AWS::SNS::Topic
@@ -52,14 +23,14 @@ Resources:
       ContentBasedDeduplication: true
       TopicName: JacktripSnsTopic.fifo
 
-  EventBridgeToSnsPolicy:
+  LambdaToSnsPolicy:
     Type: AWS::SNS::TopicPolicy
     Properties:
       PolicyDocument:
         Statement:
           - Effect: Allow
             Principal:
-              Service: events.amazonaws.com
+              Service: lambda.amazonaws.com
             Action: sns:Publish
             Resource: !Ref JacktripSnsTopic
       Topics:
@@ -69,6 +40,7 @@ Resources:
   JacktripStateMachineRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: JacktripStateMachineRole
       Description: Role used by the Step Functions State Machine
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -90,91 +62,10 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
 
-  # JacktripEventRuleRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     Description: Role used by Event Rule to invoke Step Functions
-  #     AssumeRolePolicyDocument:
-  #       Version: '2012-10-17'
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service: events.amazonaws.com
-  #           Action: sts:AssumeRole
-  #     Policies:
-  #       - PolicyName: InvokeJacktripStepFunctions
-  #         PolicyDocument:
-  #           Version: '2012-10-17'
-  #           Statement:
-  #             - Effect: Allow
-  #               Action:
-  #                 - states:StartExecution
-  #               Resource:
-  #                 Fn::Sub: arn:*:states:*:${AWS::AccountId}:stateMachine:*
-
-  JacktripBucketReplicationRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: s3.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: JacktripBucketReplicationRole
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: 'Allow'
-                Action:
-                  - 's3:GetReplicationConfiguration'
-                  - 's3:ListBucket'
-                Resource: !GetAtt JacktripCodeBucketCentral.Arn
-              - Effect: 'Allow'
-                Action:
-                  - 's3:GetObjectVersionForReplication'
-                  - 's3:GetObjectVersionAcl'
-                  - 's3:GetObjectVersionTagging'
-                Resource: !Sub '${JacktripCodeBucketCentral.Arn}/*'
-              - Effect: 'Allow'
-                Action:
-                  - 's3:ReplicateObject'
-                  - 's3:ReplicateDelete'
-                  - 's3:ReplicateTags'
-                Resource: '*'
-  # SSM Parameters
-  JacktripCentralRegionSSM:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: JacktripCentralRegion
-      Description: 'Central region of the Jacktrip architecture'
-      Type: String
-      Value: !Ref AWS::Region
-  JacktripCentralCodeBucketSSM:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Type: String
-      Value: !Ref JacktripCodeBucketCentral
-  JacktripStateMachineRoleSSM:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: JacktripStateMachineRole
-      Description: ARN of JacktripStateMachineRole used by state machines
-      Type: String
-      Value: !GetAtt JacktripStateMachineRole.Arn
-  # JacktripEventRuleRoleSSM:
-  #   Type: AWS::SSM::Parameter
-  #   Properties:
-  #     Name: JacktripEventRuleRole
-  #     Description: ARN of JacktripEventRuleRole used by event rules
-  #     Type: text
-  #     Value: !GetAtt JacktripEventRuleRole.Arn
-  JacktripSnsTopicSSM:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: JacktripSnsTopic
-      Description: ARN of JacktripSnsTopic
-      Type: String
-      Value: !Ref JacktripSnsTopic
+Outputs:
+  StateMachineRoleArn:
+    Description: Arn for the Jacktrip State Machine
+    Value: !GetAtt JacktripStateMachineRole.Arn
+  SnsTopicArn:
+    Description: Arn for the Jacktrip State Machine
+    Value: !Ref JacktripSnsTopic

@@ -1,5 +1,6 @@
 cli.txt
-.aws-sam/
+.aws-sam*/
 stacksetpolicy.json
 AWSCloudFormationStackSet*.yml
 packaged.yaml
+bucket.yaml

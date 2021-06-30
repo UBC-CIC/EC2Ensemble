@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'CloudFormation Template for instantiating Jacktrip servers in AWS'
+
+Globals:
+  Function:
+    Runtime: nodejs14.x
+Parameters:
+  CentralRegion:
+    Type: String
+    Default: ca-central-1
+
+Resources:
+  # Lambdas
+  JacktripCreateServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend
+      Handler: functions/createServer.handler
+
+  JacktripTerminateServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend
+      Handler: functions/terminateServer.handler
+
+  SqsConsumerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend
+      Handler: functions/sqsConsumer.handler
+      Environment:
+        Variables:
+          stateMachineArn: !Ref JacktripStateMachine
+
+  # SNS Subscription and SQS
+  JacktripSqsSnsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Sub arn:aws:sns:${CentralRegion}:173513177120:JacktripSnsTopic.fifo
+      Protocol: sqs
+      Endpoint: !GetAtt JacktripSqsQueue.Arn
+      Region: !Ref CentralRegion
+      FilterPolicy:
+        region:
+          - !Ref AWS::Region
+
+  JacktripSqsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      QueueName: JacktripQueue.fifo
+
+  # Step Functions
+  JacktripStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: ./backend/state_machine/state_machine.asl.json
+      DefinitionSubstitutions:
+        CreateServerFunctionArn: !GetAtt JacktripCreateServer.Arn
+        TerminateServerFunctionArn: !GetAtt JacktripTerminateServer.Arn
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Role: arn:aws:iam::173513177120:role/JacktripStateMachineRole
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub 'Jacktrip-StateMachine-LogGroup-${AWS::Region}'
