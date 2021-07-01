@@ -1,20 +1,29 @@
 const AWS = require('aws-sdk');
+const { v4: uuid } = require('uuid');
 
 const sns = new AWS.SNS();
 
 exports.handler = async (event) => {
-	const body = event.body;
+	const body = JSON.parse(event.body);
 	console.log(body);
 
 	const message = {
-		region: 'us-west-2',
+		region: body.region,
 		type: body.type,
 	};
+	console.log(message);
 	const params = {
 		Message: JSON.stringify(message),
 		TopicArn: process.env.snsTopicArn,
+		MessageGroupId: uuid(),
+		MessageAttributes: {
+			region: {
+				DataType: 'String',
+				StringValue: body.region,
+			},
+		},
 	};
-	console.log(event);
+	console.log(params);
 
 	try {
 		const res = await sns.publish(params).promise();

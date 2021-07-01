@@ -29,6 +29,13 @@ Resources:
     Properties:
       CodeUri: ./backend
       Handler: functions/sqsConsumer.handler
+      Events:
+        SqsEvent:
+          Type: SQS
+          Properties:
+            Enabled: true
+            Queue: !GetAtt JacktripSqsQueue.Arn
+          BatchSize: 5
       Environment:
         Variables:
           stateMachineArn: !Ref JacktripStateMachine
@@ -50,6 +57,20 @@ Resources:
     Properties:
       FifoQueue: true
       QueueName: JacktripQueue.fifo
+
+  JacktripSqsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref JacktripSqsQueue
+      PolicyDocument: # include in JSON format
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Principal:
+              Service: sns.amazonaws.com
+            Resource: !GetAtt JacktripSqsQueue.Arn
 
   # Step Functions
   JacktripStateMachine:
