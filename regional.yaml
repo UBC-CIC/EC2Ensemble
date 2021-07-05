@@ -15,20 +15,20 @@ Resources:
   JacktripCreateServer:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend
-      Handler: functions/createServer.handler
+      CodeUri: ./backend/functions/regional
+      Handler: createServer.handler
 
   JacktripTerminateServer:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend
-      Handler: functions/terminateServer.handler
+      CodeUri: ./backend/functions/regional
+      Handler: terminateServer.handler
 
   SqsConsumerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend
-      Handler: functions/sqsConsumer.handler
+      CodeUri: ./backend/functions/regional
+      Handler: sqsConsumer.handler
       Events:
         SqsEvent:
           Type: SQS

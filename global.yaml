@@ -7,8 +7,8 @@ Resources:
   PublishToSnsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend
-      Handler: functions/publishToSns.handler
+      CodeUri: ./backend/functions/global
+      Handler: publishToSns.handler
       Runtime: nodejs14.x
       Events:
         apiEvent:
@@ -32,19 +32,6 @@ Resources:
       FifoTopic: true
       ContentBasedDeduplication: true
       TopicName: JacktripSnsTopic.fifo
-
-  # LambdaToSnsPolicy:
-  #   Type: AWS::SNS::TopicPolicy
-  #   Properties:
-  #     PolicyDocument:
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service: lambda.amazonaws.com
-  #           Action: sns:Publish
-  #           Resource: !Ref JacktripSnsTopic
-  #     Topics:
-  #       - !Ref JacktripSnsTopic
 
   # IAM Roles
   JacktripStateMachineRole:
