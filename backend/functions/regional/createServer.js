@@ -1,31 +1,17 @@
 const AWS = require('aws-sdk');
 
-const ddb = new AWS.DynamoDB.DocumentClient();
+const ec2 = new AWS.EC2();
 
 exports.handler = async (event) => {
-	console.log(event.body);
-	const { user, serverName } = event.body;
-	const params = {
-		TableName: process.env.serverTable,
-		Item: {
-			user: user,
-			server_name: serverName,
-		},
-	};
 	console.log(event);
-	console.log(params);
+	const params = {
+		ImageId: 'ami-0721c9af7b9b75114',
+		InstanceType: 't2.micro',
+		MinCount: 1,
+		MaxCount: 1,
+	};
+	const res = await ec2.runInstances(params).promise();
+	console.log(res);
 
-	try {
-		const writeRes = await ddb.put(params).promise();
-		return {
-			statusCode: 200,
-			body: JSON.stringify(writeRes),
-		};
-	} catch (error) {
-		console.error('Error: ', error);
-		return {
-			statusCode: 400,
-			body: JSON.stringify(error),
-		};
-	}
+	return res;
 };

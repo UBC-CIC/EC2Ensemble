@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 
-const stepFunctions = AWS.StepFunctions();
+const stepFunctions = new AWS.StepFunctions();
 exports.handler = async (event) => {
 	console.log(event);
 
@@ -12,7 +12,7 @@ exports.handler = async (event) => {
 		const params = {
 			stateMachineArn: process.env.stateMachineArn,
 			name: body.MessageId,
-			input: JSON.stringify(body.message),
+			input: body.Message,
 		};
 		const res = await stepFunctions.startExecution(params).promise();
 		console.log(res);

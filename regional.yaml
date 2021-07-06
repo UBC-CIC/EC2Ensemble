@@ -17,6 +17,13 @@ Resources:
     Properties:
       CodeUri: ./backend/functions/regional
       Handler: createServer.handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:RunInstances
+              Resource: '*'
 
   JacktripTerminateServer:
     Type: AWS::Serverless::Function
@@ -39,6 +46,9 @@ Resources:
       Environment:
         Variables:
           stateMachineArn: !Ref JacktripStateMachine
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt JacktripStateMachine.Name
 
   # SNS Subscription and SQS
   JacktripSqsSnsSubscription:

@@ -9,7 +9,7 @@ exports.handler = async (event) => {
 
 	const message = {
 		region: body.region,
-		type: body.type,
+		action: body.action,
 	};
 	console.log(message);
 	const params = {
