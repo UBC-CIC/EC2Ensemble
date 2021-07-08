@@ -1,33 +1,33 @@
 {
-  "StartAt": "EvaluateEventType",
-  "States": {
-    "EvaluateEventType": {
-      "Type": "Choice",
-      "Comment": "Evaluate and route the event types",
-      "Choices": [
-        {
-          "Variable": "$.action",
-          "StringEquals": "create",
-          "Next": "CreateServer"
-        },
-        {
-          "Variable": "$.action",
-          "StringEquals": "terminate",
-          "Next": "TerminateServer"
-        }
-      ]
-    },
-    "CreateServer": {
-      "Type": "Task",
-      "Comment": "Create Jacktrip Server",
-      "Resource": "${CreateServerFunctionArn}",
-      "End": true
-    },
-    "TerminateServer": {
-      "Type": "Task",
-      "Comment": "Terminate Jacktrip Server",
-      "Resource": "${TerminateServerFunctionArn}",
-      "End": true
-    }
-  }
+	"StartAt": "EvaluateEventType",
+	"States": {
+		"EvaluateEventType": {
+			"Type": "Choice",
+			"Comment": "Evaluate and route the event types",
+			"Choices": [
+				{
+					"Variable": "$.action",
+					"StringEquals": "create",
+					"Next": "CreateServer"
+				},
+				{
+					"Variable": "$.action",
+					"StringEquals": "terminate",
+					"Next": "TerminateServer"
+				}
+			]
+		},
+		"CreateServer": {
+			"Type": "Task",
+			"Comment": "Create Jacktrip Server",
+			"Resource": "${CreateServerFunctionArn}",
+			"End": true
+		},
+		"TerminateServer": {
+			"Type": "Task",
+			"Comment": "Terminate Jacktrip Server",
+			"Resource": "${TerminateServerFunctionArn}",
+			"End": true
+		}
+	}
 }

@@ -30,6 +30,13 @@ Resources:
     Properties:
       CodeUri: ./backend/functions/regional
       Handler: terminateServer.handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:TerminateInstances
+              Resource: '*'
 
   SqsConsumerFunction:
     Type: AWS::Serverless::Function
