@@ -9,10 +9,15 @@ exports.handler = async (event) => {
 		const body = JSON.parse(record.body);
 		console.log(body);
 
+		const input = {
+			...body.Message,
+			waitTime: 10,
+		};
+
 		const params = {
 			stateMachineArn: process.env.stateMachineArn,
 			name: body.MessageId,
-			input: body.Message,
+			input,
 		};
 		const res = await stepFunctions.startExecution(params).promise();
 		console.log(res);

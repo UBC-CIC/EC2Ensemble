@@ -51,8 +51,12 @@ exports.handler = async (event) => {
 		};
 	}
 
+	const message = {
+		...body,
+		serverId,
+	};
 	const snsParams = {
-		Message: JSON.stringify(body),
+		Message: JSON.stringify(message),
 		TopicArn: process.env.snsTopicArn,
 		MessageGroupId: serverId,
 		MessageAttributes: {
@@ -71,6 +75,7 @@ exports.handler = async (event) => {
 			body: JSON.stringify(res),
 		};
 	} catch (error) {
+		// TODO: Delete ddb entry to cleanup
 		return {
 			statusCode: 400,
 			body: JSON.stringify(error),

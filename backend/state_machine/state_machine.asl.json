@@ -21,12 +21,25 @@
 			"Type": "Task",
 			"Comment": "Create Jacktrip Server",
 			"Resource": "${CreateServerFunctionArn}",
-			"End": true
+			"ResultPath": "$.taskResult",
+			"Next": "WaitCreate"
 		},
 		"TerminateServer": {
 			"Type": "Task",
 			"Comment": "Terminate Jacktrip Server",
 			"Resource": "${TerminateServerFunctionArn}",
+			"ResultPath": "$.taskResult",
+			"End": true
+		},
+		"WaitCreate": {
+			"Type": "Wait",
+			"SecondsPath": "$.waitTime",
+			"Next": "PollInstanceStatus"
+		},
+		"GetServerStatus": {
+			"Type": "Task",
+			"Comment": "Check if instance is running",
+			"Resource": "${GetServerStatusFunctionArn}",
 			"End": true
 		}
 	}

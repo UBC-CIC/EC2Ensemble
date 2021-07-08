@@ -23,6 +23,7 @@ Resources:
             - Effect: Allow
               Action:
                 - ec2:RunInstances
+                - ec2:CreateTags
               Resource: '*'
 
   JacktripTerminateServer:
@@ -36,6 +37,19 @@ Resources:
             - Effect: Allow
               Action:
                 - ec2:TerminateInstances
+              Resource: '*'
+
+  GetServerStatus:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional
+      Handler: getServerStatus.handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:DescribeInstanceStatus
               Resource: '*'
 
   SqsConsumerFunction:
@@ -97,6 +111,7 @@ Resources:
       DefinitionSubstitutions:
         CreateServerFunctionArn: !GetAtt JacktripCreateServer.Arn
         TerminateServerFunctionArn: !GetAtt JacktripTerminateServer.Arn
+        GetServerStatusFunctionArn: !GetAtt GetServerStatus.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true
