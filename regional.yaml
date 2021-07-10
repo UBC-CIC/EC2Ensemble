@@ -52,6 +52,18 @@ Resources:
                 - ec2:DescribeInstanceStatus
               Resource: '*'
 
+  HandleFail:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional
+      Handler: handleFail.handler
+
+  HandleSuccess:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional
+      Handler: handleSuccess.handler
+
   SqsConsumerFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -112,6 +124,8 @@ Resources:
         CreateServerFunctionArn: !GetAtt JacktripCreateServer.Arn
         TerminateServerFunctionArn: !GetAtt JacktripTerminateServer.Arn
         GetServerStatusFunctionArn: !GetAtt GetServerStatus.Arn
+        HandleFailFunctionArn: !GetAtt HandleFail.Arn
+        HandleSuccessFunctionArn: !GetAtt HandleSuccess.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true

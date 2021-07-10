@@ -34,12 +34,40 @@
 		"WaitCreate": {
 			"Type": "Wait",
 			"SecondsPath": "$.waitTime",
-			"Next": "PollInstanceStatus"
+			"Next": "GetServerStatus"
 		},
 		"GetServerStatus": {
 			"Type": "Task",
 			"Comment": "Check if instance is running",
 			"Resource": "${GetServerStatusFunctionArn}",
+			"ResultPath": "$.status",
+			"Next": "InstanceRunning?"
+		},
+		"InstanceRunning?": {
+			"Type": "Choice",
+			"Choices": [
+				{
+					"Variable": "$.status",
+					"StringEquals": "pending",
+					"Next": "WaitCreate"
+				},
+				{
+					"Variable": "$.status",
+					"StringEquals": "running",
+					"Next": "HandleSuccess"
+				}
+			]
+		},
+		"HandleFail": {
+			"Type": "Task",
+			"Comment": "Cleanup routine after failure",
+			"Resource": "${HandleFailFunctionArn}",
+			"End": true
+		},
+		"HandleSuccess": {
+			"Type": "Task",
+			"Comment": "Routine after successful flow",
+			"Resource": "${HandleSuccessFunctionArn",
 			"End": true
 		}
 	}

@@ -14,6 +14,7 @@ exports.handler = async (event) => {
 	try {
 		runRes = await ec2.runInstances(runParams).promise();
 		console.log(runRes);
+		console.log(runRes.Instances[0].State);
 	} catch (error) {
 		throw new Error('RunInstances failed: ' + JSON.stringify(error));
 	}
@@ -34,7 +35,7 @@ exports.handler = async (event) => {
 	};
 	try {
 		await ec2.createTags(tagParams).promise();
-		return instanceId;
+		return { instanceId };
 	} catch (error) {
 		// Maybe terminate the created instance
 		throw new Error('CreateTags failed: ' + JSON.stringify(error));
