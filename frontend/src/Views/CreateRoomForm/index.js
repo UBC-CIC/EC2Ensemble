@@ -44,13 +44,15 @@ export default function CreateRoomForm(props) {
   const classes = useStyles();
 
   const [roomFormInfo, setRoomFormInfo] = useState({
-    name: '',
+    user: 'testUser',
+    roomName: '',
     description: '',
     type: FormOptions.type[0],
     region: FormOptions.region[0],
     size: FormOptions.size[0],
     frequency: FormOptions.frequency[0],
-    buffer: FormOptions.buffer[0]
+    buffer: FormOptions.buffer[0],
+    action: 'create'
   })
 
   const handleChange = (event) => {
@@ -62,7 +64,7 @@ export default function CreateRoomForm(props) {
         <h2 id="modal-title" className={classes.text}>Create Room</h2>
         <form id="modal-form" onSubmit={(event)=>props.handleSubmit(event, roomFormInfo)}>
           <FormInput
-              id={"name"} 
+              id={"roomName"} 
               inputLabel={"Room Name"} 
               required={true}
               onChange={handleChange}
@@ -137,7 +139,7 @@ export default function CreateRoomForm(props) {
 // the first one in the list is the default value that the user will see
 const FormOptions = {
   type: ["AWS"],
-  region: ["us-west-1"],
+  region: ["ca-central-1", "us-west-1"],
   size: Array.from(Array(9), (_,i)=>i+2).concat([15,20]),
   frequency: [44100, 48000, 256000],
   buffer: [32, 64, 128, 256]

@@ -7,22 +7,22 @@ const useStyles = makeStyles((theme) => ({
         borderRadius: "10px",
         padding: theme.spacing(3, 4),
     },
-    flex: {
-        display: "flex",
-    },
     flexEnd: {
-        marginLeft: "auto",
+        [theme.breakpoints.up('sm')]: {
+            marginLeft: "auto",
+        }
     },
     margin_horizontal2: {
         margin: theme.spacing(2, 'auto')
     },
     innerVerticalPadding: {
         '& div': {
-            padding: theme.spacing(0.5, 0)
+            padding: theme.spacing(1, 0)
         }
     },
     margin_innerLeft: {
-        '& > button': {
+        display: 'flex',
+        '& > button:not(:first-child)': {
             marginLeft: "16px" 
         }
     },
@@ -31,16 +31,29 @@ const useStyles = makeStyles((theme) => ({
     },
     info: {
         marginBottom: "10px"
+    },
+    width: {
+        width: '100%',
+    },
+    marginRight: {
+        marginRight: "16px" 
     }
-    
 }))
 
+const SmallOutlinedButton = (props) => {
+    const {children, ...others} = props;
+    return (
+        <Button size="small" variant="outlined" {...others}>
+            {children}
+        </Button>
+    )
+};
 const DefaultButton = withStyles((theme) => ({
     root: {
         borderRadius: 5, 
         padding: theme.spacing(0.5, 1),
     },
-}))(Button);
+}))(SmallOutlinedButton);
 
 
 export default function Room() {
@@ -60,14 +73,23 @@ export default function Room() {
             <Grid container direction="row" className={classes.info}>
                 <Grid item className={classes.innerVerticalPadding}>
                     <div>
-                        Description: Musician Together Apart
+                        Description: Consequat duis autem vel: eum iriure dolor in hendrerit?
                     </div>
                 </Grid>
                 <Grid container item direction="row">
-                    <Grid item xs={4} className={classes.innerVerticalPadding}>
-                        <div>IP Address: 123.123.1.1</div>
-                        <div>Region: ca-central-1</div>
-                        <div>Capacity: 10</div>
+                    <Grid item sm={12} md={5} className={`${classes.width}`}>
+                        <div>
+                            <span className={classes.marginRight}>IP Address: 123.123.1.1</span>
+                            <DefaultButton 
+                                // onClick={handleCopy}
+                            >
+                                Copy
+                            </DefaultButton>
+                        </div>
+                        <Grid item className={classes.innerVerticalPadding}>
+                            <div>Region: ca-central-1</div>
+                            <div>Capacity: 10</div>
+                        </Grid>
                     </Grid>
                     <Grid item className={classes.innerVerticalPadding}>
                         <div>Sampling Frequency: 48000</div>
@@ -77,9 +99,9 @@ export default function Room() {
             </Grid>
             <Grid container item alignItems="center">
                 <div className={`${classes.flexEnd} ${classes.margin_innerLeft}`}>
-                    <DefaultButton size="small" variant="outlined">Test Latency</DefaultButton>
-                    <DefaultButton size="small" variant="outlined">Setting</DefaultButton>
-                    <DefaultButton size="small" variant="outlined">Delete Room</DefaultButton>
+                    <DefaultButton onClick>Test Latency</DefaultButton>
+                    <DefaultButton onClick>Setting</DefaultButton>
+                    <DefaultButton onClick>Delete Room</DefaultButton>
                 </div>
             </Grid>
         </Grid>

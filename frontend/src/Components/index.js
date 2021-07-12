@@ -77,7 +77,6 @@ export const FormSelect = (props) => {
                     required={required}
                     name={id}
                     id={id}
-                    // value={age}
                     {...others}
                 >
                     {options.map((option, index) => 

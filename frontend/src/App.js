@@ -69,11 +69,33 @@ function App() {
     setOpen(false);
   };
 
-  const handleSubmit = (event, roomFormInfo) => {
+  const handleSubmit = async (event, roomFormInfo) => {
     event.preventDefault();
-    console.log(roomFormInfo)
-    // websocket & send info to backend
+    // console.log(roomFormInfo)
+    // TODO: websocket & send info to backend
 
+    // PRE-testing
+    const apiUrl = '';
+
+    const requestOptions = {
+      method: 'POST',
+      // mode: 'no-cors', // disabling cors for testing purposes only
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(roomFormInfo)
+    };
+
+    console.log(JSON.stringify(roomFormInfo))
+
+    await fetch(apiUrl, requestOptions)
+      .then(response => {
+        console.log(response.json())
+        return response.json()
+      })
+      .then(data => console.log(data))
+      .catch(error => {
+        console.error('Error in creating room', error);
+    });
+    
     // close the modal
     setOpen(false);
   };
