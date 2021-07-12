@@ -2,14 +2,17 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: Template for Global resources
 
+Globals:
+  Function:
+    CodeUri: ./backend/functions/global
+    Runtime: nodejs14.x
+
 Resources:
   # Lambdas
   PublishToSnsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions/global
       Handler: publishToSns.handler
-      Runtime: nodejs14.x
       Events:
         apiEvent:
           Type: Api
@@ -43,6 +46,111 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+
+  WebSocketConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: user
+          AttributeType: S
+        - AttributeName: connectionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user
+          KeyType: HASH
+        - AttributeName: connectionId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  # Websocket API - heavily inspired from https://serverlessland.com/patterns/apigw-websocket-api-lambda
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-websocket-api'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: '$request.body.route'
+
+  # WebSocket Connect
+  WebSocketOnConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-onConnect-function'
+      Handler: onConnect.handler
+      Environment:
+        Variables:
+          connectionTableName: !Ref WebSocketConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WebSocketConnectionsTable
+  OnConnectFunctionResourcePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref WebSocketOnConnectFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  OnConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      Description: OnConnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketOnConnectFunction.Arn}/invocations
+  OnConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $connect
+      AuthorizationType: NONE
+      OperationName: OnConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OnConnectIntegration
+
+  # WebSocket Disconnect
+  WebSocketOnDisconnectFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-onDisconnect-function'
+      Handler: onDisconnect.handler
+      Environment:
+        Variables:
+          connectionTableName: !Ref WebSocketConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WebSocketConnectionsTable
+
+  # Function permissions grant an AWS service or another account permission to use a function
+  OnDisconnectFunctionResourcePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref WebSocketOnDisconnectFunction
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  OnDisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      Description: OnDisconnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketOnDisconnectFunction.Arn}/invocations
+  OnDisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      OperationName: OnDisconnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OnDisconnectIntegration
 
   # SNS
   JacktripSnsTopic:

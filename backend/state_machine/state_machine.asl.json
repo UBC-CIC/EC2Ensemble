@@ -22,7 +22,14 @@
 			"Comment": "Create Jacktrip Server",
 			"Resource": "${CreateServerFunctionArn}",
 			"ResultPath": "$.taskResult",
-			"Next": "WaitCreate"
+			"Next": "WaitCreate",
+			"Catch": [
+				{
+					"ErrorEquals": ["States.ALL"],
+					"ResultPath": "$.errorInfo",
+					"Next": "HandleFail"
+				}
+			]
 		},
 		"TerminateServer": {
 			"Type": "Task",
@@ -67,7 +74,7 @@
 		"HandleSuccess": {
 			"Type": "Task",
 			"Comment": "Routine after successful flow",
-			"Resource": "${HandleSuccessFunctionArn",
+			"Resource": "${HandleSuccessFunctionArn}",
 			"End": true
 		}
 	}
