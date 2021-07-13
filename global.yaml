@@ -6,6 +6,8 @@ Globals:
   Function:
     CodeUri: ./backend/functions/global
     Runtime: nodejs14.x
+  Api:
+    Cors: "'*'"
 
 Resources:
   # Lambdas
@@ -71,6 +73,21 @@ Resources:
       Name: !Sub '${AWS::StackName}-websocket-api'
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: '$request.body.route'
+  Deployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - OnConnectRoute
+      - UpdateFrontendRoute
+      - OnDisconnectRoute
+    Properties:
+      ApiId: !Ref WebSocketApi
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: dev
+      Description: Dev Stage
+      DeploymentId: !Ref Deployment
+      ApiId: !Ref WebSocketApi
 
   # WebSocket Connect
   WebSocketOnConnectFunction:
@@ -123,8 +140,6 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref WebSocketConnectionsTable
-
-  # Function permissions grant an AWS service or another account permission to use a function
   OnDisconnectFunctionResourcePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -152,6 +167,50 @@ Resources:
         - - 'integrations'
           - !Ref OnDisconnectIntegration
 
+  UpdateFrontendFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-update-frontend-function'
+      Handler: updateFrontend.handler
+      MemorySize: 256
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref WebSocketConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WebSocketConnectionsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  UpdateFrontendFunctionResourcePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref UpdateFrontendFunction
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  UpdateFrontendIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      Description: Post Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateFrontendFunction.Arn}/invocations
+  UpdateFrontendRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: update
+      AuthorizationType: NONE
+      OperationName: UpdateFrontendRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref UpdateFrontendIntegration
   # SNS
   JacktripSnsTopic:
     Type: AWS::SNS::Topic
@@ -194,3 +253,17 @@ Outputs:
   SnsTopicArn:
     Description: Arn for the Jacktrip State Machine
     Value: !Ref JacktripSnsTopic
+  WebSocketURL:
+    Description: 'The WSS Protocol URL to connect to'
+    Value:
+      !Join [
+        '',
+        [
+          'wss://',
+          !Ref WebSocketApi,
+          '.execute-api.',
+          !Ref 'AWS::Region',
+          '.amazonaws.com/',
+          !Ref 'Stage',
+        ],
+      ]

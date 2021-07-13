@@ -3,7 +3,7 @@ const { v4: uuid } = require('uuid');
 
 const sns = new AWS.SNS();
 const ddb = new AWS.DynamoDB.DocumentClient();
-const requiredBody = ['action', 'region', 'user', 'serverName'];
+const requiredBody = ['action', 'region', 'user', 'roomName'];
 const allowedAction = ['create', 'terminate'];
 
 exports.handler = async (event) => {
