@@ -1,13 +1,26 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { applyMiddleware, createStore } from "redux";
+import thunk from "redux-thunk";
+import { Provider } from "react-redux";
+import Amplify from "aws-amplify";
+import awsExports from "./aws-exports";
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import reducers from "./Reducers";
+
+Amplify.configure(awsExports);
+
+const store = createStore(
+    reducers, applyMiddleware(thunk)
+);
+
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    <Provider store={store}>
+      <App />
+    </Provider>,
   document.getElementById('root')
 );
 

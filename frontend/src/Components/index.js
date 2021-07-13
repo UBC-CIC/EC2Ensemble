@@ -8,8 +8,13 @@ import {
     FormControl,
     InputLabel,
     Select,
+
+    InputAdornment,
+    IconButton,
 } from '@material-ui/core/';
 
+// icons
+import SearchIcon from '@material-ui/icons/Search';
 
 const CustomFormControl = withStyles((theme) => ({
     root: {
@@ -89,5 +94,36 @@ export const FormSelect = (props) => {
         </div>
     )
 }
-  
 
+
+
+// https://github.com/mui-org/material-ui/issues/13570
+const BorderTextField = withStyles({
+    root: {
+      '& .MuiOutlinedInput-root': {
+        '& fieldset': {
+          borderRadius: "50px",
+        },
+      },
+    },
+})(TextField);
+
+export const SearchBar = () => {
+    return (
+      <BorderTextField
+          fullWidth={true}
+          placeholder="Search"
+          variant="outlined"
+          size="small"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                  <IconButton type="submit" size="small" aria-label="search-button">
+                      <SearchIcon />
+                  </IconButton>
+              </InputAdornment>
+            ),
+          }}
+      />
+    )
+  }

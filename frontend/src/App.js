@@ -1,160 +1,81 @@
-import React, { useState } from 'react';
-
-// materialUI
-import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Grid, InputAdornment, IconButton, TextField } from '@material-ui/core/';
-
-// internal imports
+import {Grid} from '@material-ui/core';
 import './App.css';
-import Room from './Views/Room';
-import CreateRoomForm from './Views/CreateRoomForm';
-
-// icons
-import SearchIcon from '@material-ui/icons/Search';
-import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
-
-
-const useStyles = makeStyles((theme) => ({
-  flexEnd: {
-    marginLeft: "auto",
-  },
-  margin_horizontal2: {
-    margin: theme.spacing(2, 'auto')
-  },
-  margin_horizontal3: {
-    margin: theme.spacing(3, 'auto')
-  },
-  underlineText: {
-    textDecoration: "underline",
-    textUnderlineOffset: "0.1em"
-  }
-}))
-
-// https://github.com/mui-org/material-ui/issues/13570
-const BorderTextField = withStyles({
-  root: {
-    '& .MuiOutlinedInput-root': {
-      '& fieldset': {
-        borderRadius: "50px",
-      },
-    },
-  },
-})(TextField);
-
-const DefaultButton = withStyles((theme) => ({
-  root: {
-      borderRadius: 5, 
-      padding: theme.spacing(1, 3),
-  },
-}))(Button);
+import Login from "./Views/Authentication/Login";
+import Home from "./Views/Home";
+import { Hub } from "aws-amplify";
+import React, {useState, useEffect} from "react";
+import { BrowserRouter, Route } from "react-router-dom";
+import { connect } from "react-redux";
+import {updateLoginState} from "./Actions/loginActions";
 
 
-const ForwardIcon = withStyles((theme) => ({
-  root: {
-    transform: "rotate(-180deg)"
-  },
-}))(ArrowBackIosIcon);
+function App(props) {
+    const {loginState, updateLoginState} = props;
 
+    const [currentLoginState, updateCurrentLoginState] = useState(loginState);
 
-function App() {
-  const classes = useStyles();
+    useEffect(() => {
+        setAuthListener();
+    }, []);
 
-  const [open, setOpen] = useState(false);
+    useEffect(() => {
+        updateCurrentLoginState(loginState);
+    }, [loginState]);
 
-  const handleOpen = () => {
-    setOpen(true);
-  };
+    async function setAuthListener() {
+        Hub.listen('auth', (data)=> {
+            switch(data.payload.event) {
+                case "signOut":
+                    updateLoginState("signIn");
+                    break;
+                default:
+                    break;
+            }
+        })
+    }
 
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleSubmit = async (event, roomFormInfo) => {
-    event.preventDefault();
-    // console.log(roomFormInfo)
-    // TODO: websocket & send info to backend
-
-    // PRE-testing
-    const apiUrl = '';
-
-    const requestOptions = {
-      method: 'POST',
-      // mode: 'no-cors', // disabling cors for testing purposes only
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(roomFormInfo)
-    };
-
-    console.log(JSON.stringify(roomFormInfo))
-
-    await fetch(apiUrl, requestOptions)
-      .then(response => {
-        console.log(response.json())
-        return response.json()
-      })
-      .then(data => console.log(data))
-      .catch(error => {
-        console.error('Error in creating room', error);
-    });
-    
-    // close the modal
-    setOpen(false);
-  };
-
-  return (
-    <Grid container justifyContent="center">
-      <Grid item xs={11} sm={10}>
-        {/* https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Aligning_Items_in_a_Flex_Container#using_auto_margins_for_main_axis_alignment */}
-        <Grid container item justifyContent="center" alignItems="center" className={classes.margin_horizontal2}>
-          <div><h2>All Rooms</h2></div>
-          <div className={`${classes.flexEnd}`}>
-            <DefaultButton 
-              variant="contained"
-              onClick={handleOpen}
-            >
-              Create Room
-            </DefaultButton>
-            <CreateRoomForm 
-              open={open} 
-              handleClose={handleClose} 
-              handleSubmit={handleSubmit}
-            />
-          </div>
-        </Grid>
-        <Grid className={classes.margin_horizontal2}>
-          <SearchBar/>
-        </Grid>
-        <Grid container item justifyContent="flex-end" alignItems="center" className={classes.margin_horizontal3}>
-          <ArrowBackIosIcon fontSize="small"/><span className={classes.underlineText}>1</span><ForwardIcon fontSize="small"/>
-        </Grid>
-
-        {/* load rooms in db */}
-        <Grid>
-          <Room/>
-        </Grid>
+    return (
+      <Grid container>
+          <Grid item xs={12}>
+              {
+                  currentLoginState !== "signedIn" && (
+                      /* Login component options:
+                      *
+                      * [logo: "custom", "none"]
+                      * [type: "video", "image", "static"]
+                      * [themeColor: "standard", "#012144" (color hex value in quotes) ]
+                      *  Suggested alternative theme colors: #037dad, #5f8696, #495c4e, #4f2828, #ba8106, #965f94
+                      * [animateTitle: true, false]
+                      * [title: string]
+                      * [darkMode (changes font/logo color): true, false]
+                      * [disableSignUp: true, false]
+                      * */
+                      <Login logo={"custom"} type={"image"} themeColor={"standard"} animateTitle={true}
+                             title={"PCMA CIC"} darkMode={true}
+                             disableSignUp={false}
+                      />
+                  )
+              }
+              {
+                  currentLoginState === "signedIn" && (
+                    <BrowserRouter>
+                        <Route path="/" render={props => <Home {...props}/>} />
+                    </BrowserRouter>
+                  )
+              }
+          </Grid>
       </Grid>
-
-    </Grid>
   );
 }
 
-function SearchBar() {
-  return (
-    <BorderTextField
-        fullWidth={true}
-        placeholder="Search"
-        variant="outlined"
-        size="small"
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-                <IconButton type="submit" size="small" aria-label="search-button">
-                    <SearchIcon />
-                </IconButton>
-            </InputAdornment>
-          ),
-        }}
-    />
-  )
-}
+const mapStateToProps = (state) => {
+    return {
+        loginState: state.loginState.currentState,
+    };
+};
 
-export default App;
+const mapDispatchToProps = {
+    updateLoginState,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);

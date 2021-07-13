@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Auth } from "aws-amplify";
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
@@ -44,7 +45,7 @@ export default function CreateRoomForm(props) {
   const classes = useStyles();
 
   const [roomFormInfo, setRoomFormInfo] = useState({
-    user: 'testUser',
+    user: '',
     roomName: '',
     description: '',
     type: FormOptions.type[0],
@@ -54,6 +55,14 @@ export default function CreateRoomForm(props) {
     buffer: FormOptions.buffer[0],
     action: 'create'
   })
+
+  useEffect(() => {
+    async function retrieveUser() {
+      const currUser = await Auth.currentAuthenticatedUser();
+      setRoomFormInfo({...roomFormInfo, user: currUser.username}); // current user id
+    }
+    retrieveUser();
+  }, [])
 
   const handleChange = (event) => {
     setRoomFormInfo({...roomFormInfo, [event.target.name]: event.target.value});

@@ -1,0 +1,128 @@
+import React, { useState } from 'react';
+
+// materialUI
+import { makeStyles, withStyles } from '@material-ui/core/styles';
+import { Button, Grid, TextField } from '@material-ui/core/';
+
+// internal imports
+import Room from './Room';
+import CreateRoomForm from './CreateRoomForm';
+import { SearchBar } from '../Components';
+
+// icons
+import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
+
+
+const useStyles = makeStyles((theme) => ({
+  flexEnd: {
+    marginLeft: "auto",
+  },
+  margin_horizontal2: {
+    margin: theme.spacing(2, 'auto')
+  },
+  margin_horizontal3: {
+    margin: theme.spacing(3, 'auto')
+  },
+  underlineText: {
+    textDecoration: "underline",
+    textUnderlineOffset: "0.1em"
+  }
+}))
+
+const DefaultButton = withStyles((theme) => ({
+  root: {
+      borderRadius: 5, 
+      padding: theme.spacing(1, 3),
+  },
+}))(Button);
+
+
+const ForwardIcon = withStyles((theme) => ({
+  root: {
+    transform: "rotate(-180deg)"
+  },
+}))(ArrowBackIosIcon);
+
+
+function Home(props) {
+  const classes = useStyles();
+
+  const [open, setOpen] = useState(false);
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSubmit = async (event, roomFormInfo) => {
+    event.preventDefault();
+    // console.log(roomFormInfo)
+    // TODO: websocket & send info to backend
+
+    // PRE-testing
+    const apiUrl = '';
+
+    const requestOptions = {
+      method: 'POST',
+      // mode: 'no-cors', // disabling cors for testing purposes only
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(roomFormInfo)
+    };
+
+    console.log(JSON.stringify(roomFormInfo))
+
+    await fetch(apiUrl, requestOptions)
+      .then(response => {
+        console.log(response.json())
+        return response.json()
+      })
+      .then(data => console.log(data))
+      .catch(error => {
+        console.error('Error in creating room', error);
+    });
+    
+    // close the modal
+    setOpen(false);
+  };
+
+  return (
+    <Grid container justifyContent="center">
+      <Grid item xs={11} sm={10}>
+        {/* https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Aligning_Items_in_a_Flex_Container#using_auto_margins_for_main_axis_alignment */}
+        <Grid container item justifyContent="center" alignItems="center" className={classes.margin_horizontal2}>
+          <div><h2>All Rooms</h2></div>
+          <div className={`${classes.flexEnd}`}>
+            <DefaultButton 
+              variant="contained"
+              onClick={handleOpen}
+            >
+              Create Room
+            </DefaultButton>
+            <CreateRoomForm 
+              open={open} 
+              handleClose={handleClose} 
+              handleSubmit={handleSubmit}
+            />
+          </div>
+        </Grid>
+        <Grid className={classes.margin_horizontal2}>
+          <SearchBar/>
+        </Grid>
+        <Grid container item justifyContent="flex-end" alignItems="center" className={classes.margin_horizontal3}>
+          <ArrowBackIosIcon fontSize="small"/><span className={classes.underlineText}>1</span><ForwardIcon fontSize="small"/>
+        </Grid>
+
+        {/* load rooms in db */}
+        <Grid>
+          <Room/>
+        </Grid>
+      </Grid>
+
+    </Grid>
+  );
+}
+
+export default Home;

@@ -99,9 +99,9 @@ export default function Room() {
             </Grid>
             <Grid container item alignItems="center">
                 <div className={`${classes.flexEnd} ${classes.margin_innerLeft}`}>
-                    <DefaultButton onClick>Test Latency</DefaultButton>
-                    <DefaultButton onClick>Setting</DefaultButton>
-                    <DefaultButton onClick>Delete Room</DefaultButton>
+                    <DefaultButton >Test Latency</DefaultButton>
+                    <DefaultButton >Setting</DefaultButton>
+                    <DefaultButton >Delete Room</DefaultButton>
                 </div>
             </Grid>
         </Grid>
