@@ -16,7 +16,7 @@ exports.handler = async (event) => {
 	if (!hasAllKeys) {
 		return {
 			statusCode: 400,
-			body: 'No region or action',
+			body: 'Incomplete body',
 		};
 	}
 
@@ -34,7 +34,7 @@ exports.handler = async (event) => {
 		Item: {
 			user: body.user,
 			serverId,
-			serverName: body.serverName,
+			roomName: body.roomName,
 			region: body.region,
 			status: 'creating',
 		},
@@ -72,6 +72,9 @@ exports.handler = async (event) => {
 		const res = await sns.publish(snsParams).promise();
 		return {
 			statusCode: 200,
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+			},
 			body: JSON.stringify(res),
 		};
 	} catch (error) {

@@ -12,5 +12,7 @@ exports.handler = async (event) => {
 	};
 	const res = await ec2.describeInstanceStatus(params).promise();
 	console.log(res);
-	return res.InstanceStatuses[0].InstanceState.Name;
+	const state = res.InstanceStatuses[0].InstanceState.Name;
+	console.log(state);
+	return state;
 };

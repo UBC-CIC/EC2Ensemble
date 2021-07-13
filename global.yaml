@@ -7,7 +7,10 @@ Globals:
     CodeUri: ./backend/functions/global
     Runtime: nodejs14.x
   Api:
-    Cors: "'*'"
+    Cors:
+      AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
+      AllowOrigin: "'*'"
+      AllowMethods: "'OPTIONS, POST'"
 
 Resources:
   # Lambdas

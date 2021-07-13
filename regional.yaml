@@ -5,17 +5,23 @@ Description: 'CloudFormation Template for instantiating Jacktrip servers in AWS'
 Globals:
   Function:
     Runtime: nodejs14.x
+    CodeUri: ./backend/functions/regional
 Parameters:
   CentralRegion:
     Type: String
     Default: ca-central-1
+  UserServerTableName:
+    Type: String
+    Default: jacktrip-global-UserServerTable-1CV4VPDXSCTB2
+  WebSocketTableName:
+    Type: String
+    Default: jacktrip-global-WebSocketConnectionsTable-1QC23EHLCKG1K
 
 Resources:
   # Lambdas
   JacktripCreateServer:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions/regional
       Handler: createServer.handler
       Policies:
         - Version: '2012-10-17'
@@ -29,7 +35,6 @@ Resources:
   JacktripTerminateServer:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions/regional
       Handler: terminateServer.handler
       Policies:
         - Version: '2012-10-17'
@@ -42,7 +47,6 @@ Resources:
   GetServerStatus:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions/regional
       Handler: getServerStatus.handler
       Policies:
         - Version: '2012-10-17'
@@ -55,14 +59,36 @@ Resources:
   HandleFail:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions/regional
       Handler: handleFail.handler
+      Environment:
+        Variables:
+          centralRegion: !Ref CentralRegion
+          userServerTableName: !Ref UserServerTableName
 
   HandleSuccess:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions/regional
       Handler: handleSuccess.handler
+      Environment:
+        Variables:
+          centralRegion: !Ref CentralRegion
+          userServerTableName: !Ref UserServerTableName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+              Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${UserServerTableName}'
+
+  ContactWebSocket:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: contactWebSocket.handler
+      Environment:
+        Variables:
+          webSocketTableName: !Ref WebSocketTableName
 
   SqsConsumerFunction:
     Type: AWS::Serverless::Function
