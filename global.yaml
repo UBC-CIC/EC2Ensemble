@@ -56,15 +56,11 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: user
-          AttributeType: S
         - AttributeName: connectionId
           AttributeType: S
       KeySchema:
-        - AttributeName: user
-          KeyType: HASH
         - AttributeName: connectionId
-          KeyType: RANGE
+          KeyType: HASH
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1

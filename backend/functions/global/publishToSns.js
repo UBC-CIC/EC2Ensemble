@@ -3,20 +3,20 @@ const { v4: uuid } = require('uuid');
 
 const sns = new AWS.SNS();
 const ddb = new AWS.DynamoDB.DocumentClient();
-const requiredBody = ['action', 'region', 'user', 'roomName'];
+const requiredBody = ['action', 'region', 'user', 'connectionId'];
+const requiredBodyCreate = ['roomName', 'frequency', 'buffer', 'size', 'type'];
+const requiredBodyTerminate = ['instanceId', 'serverId'];
 const allowedAction = ['create', 'terminate'];
 
 exports.handler = async (event) => {
+	console.log(event.body);
 	const body = JSON.parse(event.body);
 	console.log(body);
 
-	const hasAllKeys = requiredBody.every((item) =>
-		Object.prototype.hasOwnProperty.call(body, item)
-	);
-	if (!hasAllKeys) {
+	if (!validateBody(requiredBody, body)) {
 		return {
 			statusCode: 400,
-			body: 'Incomplete body',
+			body: 'Incomplete body 1',
 		};
 	}
 
@@ -27,28 +27,48 @@ exports.handler = async (event) => {
 		};
 	}
 
-	const serverId = uuid();
-
-	const ddbParams = {
-		TableName: process.env.userServerTableName,
-		Item: {
-			user: body.user,
-			serverId,
-			roomName: body.roomName,
-			region: body.region,
-			status: 'creating',
-		},
-	};
-	console.log('DDB: ', ddbParams);
-
-	try {
-		const res = await ddb.put(ddbParams).promise();
-		console.log(res);
-	} catch (error) {
+	if (
+		!validateBody(
+			body.action === 'create'
+				? requiredBodyCreate
+				: requiredBodyTerminate,
+			body
+		)
+	) {
 		return {
 			statusCode: 400,
-			body: JSON.stringify(error),
+			body: 'Incomplete body 2',
 		};
+	}
+
+	const serverId = body.action === 'create' ? uuid() : body.serverId;
+	if (body.action === 'create') {
+		const { user, roomName, type, region, buffer, frequency, size } = body;
+		const ddbParams = {
+			TableName: process.env.userServerTableName,
+			Item: {
+				user,
+				serverId,
+				roomName,
+				type,
+				region,
+				buffer,
+				frequency,
+				size,
+				status: 'creating',
+			},
+		};
+		console.log('DDB: ', ddbParams);
+
+		try {
+			const res = await ddb.put(ddbParams).promise();
+			console.log(res);
+		} catch (error) {
+			return {
+				statusCode: 400,
+				body: JSON.stringify(error),
+			};
+		}
 	}
 
 	const message = {
@@ -84,4 +104,10 @@ exports.handler = async (event) => {
 			body: JSON.stringify(error),
 		};
 	}
+};
+
+const validateBody = (required, body) => {
+	return required.every((item) => {
+		return Object.prototype.hasOwnProperty.call(body, item);
+	});
 };

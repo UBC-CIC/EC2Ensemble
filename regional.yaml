@@ -16,6 +16,9 @@ Parameters:
   WebSocketTableName:
     Type: String
     Default: jacktrip-global-WebSocketConnectionsTable-1QC23EHLCKG1K
+  WebSocketApiId:
+    Type: String
+    Default: 30yypq5gz0
 
 Resources:
   # Lambdas
@@ -89,6 +92,14 @@ Resources:
       Environment:
         Variables:
           webSocketTableName: !Ref WebSocketTableName
+          centralRegion: !Ref CentralRegion
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${CentralRegion}:${AWS::AccountId}:${WebSocketApiId}/*'
 
   SqsConsumerFunction:
     Type: AWS::Serverless::Function
@@ -152,6 +163,7 @@ Resources:
         GetServerStatusFunctionArn: !GetAtt GetServerStatus.Arn
         HandleFailFunctionArn: !GetAtt HandleFail.Arn
         HandleSuccessFunctionArn: !GetAtt HandleSuccess.Arn
+        ContactWebSocketFunctionArn: !GetAtt ContactWebSocket.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true

@@ -36,7 +36,7 @@
 			"Comment": "Terminate Jacktrip Server",
 			"Resource": "${TerminateServerFunctionArn}",
 			"ResultPath": "$.taskResult",
-			"End": true
+			"Next": "HandleSuccess"
 		},
 		"WaitCreate": {
 			"Type": "Wait",
@@ -75,6 +75,12 @@
 			"Type": "Task",
 			"Comment": "Routine after successful flow",
 			"Resource": "${HandleSuccessFunctionArn}",
+			"ResultPath": "$.webSocketMessage",
+			"Next": "ContactWebSocket"
+		},
+		"ContactWebSocket": {
+			"Type": "Task",
+			"Resource": "${ContactWebSocketFunctionArn}",
 			"End": true
 		}
 	}
