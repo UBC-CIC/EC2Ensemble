@@ -76,7 +76,6 @@ Resources:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
       - OnConnectRoute
-      - UpdateFrontendRoute
       - OnDisconnectRoute
     Properties:
       ApiId: !Ref WebSocketApi
@@ -166,50 +165,6 @@ Resources:
         - - 'integrations'
           - !Ref OnDisconnectIntegration
 
-  UpdateFrontendFunction:
-    Type: 'AWS::Serverless::Function'
-    Properties:
-      FunctionName: !Sub '${AWS::StackName}-update-frontend-function'
-      Handler: updateFrontend.handler
-      MemorySize: 256
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref WebSocketConnectionsTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref WebSocketConnectionsTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - 'execute-api:ManageConnections'
-              Resource:
-                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
-  UpdateFrontendFunctionResourcePermission:
-    Type: 'AWS::Lambda::Permission'
-    Properties:
-      Action: 'lambda:InvokeFunction'
-      Principal: apigateway.amazonaws.com
-      FunctionName: !Ref UpdateFrontendFunction
-      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
-  UpdateFrontendIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketApi
-      Description: Post Integration
-      IntegrationType: AWS_PROXY
-      IntegrationUri:
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateFrontendFunction.Arn}/invocations
-  UpdateFrontendRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketApi
-      RouteKey: update
-      AuthorizationType: NONE
-      OperationName: UpdateFrontendRoute
-      Target: !Join
-        - '/'
-        - - 'integrations'
-          - !Ref UpdateFrontendIntegration
   # SNS
   JacktripSnsTopic:
     Type: AWS::SNS::Topic
