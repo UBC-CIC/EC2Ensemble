@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+// aws
+import { Auth } from "aws-amplify";
+import awsExports from "../aws-exports";
+import { fromSSO } from "@aws-sdk/credential-provider-sso";
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Grid, TextField } from '@material-ui/core/';
+import { Button, Grid } from '@material-ui/core/';
 
 // internal imports
 import Room from './Room';
@@ -43,11 +47,53 @@ const ForwardIcon = withStyles((theme) => ({
   },
 }))(ArrowBackIosIcon);
 
+// get and set up aws service
+const AWS = require("aws-sdk");
+// (async () => {
+//   const credentials = await fromSSO({ profile: "" })();
+//   console.log(credentials)
+//   AWS.config.credentials = credentials;
+// })();
 
 function Home(props) {
   const classes = useStyles();
 
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // load dynamodb
+  const docClient = new AWS.DynamoDB.DocumentClient({ 
+    // credentials: credentials,
+    region: awsExports.aws_project_region,
+  });
+
+  // useEffect(() => {
+  //   // retrieve rooms
+    
+  //   (async () => {
+  //     const currUser = await Auth.currentAuthenticatedUser();
+
+  //     const params = {
+  //       TableName : process.env.REACT_APP_ROOM_TABLE,
+  //       KeyConditionExpression: "user = :user",
+  //       ExpressionAttributeValues: {
+  //         ":user": currUser.username
+  //       },
+  //     };
+
+  //     try {
+  //       const data = await docClient.query(params).promise();
+  //       console.log(data.Items)
+  //       // data.Items.forEach((item) => {
+  //         //       console.log(" -", item.year + ": " + item.title
+  //         //       + " ... " + item.info.genres
+  //         //       + " ... " + item.info.actors[0]);
+  //       // });
+  //     } catch (err) {
+  //       console.log("Unable to query. Error:", JSON.stringify(err, null, 2));
+  //     }
+  //   })();
+  // }, [])
 
   const handleOpen = () => {
     setOpen(true);
@@ -59,12 +105,11 @@ function Home(props) {
 
   const handleSubmit = async (event, roomFormInfo) => {
     event.preventDefault();
-    // console.log(roomFormInfo)
+    setLoading(true);
     // TODO: websocket & send info to backend
 
     // PRE-testing
-    const apiUrl = '';
-
+    const apiUrl = process.env.REACT_APP_AWS_API_BASE;
     const requestOptions = {
       method: 'POST',
       // mode: 'no-cors', // disabling cors for testing purposes only
@@ -72,20 +117,20 @@ function Home(props) {
       body: JSON.stringify(roomFormInfo)
     };
 
-    console.log(JSON.stringify(roomFormInfo))
-
     await fetch(apiUrl, requestOptions)
-      .then(response => {
-        console.log(response.json())
-        return response.json()
+      .then(response => response.json())
+      .then(data => {
+        console.log(data)
+        
+        setLoading(false);
+        // close the modal
+        setOpen(false);
       })
-      .then(data => console.log(data))
       .catch(error => {
+        setLoading(false);
         console.error('Error in creating room', error);
     });
     
-    // close the modal
-    setOpen(false);
   };
 
   return (
@@ -105,6 +150,7 @@ function Home(props) {
               open={open} 
               handleClose={handleClose} 
               handleSubmit={handleSubmit}
+              loading={loading}
             />
           </div>
         </Grid>

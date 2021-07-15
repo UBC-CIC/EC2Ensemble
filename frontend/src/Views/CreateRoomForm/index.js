@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
+// aws
 import { Auth } from "aws-amplify";
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Modal } from '@material-ui/core';
+import { Button, CircularProgress, Modal } from '@material-ui/core';
 import { FormInput, FormSelect } from '../../Components';
 
 
@@ -30,6 +31,10 @@ const useStyles = makeStyles((theme) => ({
     '& button': {
       fontWeight: 'bold'
     }
+  },
+  progress: {
+    display: "flex",
+    padding: theme.spacing(0, 1)
   }
 }));
 
@@ -42,6 +47,7 @@ const DefaultButton = withStyles((theme) => ({
 
 
 export default function CreateRoomForm(props) {
+  const { loading } = props;
   const classes = useStyles();
 
   const [roomFormInfo, setRoomFormInfo] = useState({
@@ -59,7 +65,7 @@ export default function CreateRoomForm(props) {
   useEffect(() => {
     async function retrieveUser() {
       const currUser = await Auth.currentAuthenticatedUser();
-      setRoomFormInfo({...roomFormInfo, user: currUser.username}); // current user id
+      setRoomFormInfo(() => ({...roomFormInfo, user: currUser.username})); // current user id
     }
     retrieveUser();
   }, [])
@@ -122,8 +128,12 @@ export default function CreateRoomForm(props) {
               onChange={handleChange}
           /> 
           <div className={classes.button}>
-            <DefaultButton onClick={props.handleClose}>Cancel</DefaultButton>
-            <DefaultButton type="submit">Submit</DefaultButton>
+            <DefaultButton disabled={!!loading} onClick={props.handleClose}>Cancel</DefaultButton>
+            <DefaultButton type="submit" disabled={!!loading}>
+              Submit
+              {/* if it is loading, show the loading indicator */}
+              {!!loading && <div className={classes.progress}><CircularProgress size={15}/></div>}
+            </DefaultButton>
           </div>
         </form>
     </div>
@@ -148,7 +158,7 @@ export default function CreateRoomForm(props) {
 // the first one in the list is the default value that the user will see
 const FormOptions = {
   type: ["AWS"],
-  region: ["ca-central-1", "us-west-1"],
+  region: ["ca-central-1", "us-west-1", "us-west-2"],
   size: Array.from(Array(9), (_,i)=>i+2).concat([15,20]),
   frequency: [44100, 48000, 256000],
   buffer: [32, 64, 128, 256]
