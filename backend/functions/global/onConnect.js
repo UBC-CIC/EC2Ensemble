@@ -5,11 +5,20 @@ exports.handler = async (event) => {
 	console.log(event);
 	console.log(event.requestContext);
 	const { connectionId, domainName, stage } = event.requestContext;
+	const user = event.queryStringParameters.user;
+
+	if (!user) {
+		return {
+			statusCode: 400,
+			body: 'No user found in query string',
+		};
+	}
 
 	const ddbParams = {
 		TableName: process.env.connectionTableName,
 		Item: {
 			connectionId,
+			user,
 			domainName,
 			stage,
 		},

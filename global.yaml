@@ -34,6 +34,26 @@ Resources:
           snsTopicArn: !Ref JacktripSnsTopic
           userServerTableName: !Ref UserServerTable
 
+  GetUserServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: getUserServer.handler
+      Events:
+        apiEvent:
+          Type: Api
+          Properties:
+            Method: get
+            Path: /user
+            RequestParameters:
+              - method.request.querystring.user:
+                  Required: true
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+
   # DynamoDB
   UserServerTable:
     Type: AWS::DynamoDB::Table
@@ -56,11 +76,25 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
+        - AttributeName: user
+          AttributeType: S
         - AttributeName: connectionId
           AttributeType: S
       KeySchema:
         - AttributeName: connectionId
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserIndex
+          KeySchema:
+            - AttributeName: user
+              KeyType: HASH
+            - AttributeName: connectionId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1

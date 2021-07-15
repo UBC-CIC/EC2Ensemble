@@ -5,17 +5,41 @@ const apigwManagementApi = new AWS.ApiGatewayManagementApi({
 	endpoint: '30yypq5gz0.execute-api.ca-central-1.amazonaws.com/dev',
 	region: process.env.centralRegion,
 });
+const ddb = new AWS.DynamoDB.DocumentClient({
+	region: process.env.centralRegion,
+});
 exports.handler = async (event) => {
 	console.log(event);
-	const { connectionId, webSocketMessage } = event;
+	const { user, webSocketMessage } = event;
 
-	const wsParams = {
-		Data: Buffer.from(JSON.stringify(webSocketMessage)),
-		ConnectionId: connectionId,
+	const ddbParams = {
+		TableName: process.env.connectionTableName,
+		KeyConditionExpression: '#user = :user',
+		IndexName: 'UserIndex',
+		ExpressionAttributeValues: {
+			':user': user,
+		},
+		ExpressionAttributeNames: {
+			'#user': 'user',
+		},
 	};
+	const ddbRes = await ddb.query(ddbParams).promise();
+	const connections = ddbRes.Items;
+
 	try {
-		return await apigwManagementApi.postToConnection(wsParams).promise();
+		await Promise.all(
+			connections.map(async (connection) => {
+				const wsParams = {
+					Data: Buffer.from(JSON.stringify(webSocketMessage)),
+					ConnectionId: connection.connectionId,
+				};
+				const wsRes = await apigwManagementApi
+					.postToConnection(wsParams)
+					.promise();
+				console.log(wsRes);
+			})
+		);
 	} catch (error) {
-		throw Error(JSON.stringify(error));
+		throw new Error(JSON.stringify(error));
 	}
 };

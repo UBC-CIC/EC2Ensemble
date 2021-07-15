@@ -3,7 +3,7 @@ const { v4: uuid } = require('uuid');
 
 const sns = new AWS.SNS();
 const ddb = new AWS.DynamoDB.DocumentClient();
-const requiredBody = ['action', 'region', 'user', 'connectionId'];
+const requiredBody = ['action', 'region', 'user'];
 const requiredBodyCreate = ['roomName', 'frequency', 'buffer', 'size', 'type'];
 const requiredBodyTerminate = ['instanceId', 'serverId'];
 const allowedAction = ['create', 'terminate'];

@@ -15,7 +15,7 @@ Parameters:
     Default: jacktrip-global-UserServerTable-1CV4VPDXSCTB2
   WebSocketTableName:
     Type: String
-    Default: jacktrip-global-WebSocketConnectionsTable-1QC23EHLCKG1K
+    Default: jacktrip-global-WebSocketConnectionsTable-1CRP9NJGFPHVC
   WebSocketApiId:
     Type: String
     Default: 30yypq5gz0
@@ -91,7 +91,7 @@ Resources:
       Handler: contactWebSocket.handler
       Environment:
         Variables:
-          webSocketTableName: !Ref WebSocketTableName
+          connectionTableName: !Ref WebSocketTableName
           centralRegion: !Ref CentralRegion
       Policies:
         - Statement:
@@ -100,6 +100,12 @@ Resources:
                 - 'execute-api:ManageConnections'
               Resource:
                 - !Sub 'arn:aws:execute-api:${CentralRegion}:${AWS::AccountId}:${WebSocketApiId}/*'
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:Query
+              Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${WebSocketTableName}/*'
 
   SqsConsumerFunction:
     Type: AWS::Serverless::Function
