@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 // aws
 import { Auth } from "aws-amplify";
 import awsExports from "../aws-exports";
 import { fromSSO } from "@aws-sdk/credential-provider-sso";
+
+import WebSocket from 'isomorphic-ws';
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
@@ -60,6 +62,8 @@ function Home(props) {
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rooms, setRooms] = useState([])
+
 
   // load dynamodb
   const docClient = new AWS.DynamoDB.DocumentClient({ 
@@ -93,17 +97,47 @@ function Home(props) {
   //       console.log("Unable to query. Error:", JSON.stringify(err, null, 2));
   //     }
   //   })();
-  // }, [])
+  // }, []);
 
-  const handleOpen = () => {
+
+  useEffect(() => {
+    const ws = new WebSocket(process.env.REACT_APP_WS_BASE);
+    onConnect(ws);
+  }, []);
+
+  const onConnect = useCallback((ws) => {
+    // listening for open connection
+    ws.onopen = (event) => {
+        console.log("ws currently connected")
+        console.log(event)
+    }
+
+    // listening for closed connection
+    ws.onclose = (event) => {
+        console.log("ws closed", event.reason)
+    }
+
+    // *** listening for messages from ws 
+    ws.onmessage = (event) => {
+        const message = JSON.parse(event.data).message;
+        console.log("message given", message)
+    }
+
+    // listening for error
+    ws.onerror = (error) => {
+        console.log("error", error)
+    }
+  }, []);
+
+  const handleFormOpen = () => {
     setOpen(true);
   };
 
-  const handleClose = () => {
+  const handleFormClose = () => {
     setOpen(false);
   };
 
-  const handleSubmit = async (event, roomFormInfo) => {
+  const handleFormSubmit = async (event, roomFormInfo) => {
     event.preventDefault();
     setLoading(true);
     // TODO: websocket & send info to backend
@@ -142,14 +176,14 @@ function Home(props) {
           <div className={`${classes.flexEnd}`}>
             <DefaultButton 
               variant="contained"
-              onClick={handleOpen}
+              onClick={handleFormOpen}
             >
               Create Room
             </DefaultButton>
             <CreateRoomForm 
               open={open} 
-              handleClose={handleClose} 
-              handleSubmit={handleSubmit}
+              handleClose={handleFormClose} 
+              handleSubmit={handleFormSubmit}
               loading={loading}
             />
           </div>
@@ -163,7 +197,11 @@ function Home(props) {
 
         {/* load rooms in db */}
         <Grid>
-          <Room/>
+          {rooms.map((room) => {
+            return (
+              <Room/>
+            )
+          })}
         </Grid>
       </Grid>
 

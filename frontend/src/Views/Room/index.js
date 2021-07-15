@@ -1,6 +1,10 @@
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import { Button, Divider, Grid } from '@material-ui/core/';
 
+// icons
+import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 const useStyles = makeStyles((theme) => ({
     root: {
         backgroundColor: "lightgray",
@@ -37,6 +41,12 @@ const useStyles = makeStyles((theme) => ({
     },
     marginRight: {
         marginRight: "16px" 
+    },
+    connect: {
+        color: "#77e94e"
+    },
+    close: {
+        color: "#9c9c9c"
     }
 }))
 
@@ -56,15 +66,18 @@ const DefaultButton = withStyles((theme) => ({
 }))(SmallOutlinedButton);
 
 
-export default function Room() {
+export default function Room(ws) {
     const classes = useStyles();
+
+    const [connection, setConnection] = useState(false);
 
     return (
         <Grid container alignContent="flex-start" className={classes.root}>
             <Grid container item alignItems="center">
                 <div>PCMA's room</div>
                 <div className={`${classes.flexEnd}`}>
-                    7 users active
+                    <span>7 users active</span>
+                    <FiberManualRecordIcon className={connection ? classes.connect : classes.close}/>
                 </div>
             </Grid>
             <Grid item xs={12} className={classes.margin_horizontal2}>
