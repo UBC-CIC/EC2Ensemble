@@ -1,11 +1,17 @@
 const AWS = require('aws-sdk');
-const { v4: uuid } = require('uuid');
 
 const sns = new AWS.SNS();
 const ddb = new AWS.DynamoDB.DocumentClient();
-const requiredBody = ['action', 'region', 'user'];
-const requiredBodyCreate = ['roomName', 'frequency', 'buffer', 'size', 'type'];
-const requiredBodyTerminate = ['instanceId', 'serverId'];
+const requiredBody = ['action', 'region', 'user', 'serverId'];
+const requiredBodyCreate = [
+	'roomName',
+	'frequency',
+	'buffer',
+	'size',
+	'type',
+	'description',
+];
+const requiredBodyTerminate = ['instanceId'];
 const allowedAction = ['create', 'terminate'];
 
 exports.handler = async (event) => {
@@ -37,13 +43,22 @@ exports.handler = async (event) => {
 	) {
 		return {
 			statusCode: 400,
-			body: 'Incomplete body 2',
+			body: 'Incomplete request body',
 		};
 	}
 
-	const serverId = body.action === 'create' ? uuid() : body.serverId;
+	const serverId = body.serverId;
 	if (body.action === 'create') {
-		const { user, roomName, type, region, buffer, frequency, size } = body;
+		const {
+			user,
+			roomName,
+			type,
+			region,
+			buffer,
+			frequency,
+			size,
+			description,
+		} = body;
 		const ddbParams = {
 			TableName: process.env.userServerTableName,
 			Item: {
@@ -55,6 +70,7 @@ exports.handler = async (event) => {
 				buffer,
 				frequency,
 				size,
+				description,
 				status: 'creating',
 			},
 		};
