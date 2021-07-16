@@ -68,6 +68,7 @@ function Home(props) {
   const [loading, setLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
   const [currUser, setCurrUser] = useState("");
+  const [websocket, setWebsocket] = useState(null);
 
 
   // load dynamodb
@@ -137,11 +138,13 @@ function Home(props) {
 
     // listening for open connection
     ws.onopen = () => {
+        // setWebsocket(ws)
         console.log("ws currently connected")
     }
 
     // listening for closed connection
     ws.onclose = (event) => {
+        // setWebsocket(null)
         console.log("ws closed", event.reason)
     }
 
@@ -155,7 +158,7 @@ function Home(props) {
     ws.onerror = (error) => {
         console.log("error", error)
     }
-  }, [currUser]);
+  }, [websocket]);
 
   const handleFormOpen = () => {
     setOpen(true);
@@ -188,7 +191,7 @@ function Home(props) {
       .then(data => {
         console.log("successfully created new room")
         // if successful, update the room list
-        updateRooms(roomFormInfoUser);
+        setRooms([...rooms, roomFormInfoUser])
 
         setLoading(false);
         // close the modal
@@ -200,15 +203,10 @@ function Home(props) {
     });
   };
 
-  // update the room list
-  const updateRooms = (newRoomInfo) => {
-    setRooms([...rooms, newRoomInfo])
-  }
 
   return (
     <Grid container justifyContent="center">
       <Grid item xs={11} sm={10}>
-        {/* https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Aligning_Items_in_a_Flex_Container#using_auto_margins_for_main_axis_alignment */}
         <Grid container item justifyContent="center" alignItems="center" className={classes.margin_vertical2}>
           <div><h2>All Rooms</h2></div>
           <div className={`${classes.flexEnd}`}>
@@ -237,8 +235,8 @@ function Home(props) {
         <Grid>
           {rooms.map((room, index) => {
             return (
-              <div className={classes.margin_vertical2}>
-                <Room key={index} data={room}/>
+              <div key={`room-${index}`} className={classes.margin_vertical2}>
+                <Room {...room}/>
               </div>
             )
           }).reverse()}

@@ -26,6 +26,13 @@ const useStyles = makeStyles((theme) => ({
             padding: theme.spacing(1, 0)
         }
     },
+    innerHeight: {
+        '& div': {
+            display: "flex",
+            height: "34px",
+            alignItems: 'center'
+        }
+    },
     margin_innerLeft: {
         display: 'flex',
         '& > button:not(:first-child)': {
@@ -71,7 +78,7 @@ const DefaultButton = withStyles((theme) => ({
 }))(SmallOutlinedButton);
 
 
-export default function Room({ data }) {
+export default function Room(props) {
     const classes = useStyles();
     const {
         roomName,
@@ -80,9 +87,12 @@ export default function Room({ data }) {
         size,
         frequency,
         buffer,
-        status
-    } = data
+        status,
+        ip
+    } = props
 
+    console.log(status)
+    
     /* there are three connection status
     * running    === no connection to room, probably been terminated
     * creating   === room in process of being created/connected
@@ -93,7 +103,7 @@ export default function Room({ data }) {
     useEffect(()=> {
         if (status === 'running') {
             setConnectionStyle(classes.running)
-        } else if (status === 'creating') {
+        } else if ((status === 'creating')||(status === undefined)) {
             setConnectionStyle(classes.creating)
         } else {
             setConnectionStyle(classes.terminated)
@@ -107,7 +117,7 @@ export default function Room({ data }) {
                 <div className={`${classes.flexEnd}`}>
                     { 
                         (status === "running" && <span>7 users active</span>) ||
-                        (status === "creating" && <span>In Creation</span>)
+                        ((status === "creating" || status === undefined) && <span>In Creation</span>)
                     }
                     <FiberManualRecordIcon className={connectionStyle}/>
                 </div>
@@ -125,20 +135,19 @@ export default function Room({ data }) {
                 }
                 <Grid container item direction="row">
                     <Grid item sm={12} md={5} className={`${classes.width}`}>
-                        <div>
-                            <span className={classes.marginRight}>IP Address: 123.123.1.1</span>
-                            <DefaultButton 
-                                // onClick={handleCopy}
-                            >
-                                Copy
-                            </DefaultButton>
-                        </div>
-                        <Grid item className={classes.innerVerticalPadding}>
+                        <Grid item className={classes.innerHeight}>
+                            <div>
+                                <span className={classes.marginRight}>IP Address: {!!ip ? ip : "N/A"}</span>
+                                {
+                                    !!ip && 
+                                    <DefaultButton>Copy</DefaultButton>
+                                }
+                            </div>
                             <div>Region: {region}</div>
                             <div>Capacity: {size}</div>
                         </Grid>
                     </Grid>
-                    <Grid item className={classes.innerVerticalPadding}>
+                    <Grid item className={classes.innerHeight}>
                         <div>Sampling Frequency: {frequency}</div>
                         <div>Buffer Size: {buffer}</div> 
                     </Grid>
