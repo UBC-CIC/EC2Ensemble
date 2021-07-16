@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { connect } from "react-redux";
+import { v4 as uuidv4 } from 'uuid';
+
 // aws
-import { Auth } from "aws-amplify";
-import awsExports from "../aws-exports";
+import { Auth, Storage } from "aws-amplify";
 import { fromSSO } from "@aws-sdk/credential-provider-sso";
 
 import WebSocket from 'isomorphic-ws';
@@ -23,10 +25,10 @@ const useStyles = makeStyles((theme) => ({
   flexEnd: {
     marginLeft: "auto",
   },
-  margin_horizontal2: {
+  margin_vertical2: {
     margin: theme.spacing(2, 'auto')
   },
-  margin_horizontal3: {
+  margin_vertical3: {
     margin: theme.spacing(3, 'auto')
   },
   underlineText: {
@@ -50,26 +52,29 @@ const ForwardIcon = withStyles((theme) => ({
 }))(ArrowBackIosIcon);
 
 // get and set up aws service
-const AWS = require("aws-sdk");
-// (async () => {
-//   const credentials = await fromSSO({ profile: "" })();
-//   console.log(credentials)
-//   AWS.config.credentials = credentials;
+// const AWS = require("aws-sdk");
+// (() => {
+//   // const credentials = await fromSSO({ profile: "" })();
+//   const credentials = new AWS.SharedIniFileCredentials({profile: 'n'});
+//   AWS.config.update = credentials;
 // })();
 
 function Home(props) {
+  const {loginState} = props;
+
   const classes = useStyles();
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [rooms, setRooms] = useState([])
+  const [rooms, setRooms] = useState([]);
+  const [currUser, setCurrUser] = useState("");
 
 
   // load dynamodb
-  const docClient = new AWS.DynamoDB.DocumentClient({ 
-    // credentials: credentials,
-    region: awsExports.aws_project_region,
-  });
+  // const docClient = new AWS.DynamoDB.DocumentClient({ 
+  //   // credentials: credentials,
+  //   region: awsExports.aws_project_region,
+  // });
 
   // useEffect(() => {
   //   // retrieve rooms
@@ -77,17 +82,17 @@ function Home(props) {
   //   (async () => {
   //     const currUser = await Auth.currentAuthenticatedUser();
 
-  //     const params = {
-  //       TableName : process.env.REACT_APP_ROOM_TABLE,
-  //       KeyConditionExpression: "user = :user",
-  //       ExpressionAttributeValues: {
-  //         ":user": currUser.username
-  //       },
-  //     };
+  //     // const params = {
+  //     //   TableName : process.env.REACT_APP_ROOM_TABLE,
+  //     //   KeyConditionExpression: "user = :user",
+  //     //   ExpressionAttributeValues: {
+  //     //     ":user": currUser.username
+  //     //   },
+  //     // };
 
   //     try {
-  //       const data = await docClient.query(params).promise();
-  //       console.log(data.Items)
+  //       // const data = await docClient.query(params).promise();
+  //       // console.log(data.Items)
   //       // data.Items.forEach((item) => {
   //         //       console.log(" -", item.year + ": " + item.title
   //         //       + " ... " + item.info.genres
@@ -101,15 +106,38 @@ function Home(props) {
 
 
   useEffect(() => {
-    const ws = new WebSocket(process.env.REACT_APP_WS_BASE);
-    onConnect(ws);
-  }, []);
+    (async () => {
+      await Auth.currentAuthenticatedUser()
+        .then(async (user) => {
+          const userId = user.username;
+          setCurrUser(userId);
+          console.log("start", currUser)
 
-  const onConnect = useCallback((ws) => {
+          // load ws
+          connectWS(userId);
+
+          // get rooms from db and update
+          await fetch(`${process.env.REACT_APP_AWS_USERDB_BASE}?user=${encodeURIComponent(userId)}`)
+            .then(response => response.json())
+            .then(data => {
+              console.log("not called other times",data.Items) 
+              setRooms(data.Items)
+            })
+            .catch(error => {
+              console.error('Error in querying room', error);
+          });
+
+        })
+    })();
+  }, [loginState]);
+
+
+  const connectWS = useCallback((userId) => {
+    const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?user=${userId}`);
+
     // listening for open connection
-    ws.onopen = (event) => {
+    ws.onopen = () => {
         console.log("ws currently connected")
-        console.log(event)
     }
 
     // listening for closed connection
@@ -127,7 +155,7 @@ function Home(props) {
     ws.onerror = (error) => {
         console.log("error", error)
     }
-  }, []);
+  }, [currUser]);
 
   const handleFormOpen = () => {
     setOpen(true);
@@ -139,23 +167,29 @@ function Home(props) {
 
   const handleFormSubmit = async (event, roomFormInfo) => {
     event.preventDefault();
-    setLoading(true);
-    // TODO: websocket & send info to backend
 
-    // PRE-testing
-    const apiUrl = process.env.REACT_APP_AWS_API_BASE;
-    const requestOptions = {
-      method: 'POST',
-      // mode: 'no-cors', // disabling cors for testing purposes only
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(roomFormInfo)
+    const roomFormInfoUser = {
+      user: currUser,
+      serverId: uuidv4(),
+      ...roomFormInfo
     };
 
-    await fetch(apiUrl, requestOptions)
+    setLoading(true);
+
+    const url = process.env.REACT_APP_AWS_API_BASE;
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(roomFormInfoUser)
+    };
+
+    await fetch(url, requestOptions)
       .then(response => response.json())
       .then(data => {
-        console.log(data)
-        
+        console.log("successfully created new room")
+        // if successful, update the room list
+        updateRooms(roomFormInfoUser);
+
         setLoading(false);
         // close the modal
         setOpen(false);
@@ -164,14 +198,18 @@ function Home(props) {
         setLoading(false);
         console.error('Error in creating room', error);
     });
-    
   };
+
+  // update the room list
+  const updateRooms = (newRoomInfo) => {
+    setRooms([...rooms, newRoomInfo])
+  }
 
   return (
     <Grid container justifyContent="center">
       <Grid item xs={11} sm={10}>
         {/* https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Aligning_Items_in_a_Flex_Container#using_auto_margins_for_main_axis_alignment */}
-        <Grid container item justifyContent="center" alignItems="center" className={classes.margin_horizontal2}>
+        <Grid container item justifyContent="center" alignItems="center" className={classes.margin_vertical2}>
           <div><h2>All Rooms</h2></div>
           <div className={`${classes.flexEnd}`}>
             <DefaultButton 
@@ -188,20 +226,22 @@ function Home(props) {
             />
           </div>
         </Grid>
-        <Grid className={classes.margin_horizontal2}>
+        <Grid className={classes.margin_vertical2}>
           <SearchBar/>
         </Grid>
-        <Grid container item justifyContent="flex-end" alignItems="center" className={classes.margin_horizontal3}>
+        <Grid container item justifyContent="flex-end" alignItems="center" className={classes.margin_vertical3}>
           <ArrowBackIosIcon fontSize="small"/><span className={classes.underlineText}>1</span><ForwardIcon fontSize="small"/>
         </Grid>
 
-        {/* load rooms in db */}
+        {/* load rooms in reverse order, showing the most recent one first*/}
         <Grid>
-          {rooms.map((room) => {
+          {rooms.map((room, index) => {
             return (
-              <Room/>
+              <div className={classes.margin_vertical2}>
+                <Room key={index} data={room}/>
+              </div>
             )
-          })}
+          }).reverse()}
         </Grid>
       </Grid>
 
@@ -209,4 +249,10 @@ function Home(props) {
   );
 }
 
-export default Home;
+const mapStateToProps = (state) => {
+  return {
+      loginState: state.loginState.currentState,
+  };
+};
+
+export default connect(mapStateToProps, null)(Home);

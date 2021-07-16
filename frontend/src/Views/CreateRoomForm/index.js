@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-// aws
-import { Auth } from "aws-amplify";
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
@@ -47,11 +45,10 @@ const DefaultButton = withStyles((theme) => ({
 
 
 export default function CreateRoomForm(props) {
-  const { loading } = props;
+  const { open, loading } = props;
   const classes = useStyles();
 
-  const [roomFormInfo, setRoomFormInfo] = useState({
-    user: '',
+  const initFormValues = {
     roomName: '',
     description: '',
     type: FormOptions.type[0],
@@ -59,19 +56,23 @@ export default function CreateRoomForm(props) {
     size: FormOptions.size[0],
     frequency: FormOptions.frequency[0],
     buffer: FormOptions.buffer[0],
-    action: 'create'
-  })
+    action: 'create',
+    status: 'creating'
+  }
+  const [roomFormInfo, setRoomFormInfo] = useState(initFormValues)
 
+  // when form's display status (i.e. open) is being toggled, reset the roomFormInfo state
   useEffect(() => {
-    async function retrieveUser() {
-      const currUser = await Auth.currentAuthenticatedUser();
-      setRoomFormInfo(() => ({...roomFormInfo, user: currUser.username})); // current user id
-    }
-    retrieveUser();
-  }, [])
+    resetFormInfo();
+  }, [open])
 
   const handleChange = (event) => {
     setRoomFormInfo({...roomFormInfo, [event.target.name]: event.target.value});
+  }
+
+  // reset the roomFormInfo state
+  const resetFormInfo = () => {
+    setRoomFormInfo(initFormValues)
   }
 
   const body = (
