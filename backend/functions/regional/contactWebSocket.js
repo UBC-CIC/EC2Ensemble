@@ -25,6 +25,9 @@ exports.handler = async (event) => {
 	};
 	const ddbRes = await ddb.query(ddbParams).promise();
 	const connections = ddbRes.Items;
+	if (connections.length === 0) {
+		console.log('No active connections');
+	}
 
 	try {
 		await Promise.all(

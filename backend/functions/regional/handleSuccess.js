@@ -13,14 +13,16 @@ exports.handler = async (event) => {
 				serverId: event.serverId,
 			},
 			UpdateExpression:
-				'SET #status = :newStatus, instanceId = :instanceId',
+				'SET #status = :newStatus, instanceId = :instanceId, #ipAddress = :ip',
 			ReturnValues: 'UPDATED_NEW',
 			ExpressionAttributeValues: {
 				':newStatus': 'running',
-				':instanceId': event.taskResult.instanceId,
+				':instanceId': event.taskResult,
+				':ip': event.getStatusResult.ip,
 			},
 			ExpressionAttributeNames: {
 				'#status': 'status',
+				'#ipAddress': 'ipAddress',
 			},
 		};
 		console.log(params);
@@ -45,6 +47,9 @@ exports.handler = async (event) => {
 		}
 	}
 	return {
+		...(event.action === 'create' && {
+			ipAddress: event.getStatusResult.ip,
+		}),
 		action: event.action,
 		serverId: event.serverId,
 		user: event.user,

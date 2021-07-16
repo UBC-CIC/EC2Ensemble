@@ -9,35 +9,29 @@ exports.handler = async (event) => {
 		InstanceType: 't2.micro',
 		MinCount: 1,
 		MaxCount: 1,
+		TagSpecifications: [
+			{
+				ResourceType: 'instance',
+				Tags: [
+					{
+						Key: 'user',
+						Value: event.user,
+					},
+					{
+						Key: 'serverId',
+						Value: event.serverId,
+					},
+				],
+			},
+		],
 	};
 	let runRes;
 	try {
 		runRes = await ec2.runInstances(runParams).promise();
 		console.log(runRes);
 		console.log(runRes.Instances[0].State);
+		return runRes.Instances[0].InstanceId;
 	} catch (error) {
 		throw new Error('RunInstances failed: ' + JSON.stringify(error));
-	}
-
-	const instanceId = runRes.Instances[0].InstanceId;
-	const tagParams = {
-		Resources: [instanceId],
-		Tags: [
-			{
-				Key: 'user',
-				Value: event.user,
-			},
-			{
-				Key: 'serverId',
-				Value: event.serverId,
-			},
-		],
-	};
-	try {
-		await ec2.createTags(tagParams).promise();
-		return { instanceId };
-	} catch (error) {
-		// Maybe terminate the created instance
-		throw new Error('CreateTags failed: ' + JSON.stringify(error));
 	}
 };

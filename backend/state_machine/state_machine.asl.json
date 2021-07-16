@@ -47,19 +47,19 @@
 			"Type": "Task",
 			"Comment": "Check if instance is running",
 			"Resource": "${GetServerStatusFunctionArn}",
-			"ResultPath": "$.status",
+			"ResultPath": "$.getStatusResult",
 			"Next": "InstanceRunning?"
 		},
 		"InstanceRunning?": {
 			"Type": "Choice",
 			"Choices": [
 				{
-					"Variable": "$.status",
+					"Variable": "$.getStatusResult.status",
 					"StringEquals": "pending",
 					"Next": "WaitCreate"
 				},
 				{
-					"Variable": "$.status",
+					"Variable": "$.getStatusResult.status",
 					"StringEquals": "running",
 					"Next": "HandleSuccess"
 				}

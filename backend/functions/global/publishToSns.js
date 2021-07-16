@@ -11,7 +11,6 @@ const requiredBodyCreate = [
 	'type',
 	'description',
 ];
-const requiredBodyTerminate = ['instanceId'];
 const allowedAction = ['create', 'terminate'];
 
 exports.handler = async (event) => {
@@ -33,44 +32,29 @@ exports.handler = async (event) => {
 		};
 	}
 
-	if (
-		!validateBody(
-			body.action === 'create'
-				? requiredBodyCreate
-				: requiredBodyTerminate,
-			body
-		)
-	) {
-		return {
-			statusCode: 400,
-			body: 'Incomplete request body',
-		};
-	}
+	var message = {
+		...body,
+	};
 
-	const serverId = body.serverId;
 	if (body.action === 'create') {
-		const {
-			user,
-			roomName,
-			type,
-			region,
-			buffer,
-			frequency,
-			size,
-			description,
-		} = body;
+		if (!validateBody(requiredBodyCreate, body)) {
+			return {
+				statusCode: 400,
+				body: 'Incomplete request body for create',
+			};
+		}
 		const ddbParams = {
 			TableName: process.env.userServerTableName,
 			Item: {
-				user,
-				serverId,
-				roomName,
-				type,
-				region,
-				buffer,
-				frequency,
-				size,
-				description,
+				user: body.user,
+				serverId: body.serverId,
+				roomName: body.roomName,
+				type: body.type,
+				region: body.region,
+				buffer: body.buffer,
+				frequency: body.frequency,
+				size: body.size,
+				description: body.description,
 				status: 'creating',
 			},
 		};
@@ -85,16 +69,30 @@ exports.handler = async (event) => {
 				body: JSON.stringify(error),
 			};
 		}
+	} else {
+		const ddbParams = {
+			TableName: process.env.userServerTableName,
+			Key: {
+				user: body.user,
+				serverId: body.serverId,
+			},
+		};
+		try {
+			const res = await ddb.get(ddbParams).promise();
+			console.log(res);
+			message.instanceId = res.Item.instanceId;
+		} catch (error) {
+			return {
+				statusCode: 400,
+				body: JSON.stringify(error),
+			};
+		}
 	}
 
-	const message = {
-		...body,
-		serverId,
-	};
 	const snsParams = {
 		Message: JSON.stringify(message),
 		TopicArn: process.env.snsTopicArn,
-		MessageGroupId: serverId,
+		MessageGroupId: body.serverId,
 		MessageAttributes: {
 			region: {
 				DataType: 'String',
