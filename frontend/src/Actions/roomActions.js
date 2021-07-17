@@ -9,7 +9,7 @@ export const queryRooms = (userId) => async (dispatch) => {
             });
         })
         .catch(error => {
-            console.error('Error in querying room', error);
+            console.log('Error in querying room', error);
         });
 };
 
@@ -47,7 +47,7 @@ export const createRoom = (currUser, serverId, roomFormInfo) => async (dispatch)
       })
       .catch(error => {
         // setLoading(false);
-        console.error('Error in creating room', error);
+        console.log('Error in creating room', error);
     });
 };
 
@@ -68,17 +68,16 @@ export const disconnectRoom = (currUser, region, serverId) => async (dispatch) =
     await fetch(url, requestOptions)
       .then(response => response.json())
       .then(data => {
-        console.log("successfully deleted the room", data)
         // if successful, delete and update the room list
         dispatch({
-            type: 'UPDATE_ROOM_STATUS_TERMINATED',
+            type: 'UPDATE_ROOM_STATUS_TERMINATING',
             payload: {
                 serverId: serverId
             }
         });
       })
       .catch(error => {
-        console.error('Error in deleting room', error);
+        console.log('Error in deleting room', error);
     });
 };
 
@@ -91,7 +90,7 @@ export const updateRoomStatus = (message) => (dispatch) => {
                 ipAddress: message.ipAddress
             } 
         });
-    } else if (message.action === "terminated") {
+    } else if (message.action === "terminate") {
         dispatch({ 
             type: "UPDATE_ROOM_STATUS_TERMINATED", 
             payload:{

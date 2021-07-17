@@ -34,6 +34,17 @@ const roomReducer = (currentState = {}, action) => {
             }
             return currentState
         }
+        case "UPDATE_ROOM_STATUS_TERMINATING": {
+            const { serverId } = action.payload;
+            const currRoomInfo = currentState[serverId];
+            return {
+                ...currentState,
+                [serverId]: {
+                    ...currRoomInfo,
+                    status: 'terminating',
+                }
+            }
+        }
         case "UPDATE_ROOM_STATUS_TERMINATED": {
             const { serverId } = action.payload;
             const currRoomInfo = currentState[serverId];

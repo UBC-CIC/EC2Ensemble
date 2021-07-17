@@ -193,8 +193,7 @@ function Home(props) {
 
 const mapStateToProps = (state) => {
   return {
-      roomList: state.roomsState,
-      loginState: state.loginState.currentState,
+      roomList: state.roomsState
   };
 };
 

@@ -103,9 +103,10 @@ export default function Room(props) {
     const [connectionStyle, setConnectionStyle] = useState(classes.terminated);
 
     useEffect(()=> {
+        console.log(status)
         if (status === 'running') {
             setConnectionStyle(classes.running)
-        } else if ((status === 'creating')||(status === undefined)) {
+        } else if ((status === 'creating')||(status === undefined)||(status === 'terminating')) {
             setConnectionStyle(classes.creating)
         } else {
             setConnectionStyle(classes.terminated)
@@ -161,10 +162,16 @@ export default function Room(props) {
                     <DefaultButton >Test Latency</DefaultButton>
                     <DefaultButton >Setting</DefaultButton>
                     { status === 'terminated' && 
-                        <DefaultButton>Connect</DefaultButton>
+                        <DefaultButton disabled={true}>Connect</DefaultButton>
                     }
                     { status !== 'terminated' && 
-                        <DefaultButton onClick={()=>handleDisconnect(serverId)}>Disconnect</DefaultButton>
+                        <DefaultButton 
+                            disabled={status==='terminating' || !status || status === 'creating'}
+                            onClick={()=>handleDisconnect(serverId)}
+                        >
+                            { (status==='terminating') ? "Disconnecting..." : 
+                                        (!status || status === 'creating') ? "Connecting..." : "Disconnect" }
+                        </DefaultButton>
                     }
                 </div>
             </Grid>
