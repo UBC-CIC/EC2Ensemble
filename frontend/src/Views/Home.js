@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import { v4 as uuidv4 } from 'uuid';
 
 // aws
 import { Auth, Storage } from "aws-amplify";
 import { fromSSO } from "@aws-sdk/credential-provider-sso";
 
-import WebSocket from 'isomorphic-ws';
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
@@ -16,6 +15,9 @@ import { Button, Grid } from '@material-ui/core/';
 import Room from './Room';
 import CreateRoomForm from './CreateRoomForm';
 import { SearchBar } from '../Components';
+
+// actions
+import { createRoom, disconnectRoom, queryRooms } from '../Actions/roomActions';
 
 // icons
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
@@ -60,15 +62,16 @@ const ForwardIcon = withStyles((theme) => ({
 // })();
 
 function Home(props) {
-  const {loginState} = props;
+  const {loginState, roomList} = props;
 
   const classes = useStyles();
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [rooms, setRooms] = useState([]);
+  // const [rooms, setRooms] = useState({});
   const [currUser, setCurrUser] = useState("");
-  const [websocket, setWebsocket] = useState(null);
+  const dispatch = useDispatch();
+
 
 
   // load dynamodb
@@ -109,56 +112,16 @@ function Home(props) {
   useEffect(() => {
     (async () => {
       await Auth.currentAuthenticatedUser()
-        .then(async (user) => {
+        .then((user) => {
           const userId = user.username;
-          setCurrUser(userId);
-          console.log("start", currUser)
+          setCurrUser(userId)
 
-          // load ws
-          connectWS(userId);
-
-          // get rooms from db and update
-          await fetch(`${process.env.REACT_APP_AWS_USERDB_BASE}?user=${encodeURIComponent(userId)}`)
-            .then(response => response.json())
-            .then(data => {
-              console.log("not called other times",data.Items) 
-              setRooms(data.Items)
-            })
-            .catch(error => {
-              console.error('Error in querying room', error);
-          });
-
+          // query rooms from db
+          dispatch(queryRooms(userId));
         })
     })();
   }, [loginState]);
 
-
-  const connectWS = useCallback((userId) => {
-    const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?user=${userId}`);
-
-    // listening for open connection
-    ws.onopen = () => {
-        // setWebsocket(ws)
-        console.log("ws currently connected")
-    }
-
-    // listening for closed connection
-    ws.onclose = (event) => {
-        // setWebsocket(null)
-        console.log("ws closed", event.reason)
-    }
-
-    // *** listening for messages from ws 
-    ws.onmessage = (event) => {
-        const message = JSON.parse(event.data).message;
-        console.log("message given", message)
-    }
-
-    // listening for error
-    ws.onerror = (error) => {
-        console.log("error", error)
-    }
-  }, [websocket]);
 
   const handleFormOpen = () => {
     setOpen(true);
@@ -171,38 +134,19 @@ function Home(props) {
   const handleFormSubmit = async (event, roomFormInfo) => {
     event.preventDefault();
 
-    const roomFormInfoUser = {
-      user: currUser,
-      serverId: uuidv4(),
-      ...roomFormInfo
-    };
+    const serverId = uuidv4();
 
     setLoading(true);
-
-    const url = process.env.REACT_APP_AWS_API_BASE;
-    const requestOptions = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(roomFormInfoUser)
-    };
-
-    await fetch(url, requestOptions)
-      .then(response => response.json())
-      .then(data => {
-        console.log("successfully created new room")
-        // if successful, update the room list
-        setRooms([...rooms, roomFormInfoUser])
-
-        setLoading(false);
-        // close the modal
-        setOpen(false);
-      })
-      .catch(error => {
-        setLoading(false);
-        console.error('Error in creating room', error);
-    });
+    await dispatch(createRoom(currUser, serverId, roomFormInfo));
+    // let the buttons stop loading
+    setLoading(false);
+    // close the modal
+    setOpen(false);
   };
 
+  const handleRoomDisconnection = async (serverId) => {
+    dispatch(disconnectRoom(currUser, roomList[serverId].region, serverId));
+  };
 
   return (
     <Grid container justifyContent="center">
@@ -233,10 +177,10 @@ function Home(props) {
 
         {/* load rooms in reverse order, showing the most recent one first*/}
         <Grid>
-          {rooms.map((room, index) => {
+          {Object.values(roomList).map((room, index) => {
             return (
               <div key={`room-${index}`} className={classes.margin_vertical2}>
-                <Room {...room}/>
+                <Room handleDisconnect={handleRoomDisconnection} {...room}/>
               </div>
             )
           }).reverse()}
@@ -249,6 +193,7 @@ function Home(props) {
 
 const mapStateToProps = (state) => {
   return {
+      roomList: state.roomsState,
       loginState: state.loginState.currentState,
   };
 };

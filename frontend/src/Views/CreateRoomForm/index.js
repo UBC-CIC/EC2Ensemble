@@ -158,7 +158,8 @@ export default function CreateRoomForm(props) {
 // the first one in the list is the default value that the user will see
 const FormOptions = {
   type: ["AWS"],
-  region: ["ca-central-1", "us-west-1", "us-west-2"],
+  // region: ["ca-central-1", "us-west-1", "us-west-2"],
+  region: ["us-west-2", "ca-central-1", "us-west-1"],
   size: Array.from(Array(9), (_,i)=>i+2).concat([15,20]),
   frequency: [44100, 48000, 256000],
   buffer: [32, 64, 128, 256]

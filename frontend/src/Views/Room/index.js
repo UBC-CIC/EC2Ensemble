@@ -5,6 +5,7 @@ import { Button, Divider, Grid } from '@material-ui/core/';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import { useEffect, useState } from 'react';
 
+
 const useStyles = makeStyles((theme) => ({
     root: {
         backgroundColor: "lightgray",
@@ -88,15 +89,16 @@ export default function Room(props) {
         frequency,
         buffer,
         status,
-        ip
+        ipAddress,
+        serverId,
+        handleDisconnect
     } = props
 
-    console.log(status)
     
     /* there are three connection status
-    * running    === no connection to room, probably been terminated
+    * running    === room connected and running
     * creating   === room in process of being created/connected
-    * terminated === room connected and running
+    * terminated === no connection to room, most likely been terminated
     * */
     const [connectionStyle, setConnectionStyle] = useState(classes.terminated);
 
@@ -109,6 +111,7 @@ export default function Room(props) {
             setConnectionStyle(classes.terminated)
         }
     }, [status])
+
 
     return (
         <Grid container alignContent="flex-start" className={classes.root}>
@@ -137,9 +140,9 @@ export default function Room(props) {
                     <Grid item sm={12} md={5} className={`${classes.width}`}>
                         <Grid item className={classes.innerHeight}>
                             <div>
-                                <span className={classes.marginRight}>IP Address: {!!ip ? ip : "N/A"}</span>
+                                <span className={classes.marginRight}>IP Address: {!!ipAddress ? ipAddress : "N/A"}</span>
                                 {
-                                    !!ip && 
+                                    !!ipAddress && 
                                     <DefaultButton>Copy</DefaultButton>
                                 }
                             </div>
@@ -157,7 +160,12 @@ export default function Room(props) {
                 <div className={`${classes.flexEnd} ${classes.margin_innerLeft}`}>
                     <DefaultButton >Test Latency</DefaultButton>
                     <DefaultButton >Setting</DefaultButton>
-                    <DefaultButton >Delete Room</DefaultButton>
+                    { status === 'terminated' && 
+                        <DefaultButton>Connect</DefaultButton>
+                    }
+                    { status !== 'terminated' && 
+                        <DefaultButton onClick={()=>handleDisconnect(serverId)}>Disconnect</DefaultButton>
+                    }
                 </div>
             </Grid>
         </Grid>
