@@ -90,7 +90,6 @@ Resources:
             - Effect: Allow
               Action:
                 - dynamodb:UpdateItem
-                - dynamodb:DeleteItem
               Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${UserServerTableName}'
 
   ContactWebSocket:

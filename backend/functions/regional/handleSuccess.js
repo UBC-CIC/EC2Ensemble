@@ -38,12 +38,21 @@ exports.handler = async (event) => {
 				user: event.user,
 				serverId: event.serverId,
 			},
+			UpdateExpression:
+				'SET #status = :terminated REMOVE instanceId, #ipAddress',
+			ExpressionAttributeValues: {
+				':terminated': 'terminated',
+			},
+			ExpressionAttributeNames: {
+				'#status': 'status',
+				'#ipAddress': 'ipAddress',
+			},
 		};
 		console.log(params);
 		try {
-			await ddb.delete(params).promise();
+			await ddb.update(params).promise();
 		} catch (error) {
-			throw new Error('DDB Delete Failed: ' + JSON.stringify(error));
+			throw new Error('DDB Update Failed: ' + JSON.stringify(error));
 		}
 	}
 	return {

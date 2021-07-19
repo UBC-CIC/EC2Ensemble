@@ -69,7 +69,7 @@ exports.handler = async (event) => {
 				body: JSON.stringify(error),
 			};
 		}
-	} else {
+	} else if (body.action === "terminate") {
 		const ddbParams = {
 			TableName: process.env.userServerTableName,
 			Key: {
@@ -87,6 +87,8 @@ exports.handler = async (event) => {
 				body: JSON.stringify(error),
 			};
 		}
+	} else if (body.action === "restart") {
+		const 
 	}
 
 	const snsParams = {
