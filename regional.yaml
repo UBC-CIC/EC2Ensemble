@@ -68,6 +68,13 @@ Resources:
         Variables:
           centralRegion: !Ref CentralRegion
           userServerTableName: !Ref UserServerTableName
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:UpdateItem
+              Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${UserServerTableName}'
 
   HandleSuccess:
     Type: AWS::Serverless::Function
