@@ -40,18 +40,14 @@ export const createRoom = (currUser, serverId, roomFormInfo) => async (dispatch)
                 roomInfo: roomFormInfoUser,
             }
         });
-
-        // setLoading(false);
-        // // close the modal
-        // setOpen(false);
       })
       .catch(error => {
-        // setLoading(false);
         console.log('Error in creating room', error);
     });
 };
 
-export const disconnectRoom = (currUser, region, serverId) => async (dispatch) => {
+/* terminate the room server session when pressed on Stop button */
+export const terminateRoom = (currUser, region, serverId) => async (dispatch) => {
     const url = process.env.REACT_APP_AWS_API_BASE;
 
     const requestOptions = {
@@ -68,7 +64,7 @@ export const disconnectRoom = (currUser, region, serverId) => async (dispatch) =
     await fetch(url, requestOptions)
       .then(response => response.json())
       .then(data => {
-        // if successful, delete and update the room list
+        // if successful posted, change room state to in process of "terminating" the session
         dispatch({
             type: 'UPDATE_ROOM_STATUS_TERMINATING',
             payload: {
@@ -77,10 +73,11 @@ export const disconnectRoom = (currUser, region, serverId) => async (dispatch) =
         });
       })
       .catch(error => {
-        console.log('Error in deleting room', error);
+        console.log('Error in terminating the room', error);
     });
 };
 
+/* get messages from websocket and update the room status */
 export const updateRoomStatus = (message) => (dispatch) => {
     if ((message.action === "create") && (message.success === true)) {
         dispatch({ 

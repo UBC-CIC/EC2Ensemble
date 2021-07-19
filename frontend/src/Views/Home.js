@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from "react-redux";
 import { v4 as uuidv4 } from 'uuid';
 
 // aws
-import { Auth, Storage } from "aws-amplify";
-import { fromSSO } from "@aws-sdk/credential-provider-sso";
+import { Auth } from "aws-amplify";
 
 
 // materialUI
@@ -17,7 +16,7 @@ import CreateRoomForm from './CreateRoomForm';
 import { SearchBar } from '../Components';
 
 // actions
-import { createRoom, disconnectRoom, queryRooms } from '../Actions/roomActions';
+import { createRoom, terminateRoom, queryRooms } from '../Actions/roomActions';
 
 // icons
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
@@ -53,14 +52,6 @@ const ForwardIcon = withStyles((theme) => ({
   },
 }))(ArrowBackIosIcon);
 
-// get and set up aws service
-// const AWS = require("aws-sdk");
-// (() => {
-//   // const credentials = await fromSSO({ profile: "" })();
-//   const credentials = new AWS.SharedIniFileCredentials({profile: 'n'});
-//   AWS.config.update = credentials;
-// })();
-
 function Home(props) {
   const {loginState, roomList} = props;
 
@@ -68,46 +59,8 @@ function Home(props) {
 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  // const [rooms, setRooms] = useState({});
   const [currUser, setCurrUser] = useState("");
   const dispatch = useDispatch();
-
-
-
-  // load dynamodb
-  // const docClient = new AWS.DynamoDB.DocumentClient({ 
-  //   // credentials: credentials,
-  //   region: awsExports.aws_project_region,
-  // });
-
-  // useEffect(() => {
-  //   // retrieve rooms
-    
-  //   (async () => {
-  //     const currUser = await Auth.currentAuthenticatedUser();
-
-  //     // const params = {
-  //     //   TableName : process.env.REACT_APP_ROOM_TABLE,
-  //     //   KeyConditionExpression: "user = :user",
-  //     //   ExpressionAttributeValues: {
-  //     //     ":user": currUser.username
-  //     //   },
-  //     // };
-
-  //     try {
-  //       // const data = await docClient.query(params).promise();
-  //       // console.log(data.Items)
-  //       // data.Items.forEach((item) => {
-  //         //       console.log(" -", item.year + ": " + item.title
-  //         //       + " ... " + item.info.genres
-  //         //       + " ... " + item.info.actors[0]);
-  //       // });
-  //     } catch (err) {
-  //       console.log("Unable to query. Error:", JSON.stringify(err, null, 2));
-  //     }
-  //   })();
-  // }, []);
-
 
   useEffect(() => {
     (async () => {
@@ -144,8 +97,8 @@ function Home(props) {
     setOpen(false);
   };
 
-  const handleRoomDisconnection = async (serverId) => {
-    dispatch(disconnectRoom(currUser, roomList[serverId].region, serverId));
+  const handleRoomTermination = async (serverId) => {
+    dispatch(terminateRoom(currUser, roomList[serverId].region, serverId));
   };
 
   return (
@@ -180,7 +133,7 @@ function Home(props) {
           {Object.values(roomList).map((room, index) => {
             return (
               <div key={`room-${index}`} className={classes.margin_vertical2}>
-                <Room handleDisconnect={handleRoomDisconnection} {...room}/>
+                <Room handleTerminate={handleRoomTermination} {...room}/>
               </div>
             )
           }).reverse()}

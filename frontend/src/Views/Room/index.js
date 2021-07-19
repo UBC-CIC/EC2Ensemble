@@ -91,7 +91,7 @@ export default function Room(props) {
         status,
         ipAddress,
         serverId,
-        handleDisconnect
+        handleTerminate
     } = props
 
     
@@ -167,7 +167,7 @@ export default function Room(props) {
                     { status !== 'terminated' && 
                         <DefaultButton 
                             disabled={status==='terminating' || !status || status === 'creating'}
-                            onClick={()=>handleDisconnect(serverId)}
+                            onClick={()=>handleTerminate(serverId)}
                         >
                             { (status==='terminating') ? "Stopping..." : 
                                         (!status || status === 'creating') ? "Starting..." : "Stop" }
