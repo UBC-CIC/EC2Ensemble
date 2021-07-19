@@ -162,15 +162,15 @@ export default function Room(props) {
                     <DefaultButton >Test Latency</DefaultButton>
                     <DefaultButton >Setting</DefaultButton>
                     { status === 'terminated' && 
-                        <DefaultButton disabled={true}>Connect</DefaultButton>
+                        <DefaultButton disabled={true}>Start</DefaultButton>
                     }
                     { status !== 'terminated' && 
                         <DefaultButton 
                             disabled={status==='terminating' || !status || status === 'creating'}
                             onClick={()=>handleDisconnect(serverId)}
                         >
-                            { (status==='terminating') ? "Disconnecting..." : 
-                                        (!status || status === 'creating') ? "Connecting..." : "Disconnect" }
+                            { (status==='terminating') ? "Stopping..." : 
+                                        (!status || status === 'creating') ? "Starting..." : "Stop" }
                         </DefaultButton>
                     }
                 </div>
