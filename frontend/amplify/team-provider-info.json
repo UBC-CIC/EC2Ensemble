@@ -1,0 +1,31 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-pcmacic-dev-162425-authRole",
+      "UnauthRoleArn": "arn:aws:iam::173513177120:role/amplify-pcmacic-dev-162425-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::173513177120:role/amplify-pcmacic-dev-162425-authRole",
+      "Region": "ca-central-1",
+      "DeploymentBucketName": "amplify-pcmacic-dev-162425-deployment",
+      "UnauthRoleName": "amplify-pcmacic-dev-162425-unauthRole",
+      "StackName": "amplify-pcmacic-dev-162425",
+      "StackId": "arn:aws:cloudformation:ca-central-1:173513177120:stack/amplify-pcmacic-dev-162425/4d97f3c0-e368-11eb-9b62-06db240b6f9e",
+      "AmplifyAppId": "d2kawdqa9vldkk"
+    },
+    "categories": {
+      "auth": {
+        "pcmacicauth": {}
+      },
+      "storage": {
+        "jacktripglobalUserServerTable1CV4VPDXSCTB2": {
+          "tableName": "jacktrip-global-UserServerTable-1CV4VPDXSCTB2",
+          "region": "ca-central-1",
+          "arn": "arn:aws:dynamodb:ca-central-1:173513177120:table/jacktrip-global-UserServerTable-1CV4VPDXSCTB2",
+          "partitionKeyName": "user",
+          "partitionKeyType": "S",
+          "sortKeyName": "serverId",
+          "sortKeyType": "S"
+        }
+      }
+    }
+  }
+}
