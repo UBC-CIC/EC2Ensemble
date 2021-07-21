@@ -28,25 +28,48 @@ function WebSocketClient(props) {
     })();
   }, [loginState]);
 
+  // function heartbeat() {
+  //   if (!websocket) return;
+  //   if (websocket.readyState !== 1) return;
+  //   websocket.send("__ping__");
+  //   setTimeout(heartbeat, 5000);
+  // }
+
 
   const connectWS = useCallback((userId) => {
     const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?user=${userId}`);
+    let timer = 0;
 
     // listening for open connection
     ws.onopen = () => {
         setWebsocket(ws)
         console.log("ws currently connected")
+        setInterval(() => {
+          ws.send('__ping__');
+
+          timer = setTimeout(() => {
+            // closed connection
+          }, 5000);
+        }, 30000);
     }
 
     // listening for closed connection
     ws.onclose = (event) => {
-        setWebsocket(null)
-        console.log("ws closed", event.reason)
+        setWebsocket(null);
+        // reconnect to websocket, onclose might be triggered by backend integrations
+        setTimeout(connectWS(userId), 1000);
     }
 
     // *** listening for messages from ws 
     ws.onmessage = (event) => {
+      console.log(JSON.parse(event.data))
+      if (JSON.parse(event.data).message === '__pong__') {
+        // listen for pong
+        clearTimeout(timer);
+      } else {
         onWebSocketMessage(event.data);
+      }
+      return false;
     }
 
     // listening for error
