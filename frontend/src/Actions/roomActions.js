@@ -26,7 +26,10 @@ export const createRoom = (currUser, serverId, roomFormInfo) => async (dispatch)
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(roomFormInfoUser)
+      body: JSON.stringify({
+            ...roomFormInfoUser,
+            action: 'create'
+      })
     };
 
     await fetch(url, requestOptions)
@@ -43,6 +46,37 @@ export const createRoom = (currUser, serverId, roomFormInfo) => async (dispatch)
       })
       .catch(error => {
         console.log('Error in creating room', error);
+    });
+};
+
+/* delete a room server */
+export const deleteRoom = (currUser, region, serverId) => async (dispatch) => {
+    const url = process.env.REACT_APP_AWS_API_BASE;
+
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user: currUser,
+        region: region,
+        serverId: serverId,
+        action: "delete"
+      })
+    };
+
+    await fetch(url, requestOptions)
+      .then(response => response.json())
+      .then(data => {
+        // if successful, delete the room from the list
+        dispatch({
+            type: 'DELETE_ROOM',
+            payload: {
+                serverId: serverId,
+            }
+        });
+      })
+      .catch(error => {
+        console.log('Error in deleting the room', error);
     });
 };
 

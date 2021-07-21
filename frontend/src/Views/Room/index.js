@@ -103,7 +103,6 @@ export default function Room(props) {
     const [connectionStyle, setConnectionStyle] = useState(classes.terminated);
 
     useEffect(()=> {
-        console.log(status)
         if (status === 'running') {
             setConnectionStyle(classes.running)
         } else if ((status === 'creating')||(status === undefined)||(status === 'terminating')) {

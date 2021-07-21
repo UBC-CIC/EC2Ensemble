@@ -13,11 +13,11 @@ const roomReducer = (currentState = {}, action) => {
                 [serverId] : roomInfo
             }
         }
-        // case "DELETE_ROOM" : {
-        //     const serverId = action.payload;
-        //     delete currentState[serverId];
-        //     return currentState
-        // }
+        case "DELETE_ROOM" : {
+            const serverId = action.payload;
+            delete currentState[serverId];
+            return currentState
+        }
         case "UPDATE_ROOM_STATUS_SUCCESS": {
             const { serverId, ipAddress } = action.payload;
             // check if the current room still exists, in case it gets deleted
