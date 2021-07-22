@@ -111,7 +111,7 @@ Resources:
     DependsOn:
       - OnConnectRoute
       - OnDisconnectRoute
-      - OnPingRoute
+      - OnHeartbeatRoute
     Properties:
       ApiId: !Ref WebSocketApi
   Stage:
@@ -200,12 +200,12 @@ Resources:
         - - 'integrations'
           - !Ref OnDisconnectIntegration
 
-  # WebSocket Ping
-  WebSocketOnPingFunction:
+  # WebSocket Heartbeat
+  WebSocketOnHeartbeatFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: !Sub '${AWS::StackName}-onPing-function'
-      Handler: onPing.handler
+      FunctionName: !Sub '${AWS::StackName}-onHeartbeat-function'
+      Handler: onHeartbeat.handler
       Environment:
         Variables:
           connectionTableName: !Ref WebSocketConnectionsTable
@@ -218,32 +218,32 @@ Resources:
               - 'execute-api:ManageConnections'
             Resource:
               - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
-  OnPingFunctionResourcePermission:
+  OnHeartbeatFunctionResourcePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
       Principal: apigateway.amazonaws.com
-      FunctionName: !Ref WebSocketOnPingFunction
+      FunctionName: !Ref WebSocketOnHeartbeatFunction
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
-  OnPingIntegration:
+  OnHeartbeatIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketApi
-      Description: OnPing Integration
+      Description: OnHeartbeat Integration
       IntegrationType: AWS_PROXY
       IntegrationUri:
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketOnPingFunction.Arn}/invocations
-  OnPingRoute:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketOnHeartbeatFunction.Arn}/invocations
+  OnHeartbeatRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketApi
-      RouteKey: ping
+      RouteKey: heartbeat
       AuthorizationType: NONE
-      OperationName: OnPingRoute
+      OperationName: OnHeartbeatRoute
       Target: !Join
         - '/'
         - - 'integrations'
-          - !Ref OnPingIntegration
+          - !Ref OnHeartbeatIntegration
 
   # SNS
   JacktripSnsTopic:
