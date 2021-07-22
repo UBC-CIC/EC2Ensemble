@@ -15,8 +15,13 @@ exports.handler = async (event) => {
 	try {
 		await checkConnection(connectionId);
 		await replyToPing(connectionId);
+
+		return { 
+			statusCode: 200, 
+			body: "__thump__"
+		};
 	} catch (error) {
-		throw Error('Send pong failed: ' + JSON.stringify(error));
+		throw Error('Send heartbeat failed: ' + JSON.stringify(error));
 	}
 };
 
@@ -32,7 +37,7 @@ async function checkConnection (connectionId) {
 }
 
 async function replyToPing (connectionId) {
-	const data = { message: "__pong__" }
+	const data = { message: "__thump__" }
 	const params = {
 		Data: Buffer.from(JSON.stringify(data)),
 		ConnectionId: connectionId
