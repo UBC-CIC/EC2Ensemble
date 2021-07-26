@@ -98,7 +98,7 @@ function Room(props) {
         user
     } = props
 
-    
+
     /* there are three connection status
     * running    === room connected and running
     * creating   === room in process of being created/connected
@@ -134,7 +134,8 @@ function Room(props) {
                 <div className={`${classes.flexEnd}`}>
                     { 
                         (status === "running" && <span>7 users active</span>) ||
-                        ((status === "creating" || status === undefined) && <span>In Creation</span>)
+                        ((status === "creating" || status === undefined) && <span>In Creation</span>) ||
+                        (status==='terminating' && <span>Stopping...</span>)
                     }
                     <FiberManualRecordIcon className={connectionStyle}/>
                 </div>
