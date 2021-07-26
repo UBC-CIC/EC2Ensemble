@@ -1,6 +1,7 @@
 import {Grid} from '@material-ui/core';
 import './App.css';
 import Login from "./Views/Authentication/Login";
+import Home from './Views/Home';
 import { Hub } from "aws-amplify";
 import React, {useState, useEffect} from "react";
 import { BrowserRouter, Route } from "react-router-dom";
@@ -59,7 +60,14 @@ function App(props) {
               {
                   currentLoginState === "signedIn" && (
                     <BrowserRouter>
-                        <Route path="/" render={props => <WebSocketClient {...props}/>} />
+                        <Route 
+                            path="/" 
+                            render={props => 
+                                <WebSocketClient currentState={currentLoginState}>
+                                    <Home {...props}/>
+                                </WebSocketClient>
+                            } 
+                        />
                     </BrowserRouter>
                   )
               }
