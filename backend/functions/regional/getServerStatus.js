@@ -5,7 +5,6 @@ const ec2 = new AWS.EC2();
 exports.handler = async (event) => {
 	console.log(event);
 
-	console.log(event.taskResult.instanceId);
 	const params = {
 		InstanceIds: [event.taskResult],
 	};
@@ -13,6 +12,11 @@ exports.handler = async (event) => {
 	console.log(res);
 	const status = res.Reservations[0].Instances[0].State.Name;
 	const ip = res.Reservations[0].Instances[0].PublicIpAddress;
+	const launchTime = res.Reservations[0].Instances[0].LaunchTime;
+	const elapsedTime = new Date() - launchTime;
+	console.log(launchTime);
+	console.log(elapsedTime);
 	console.log({ status, ip });
+
 	return { status, ip };
 };

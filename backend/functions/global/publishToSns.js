@@ -11,10 +11,9 @@ const requiredBodyCreate = [
 	'type',
 	'description',
 ];
-const allowedAction = ['create', 'terminate'];
+const allowedAction = ['create', 'terminate', 'restart'];
 
 exports.handler = async (event) => {
-	console.log(event.body);
 	const body = JSON.parse(event.body);
 	console.log(body);
 
@@ -57,6 +56,7 @@ exports.handler = async (event) => {
 				description: body.description,
 				status: 'creating',
 			},
+			ConditionExpression: 'attribute_not_exists(user)',
 		};
 		console.log('DDB: ', ddbParams);
 
@@ -69,7 +69,7 @@ exports.handler = async (event) => {
 				body: JSON.stringify(error),
 			};
 		}
-	} else if (body.action === "terminate") {
+	} else if (body.action === 'terminate') {
 		const ddbParams = {
 			TableName: process.env.userServerTableName,
 			Key: {
@@ -87,8 +87,37 @@ exports.handler = async (event) => {
 				body: JSON.stringify(error),
 			};
 		}
-	} else if (body.action === "restart") {
-		const 
+	} else if (body.action === 'restart') {
+		const ddbParams = {
+			TableName: process.env.userServerTableName,
+			Key: {
+				user: body.user,
+				serverId: body.serverId,
+			},
+			UpdateExpression: 'SET #status = :newStatus',
+			ExpressionAttributeNames: {
+				'#status': 'status',
+			},
+			ExpressionAttributeValues: {
+				':newStatus': 'creating',
+				':terminated': 'terminated',
+			},
+			ConditionExpression: '#status = :terminated',
+			ReturnValues: 'ALL_NEW',
+		};
+		try {
+			const res = await ddb.update(ddbParams).promise();
+			console.log(res.Attributes);
+			message = { ...message, ...res.Attributes };
+			message.action = 'create';
+			message.time = new Date();
+			console.log(message);
+		} catch (error) {
+			return {
+				statusCode: 400,
+				body: JSON.stringify(error),
+			};
+		}
 	}
 
 	const snsParams = {

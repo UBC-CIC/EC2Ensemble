@@ -36,6 +36,13 @@
 			"Comment": "Terminate Jacktrip Server",
 			"Resource": "${TerminateServerFunctionArn}",
 			"ResultPath": "$.taskResult",
+			"Catch": [
+				{
+					"ErrorEquals": ["States.ALL"],
+					"ResultPath": "$.errorInfo",
+					"Next": "HandleFail"
+				}
+			],
 			"Next": "HandleSuccess"
 		},
 		"WaitCreate": {
@@ -69,7 +76,8 @@
 			"Type": "Task",
 			"Comment": "Cleanup routine after failure",
 			"Resource": "${HandleFailFunctionArn}",
-			"End": true
+			"ResultPath": "$.webSocketMessage",
+			"Next": "ContactWebSocket"
 		},
 		"HandleSuccess": {
 			"Type": "Task",

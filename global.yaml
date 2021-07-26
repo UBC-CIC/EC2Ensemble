@@ -213,11 +213,11 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref WebSocketConnectionsTable
         - Statement:
-          - Effect: Allow
-            Action:
-              - 'execute-api:ManageConnections'
-            Resource:
-              - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
   OnHeartbeatFunctionResourcePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
