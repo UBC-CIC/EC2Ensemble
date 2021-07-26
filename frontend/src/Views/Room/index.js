@@ -4,7 +4,10 @@ import { Button, Divider, Grid } from '@material-ui/core/';
 // icons
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import { useEffect, useState } from 'react';
+import { connect, useDispatch } from "react-redux";
 
+// actions
+import { restartRoom, terminateRoom } from '../../Actions/roomActions';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -79,7 +82,7 @@ const DefaultButton = withStyles((theme) => ({
 }))(SmallOutlinedButton);
 
 
-export default function Room(props) {
+function Room(props) {
     const classes = useStyles();
     const {
         roomName,
@@ -91,7 +94,8 @@ export default function Room(props) {
         status,
         ipAddress,
         serverId,
-        handleTerminate
+        roomList,
+        user
     } = props
 
     
@@ -111,6 +115,16 @@ export default function Room(props) {
             setConnectionStyle(classes.terminated)
         }
     }, [status])
+
+    const dispatch = useDispatch();
+
+    const handleRoomTermination = async (serverId) => {
+        dispatch(terminateRoom(user, roomList[serverId].region, serverId));
+    };
+
+    const handleRoomRestart = async (serverId) => {
+        dispatch(restartRoom(user, roomList[serverId].region, serverId));
+    };
 
 
     return (
@@ -161,12 +175,14 @@ export default function Room(props) {
                     <DefaultButton >Test Latency</DefaultButton>
                     <DefaultButton >Setting</DefaultButton>
                     { status === 'terminated' && 
-                        <DefaultButton disabled={true}>Start</DefaultButton>
+                        <DefaultButton onClick={()=>handleRoomRestart(serverId)}>
+                            Start
+                        </DefaultButton>
                     }
                     { status !== 'terminated' && 
                         <DefaultButton 
                             disabled={status==='terminating' || !status || status === 'creating'}
-                            onClick={()=>handleTerminate(serverId)}
+                            onClick={()=>handleRoomTermination(serverId)}
                         >
                             { (status==='terminating') ? "Stopping..." : 
                                         (!status || status === 'creating') ? "Starting..." : "Stop" }
@@ -177,3 +193,12 @@ export default function Room(props) {
         </Grid>
     )
 };
+
+const mapStateToProps = (state) => {
+    return {
+        roomList: state.roomsState
+    };
+};
+
+
+export default connect(mapStateToProps, null)(Room);

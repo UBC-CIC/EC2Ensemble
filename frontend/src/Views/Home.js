@@ -16,7 +16,7 @@ import CreateRoomForm from './CreateRoomForm';
 import { SearchBar } from '../Components';
 
 // actions
-import { createRoom, terminateRoom, queryRooms } from '../Actions/roomActions';
+import { createRoom, queryRooms } from '../Actions/roomActions';
 
 // icons
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
@@ -97,10 +97,6 @@ function Home(props) {
     setOpen(false);
   };
 
-  const handleRoomTermination = async (serverId) => {
-    dispatch(terminateRoom(currUser, roomList[serverId].region, serverId));
-  };
-
   return (
     <Grid container justifyContent="center">
       <Grid item xs={11} sm={10}>
@@ -133,7 +129,7 @@ function Home(props) {
           {Object.values(roomList).map((room, index) => {
             return (
               <div key={`room-${index}`} className={classes.margin_vertical2}>
-                <Room handleTerminate={handleRoomTermination} {...room}/>
+                <Room {...room}/>
               </div>
             )
           }).reverse()}
