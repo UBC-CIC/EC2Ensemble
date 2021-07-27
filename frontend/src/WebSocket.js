@@ -52,14 +52,13 @@ export default function WebSocketProvider (props) {
 
     // listening for closed connection
     clientWebSocket.current.onclose = (event) => {
-        console.log(clientWebSocket.current)
+        clientWebSocket.current = null;
         // reconnect to websocket, onclose might be triggered by backend integrations
         setTimeout(connectWS(userId), 1000);
     }
 
     // listening for messages from ws 
     clientWebSocket.current.onmessage = (event) => {
-      // console.log(JSON.parse(event.data).message)
       if (JSON.parse(event.data).message === "__thump__") {
         // listen for heartbeats from server
       } else {
