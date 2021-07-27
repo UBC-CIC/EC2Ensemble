@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { connect, useDispatch } from "react-redux";
+import React, { useEffect, useCallback, useRef } from 'react';
+import { useDispatch } from "react-redux";
 
 import WebSocket from 'isomorphic-ws';
 
@@ -7,14 +7,13 @@ import WebSocket from 'isomorphic-ws';
 import { Auth } from "aws-amplify";
 
 // internal imports
-import Home from './Views/Home';
 import { updateRoomStatus } from './Actions/roomActions';
 
-function WebSocketClient(props) {
-  const {loginState} = props;
+export default function WebSocketProvider (props) {
+  const {currentState, children} = props;
   const dispatch = useDispatch();
 
-  const [websocket, setWebsocket] = useState(null);
+  const clientWebSocket = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -26,31 +25,51 @@ function WebSocketClient(props) {
           connectWS(userId);
         })
     })();
-  }, [loginState]);
+  }, [currentState]);
 
+  const heartbeat = useCallback(() => {
+    // check if websocket is still alive
+    if (!clientWebSocket.current) return;
+    if (clientWebSocket.current.readyState !== 1) return;
+    // send messages to server to keep socket alive
+    clientWebSocket.current.send(JSON.stringify({
+      route: "heartbeat"
+    }))
+    // repeat
+    setTimeout(heartbeat, 550000);
+  }, [clientWebSocket]);
 
   const connectWS = useCallback((userId) => {
-    const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?user=${userId}`);
+    if (!clientWebSocket.current) {
+      const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?user=${userId}`);
+      clientWebSocket.current = ws;
+    }
 
     // listening for open connection
-    ws.onopen = () => {
-        setWebsocket(ws)
-        console.log("ws currently connected")
+    clientWebSocket.current.onopen = (event) => {
+      heartbeat();
     }
 
     // listening for closed connection
-    ws.onclose = (event) => {
-        setWebsocket(null)
-        console.log("ws closed", event.reason)
+    clientWebSocket.current.onclose = (event) => {
+        console.log(clientWebSocket.current)
+        // reconnect to websocket, onclose might be triggered by backend integrations
+        setTimeout(connectWS(userId), 1000);
     }
 
-    // *** listening for messages from ws 
-    ws.onmessage = (event) => {
+    // listening for messages from ws 
+    clientWebSocket.current.onmessage = (event) => {
+      // console.log(JSON.parse(event.data).message)
+      if (JSON.parse(event.data).message === "__thump__") {
+        // listen for heartbeats from server
+      } else {
         onWebSocketMessage(event.data);
+      }
+      return false;
     }
 
     // listening for error
-    ws.onerror = (error) => {
+    clientWebSocket.current.onerror = (error) => {
         console.log("error", error)
     }
   }, []);
@@ -61,14 +80,8 @@ function WebSocketClient(props) {
   }, []);
 
   return (
-      <Home ws={websocket} {...props}/>
-    );
+    <div>
+        { children }
+    </div>
+  );
 }
-
-const mapStateToProps = (state) => {
-  return {
-      loginState: state.loginState.currentState,
-  };
-};
-
-export default connect(mapStateToProps, null)(WebSocketClient);

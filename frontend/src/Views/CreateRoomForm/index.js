@@ -56,7 +56,6 @@ export default function CreateRoomForm(props) {
     size: FormOptions.size[0],
     frequency: FormOptions.frequency[0],
     buffer: FormOptions.buffer[0],
-    action: 'create',
   }
   const [roomFormInfo, setRoomFormInfo] = useState(initFormValues)
 

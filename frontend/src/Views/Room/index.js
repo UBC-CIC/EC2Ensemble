@@ -4,7 +4,10 @@ import { Button, Divider, Grid } from '@material-ui/core/';
 // icons
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import { useEffect, useState } from 'react';
+import { connect, useDispatch } from "react-redux";
 
+// actions
+import { restartRoom, terminateRoom } from '../../Actions/roomActions';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -79,7 +82,7 @@ const DefaultButton = withStyles((theme) => ({
 }))(SmallOutlinedButton);
 
 
-export default function Room(props) {
+function Room(props) {
     const classes = useStyles();
     const {
         roomName,
@@ -91,10 +94,11 @@ export default function Room(props) {
         status,
         ipAddress,
         serverId,
-        handleDisconnect
+        roomList,
+        user
     } = props
 
-    
+
     /* there are three connection status
     * running    === room connected and running
     * creating   === room in process of being created/connected
@@ -103,7 +107,6 @@ export default function Room(props) {
     const [connectionStyle, setConnectionStyle] = useState(classes.terminated);
 
     useEffect(()=> {
-        console.log(status)
         if (status === 'running') {
             setConnectionStyle(classes.running)
         } else if ((status === 'creating')||(status === undefined)||(status === 'terminating')) {
@@ -113,6 +116,16 @@ export default function Room(props) {
         }
     }, [status])
 
+    const dispatch = useDispatch();
+
+    const handleRoomTermination = async (serverId) => {
+        dispatch(terminateRoom(user, roomList[serverId].region, serverId));
+    };
+
+    const handleRoomRestart = async (serverId) => {
+        dispatch(restartRoom(user, roomList[serverId].region, serverId));
+    };
+
 
     return (
         <Grid container alignContent="flex-start" className={classes.root}>
@@ -121,7 +134,8 @@ export default function Room(props) {
                 <div className={`${classes.flexEnd}`}>
                     { 
                         (status === "running" && <span>7 users active</span>) ||
-                        ((status === "creating" || status === undefined) && <span>In Creation</span>)
+                        ((status === "creating" || status === undefined) && <span>In Creation</span>) ||
+                        (status==='terminating' && <span>Stopping...</span>)
                     }
                     <FiberManualRecordIcon className={connectionStyle}/>
                 </div>
@@ -162,12 +176,14 @@ export default function Room(props) {
                     <DefaultButton >Test Latency</DefaultButton>
                     <DefaultButton >Setting</DefaultButton>
                     { status === 'terminated' && 
-                        <DefaultButton disabled={true}>Start</DefaultButton>
+                        <DefaultButton onClick={()=>handleRoomRestart(serverId)}>
+                            Start
+                        </DefaultButton>
                     }
                     { status !== 'terminated' && 
                         <DefaultButton 
                             disabled={status==='terminating' || !status || status === 'creating'}
-                            onClick={()=>handleDisconnect(serverId)}
+                            onClick={()=>handleRoomTermination(serverId)}
                         >
                             { (status==='terminating') ? "Stopping..." : 
                                         (!status || status === 'creating') ? "Starting..." : "Stop" }
@@ -178,3 +194,12 @@ export default function Room(props) {
         </Grid>
     )
 };
+
+const mapStateToProps = (state) => {
+    return {
+        roomList: state.roomsState
+    };
+};
+
+
+export default connect(mapStateToProps, null)(Room);
