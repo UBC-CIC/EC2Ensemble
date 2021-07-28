@@ -104,7 +104,8 @@ export const terminateRoom = (currUser, region, serverId) => async (dispatch) =>
             type: 'UPDATE_ROOM_STATUS',
             payload: {
                 serverId: serverId,
-                status: 'terminating'
+                status: 'terminating',
+                ipAddress: undefined
             }
         });
       })

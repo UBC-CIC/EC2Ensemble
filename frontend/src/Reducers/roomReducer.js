@@ -19,12 +19,13 @@ const roomReducer = (currentState = {}, action) => {
             return currentState
         }
         case "UPDATE_ROOM_STATUS": {
-            const { serverId, status } = action.payload;
+            const { serverId, status, ...others } = action.payload;
             const currRoomInfo = currentState[serverId];
             return {
                 ...currentState,
                 [serverId]: {
                     ...currRoomInfo,
+                    ...others,
                     status: status,
                 }
             }

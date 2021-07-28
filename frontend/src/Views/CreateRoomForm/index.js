@@ -80,7 +80,6 @@ export default function CreateRoomForm(props) {
           .then(response => {
             const stopTime = Date.now();
             if (response.status === 200) {
-              console.log(region_name, stopTime-startTime)
               return stopTime-startTime;
             }
           })
