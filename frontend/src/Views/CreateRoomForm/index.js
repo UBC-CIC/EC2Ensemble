@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
@@ -57,12 +57,63 @@ export default function CreateRoomForm(props) {
     frequency: FormOptions.frequency[0],
     buffer: FormOptions.buffer[0],
   }
-  const [roomFormInfo, setRoomFormInfo] = useState(initFormValues)
+  const [roomFormInfo, setRoomFormInfo] = useState(initFormValues);
+  const [recommendRegion, setRecommendRegion] = useState([]);
 
-  // when form's display status (i.e. open) is being toggled, reset the roomFormInfo state
   useEffect(() => {
-    resetFormInfo();
+    // when the form's is closed, reset the roomFormInfo state
+    if (!open) resetFormInfo()
+    else {
+      (async () => {
+        setRecommendRegion(await recommendRegionList);
+      })();
+    }
   }, [open])
+
+  const checkLatency = useCallback(async (regions)=> {
+    return Promise.all(
+      regions.map(async (region_name) => {
+        const endpoint = `https://dynamodb.${region_name}.amazonaws.com`;
+        const startTime = Date.now();
+        
+        return await fetch(endpoint)
+          .then(response => {
+            const stopTime = Date.now();
+            if (response.status === 200) {
+              console.log(region_name, stopTime-startTime)
+              return stopTime-startTime;
+            }
+          })
+          .catch(error => {
+            console.log('Error in checking latency', error);
+            return Infinity;
+          });
+      })
+    )
+  }, [])
+
+  const recommendRegionList = useMemo(async () => {
+    let returnValue = [];
+    const regions = FormOptions.region;
+
+    /*
+    * checkLatencies 4 times
+    * ignore the first call to checkLatency 
+    * because first ping to site is usually high
+    */
+    await checkLatency(regions);
+    let tempLatencies = Array(3).fill(0);
+    for (let i = 0; i < 3; i++) {
+      const newLatencies = await checkLatency(regions);
+      tempLatencies = tempLatencies.map((elem, idx) => elem + newLatencies[idx]);
+    }
+
+    const minLatency = Math.min.apply(null, tempLatencies);
+    const index = tempLatencies.indexOf(minLatency);
+    returnValue = [`${regions[index]} (Recommend)`, ...regions.filter((ele, idx) => idx !== index)]
+    
+    return returnValue;
+  }, []);
 
   const handleChange = (event) => {
     setRoomFormInfo({...roomFormInfo, [event.target.name]: event.target.value});
@@ -102,7 +153,7 @@ export default function CreateRoomForm(props) {
               id={"region"} 
               inputLabel={"Region"} 
               required={true}
-              options={FormOptions.region}
+              options={recommendRegion}
               onChange={handleChange}
           /> 
           <FormSelect
@@ -157,7 +208,6 @@ export default function CreateRoomForm(props) {
 // the first one in the list is the default value that the user will see
 const FormOptions = {
   type: ["AWS"],
-  // region: ["ca-central-1", "us-west-1", "us-west-2"],
   region: ["us-west-2", "ca-central-1", "us-west-1"],
   size: Array.from(Array(9), (_,i)=>i+2).concat([15,20]),
   frequency: [44100, 48000, 256000],

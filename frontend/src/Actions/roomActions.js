@@ -20,7 +20,8 @@ export const createRoom = (currUser, serverId, roomFormInfo) => async (dispatch)
     const roomFormInfoUser = {
         user: currUser,
         serverId: serverId,
-        ...roomFormInfo
+        ...roomFormInfo,
+        region: roomFormInfo.region.split(" ")[0], // remove "Recommend" text
     };
 
     const requestOptions = {
