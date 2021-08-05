@@ -16,16 +16,16 @@ exports.handler = async (event) => {
 		await checkConnection(connectionId);
 		await replyToPing(connectionId);
 
-		return { 
-			statusCode: 200, 
-			body: "__thump__"
+		return {
+			statusCode: 200,
+			body: '__thump__',
 		};
 	} catch (error) {
 		throw Error('Send heartbeat failed: ' + JSON.stringify(error));
 	}
 };
 
-async function checkConnection (connectionId) {
+async function checkConnection(connectionId) {
 	const ddbParams = {
 		TableName: process.env.connectionTableName,
 		Key: {
@@ -36,11 +36,11 @@ async function checkConnection (connectionId) {
 	return ddb.get(ddbParams).promise();
 }
 
-async function replyToPing (connectionId) {
-	const data = { message: "__thump__" }
+async function replyToPing(connectionId) {
+	const data = { message: '__thump__' };
 	const params = {
 		Data: Buffer.from(JSON.stringify(data)),
-		ConnectionId: connectionId
+		ConnectionId: connectionId,
 	};
 
 	return apigwManagementApi.postToConnection(params).promise();
