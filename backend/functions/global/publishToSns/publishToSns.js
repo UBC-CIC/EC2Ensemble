@@ -56,7 +56,10 @@ exports.handler = async (event) => {
 				description: body.description,
 				status: 'creating',
 			},
-			ConditionExpression: 'attribute_not_exists(user)',
+			ConditionExpression: 'attribute_not_exists(#user)',
+			ExpressionAttributeNames: {
+				'#user': 'user',
+			},
 		};
 		console.log('DDB: ', ddbParams);
 
