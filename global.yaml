@@ -4,7 +4,6 @@ Description: Template for Global resources
 
 Globals:
   Function:
-    CodeUri: ./backend/functions/global
     Runtime: nodejs14.x
   Api:
     Cors:
@@ -17,6 +16,7 @@ Resources:
   PublishToSnsFunction:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./backend/functions/global/publishToSns
       Handler: publishToSns.handler
       Events:
         apiEvent:
@@ -37,6 +37,7 @@ Resources:
   GetUserServer:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./backend/functions/global/getUserServer
       Handler: getUserServer.handler
       Events:
         apiEvent:
@@ -127,6 +128,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub '${AWS::StackName}-onConnect-function'
+      CodeUri: ./backend/functions/global/onConnect
       Handler: onConnect.handler
       Environment:
         Variables:
@@ -166,6 +168,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: !Sub '${AWS::StackName}-onDisconnect-function'
+      CodeUri: ./backend/functions/global/onDisconnect
       Handler: onDisconnect.handler
       Environment:
         Variables:
@@ -205,6 +208,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       FunctionName: !Sub '${AWS::StackName}-onHeartbeat-function'
+      CodeUri: ./backend/functions/global/onHeartbeat
       Handler: onHeartbeat.handler
       Environment:
         Variables:
