@@ -24,6 +24,7 @@ exports.handler = async (event) => {
 				],
 			},
 		],
+		SecurityGroups: [process.env.ec2SecurityGroup],
 	};
 	let runRes;
 	try {

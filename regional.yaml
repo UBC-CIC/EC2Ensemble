@@ -5,7 +5,6 @@ Description: 'CloudFormation Template for instantiating Jacktrip servers in AWS'
 Globals:
   Function:
     Runtime: nodejs14.x
-    CodeUri: ./backend/functions/regional
 Parameters:
   CentralRegion:
     Type: String
@@ -25,6 +24,7 @@ Resources:
   JacktripCreateServer:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./backend/functions/regional/createServer
       Handler: createServer.handler
       Timeout: 10
       Policies:
@@ -35,10 +35,14 @@ Resources:
                 - ec2:RunInstances
                 - ec2:CreateTags
               Resource: '*'
+      Environment:
+        Variables:
+          ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
 
   JacktripTerminateServer:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./backend/functions/regional/terminateServer
       Handler: terminateServer.handler
       Policies:
         - Version: '2012-10-17'
@@ -51,6 +55,7 @@ Resources:
   GetServerStatus:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./backend/functions/regional/getServerStatus
       Handler: getServerStatus.handler
       Policies:
         - Version: '2012-10-17'
@@ -63,6 +68,7 @@ Resources:
   HandleFail:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./backend/functions/regional/handleFail
       Handler: handleFail.handler
       Environment:
         Variables:
@@ -79,6 +85,7 @@ Resources:
   HandleSuccess:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./backend/functions/regional/handleSuccess
       Handler: handleSuccess.handler
       Environment:
         Variables:
@@ -95,6 +102,7 @@ Resources:
   ContactWebSocket:
     Type: AWS::Serverless::Function
     Properties:
+      CodeUri: ./backend/functions/regional/contactWebSocket
       Handler: contactWebSocket.handler
       Environment:
         Variables:
@@ -117,7 +125,7 @@ Resources:
   SqsConsumerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions/regional
+      CodeUri: ./backend/functions/regional/sqsConsumer
       Handler: sqsConsumer.handler
       Events:
         SqsEvent:
@@ -132,6 +140,17 @@ Resources:
       Policies:
         - StepFunctionsExecutionPolicy:
             StateMachineName: !GetAtt JacktripStateMachine.Name
+
+  JacktripEC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for all EC2 instances running Jacktrip
+      GroupName: JacktripEC2SecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
 
   # SNS Subscription and SQS
   JacktripSqsSnsSubscription:
