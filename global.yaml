@@ -10,19 +10,15 @@ Globals:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
       AllowOrigin: "'*'"
       AllowMethods: "'OPTIONS, POST'"
+    Auth:
+      DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
+      Authorizers:
+        JacktripGlobalCognitoAuthorizer:
+          UserPoolArn:
+            - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
 
+    
 Resources:
-  # Creates an API Gateway Authorizer with existing cognito user pools
-  ApiGatewayAuthorizer:
-    Type: AWS::ApiGateway::Authorizer
-    Properties:
-      Name: ApiGatewayAuthorizer
-      Type: COGNITO_USER_POOLS
-      RestApiId: !Ref ServerlessRestApi
-      IdentitySource: 'method.request.header.Authorization'
-      ProviderARNs:
-        - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
-
   # Lambdas
   PublishToSnsFunction:
     Type: AWS::Serverless::Function
@@ -30,12 +26,14 @@ Resources:
       CodeUri: ./backend/functions/global/publishToSns
       Handler: publishToSns.handler
       Events:
-        apiEvent:
+        ApiEvent:
           Type: Api
           Properties:
             Method: post
             Path: /publishsns
-            # Authorizer: !ref ApiGatewayAuthorizer
+            RequestParameters:
+              - method.request.header.Authorization:
+                  Required: true
       Policies:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt JacktripSnsTopic.TopicName
@@ -52,13 +50,15 @@ Resources:
       CodeUri: ./backend/functions/global/getUserServer
       Handler: getUserServer.handler
       Events:
-        apiEvent:
+        ApiEvent:
           Type: Api
           Properties:
             Method: get
             Path: /user
             RequestParameters:
               - method.request.querystring.user:
+                  Required: true
+              - method.request.header.Authorization:
                   Required: true
       Policies:
         - DynamoDBCrudPolicy:
@@ -112,6 +112,28 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
+  # # Websocket authorizer
+  # WebsocketAuthorizer:
+  #   Type: AWS::ApiGatewayV2::Authorizer
+  #   Properties:
+  #     ApiId: !Ref WebSocketApi
+  #     AuthorizerType: REQUEST
+  #     Name: WebsocketAuthorizer
+  #     IdentitySource: 
+  #       - route.request.header.Authorization
+  #     AuthorizerCredentialsArn: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
+  #     AuthorizerUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketAuthorizerLambda.Arn}/invocations'
+  #     # !Join 
+  #     #   - ''
+  #     #   - - 'arn:'
+  #     #     - !Ref 'AWS::Partition'
+  #     #     - ':apigateway:'
+  #     #     - !Ref 'AWS::Region'
+  #     #     - ':lambda:path/2015-03-31/functions/'
+  #     #     - !Ref 'DevAuthorizerLambda.Arn'
+  #     #     - /invocations
+          
+  
   # Websocket API - heavily inspired from https://serverlessland.com/patterns/apigw-websocket-api-lambda
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
