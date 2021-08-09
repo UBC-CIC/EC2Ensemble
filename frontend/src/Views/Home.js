@@ -70,7 +70,7 @@ function Home(props) {
           setCurrUser(userId)
 
           // query rooms from db
-          dispatch(queryRooms(userId));
+          dispatch(queryRooms(user));
         })
     })();
   }, [loginState]);

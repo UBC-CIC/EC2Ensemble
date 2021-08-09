@@ -1,6 +1,18 @@
+var token;
 /* get rooms from db and update */
-export const queryRooms = (userId) => async (dispatch) => {
-    await fetch(`${process.env.REACT_APP_AWS_USERDB_BASE}?user=${encodeURIComponent(userId)}`)
+export const queryRooms = (user) => async (dispatch) => {
+    const userId = user.username;
+    token = user.signInUserSession.getIdToken().getJwtToken();
+
+    const requestOptions = {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            Authorization: 'Bearer ' + token
+        }
+    };
+
+    await fetch(`${process.env.REACT_APP_AWS_USERDB_BASE}?user=${encodeURIComponent(userId)}`, requestOptions)
         .then(response => response.json())
         .then(data => {
             dispatch({
@@ -26,7 +38,10 @@ export const createRoom = (currUser, serverId, roomFormInfo) => async (dispatch)
 
     const requestOptions = {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+      },
       body: JSON.stringify({
             ...roomFormInfoUser,
             action: 'create'
