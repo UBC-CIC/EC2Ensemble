@@ -21,6 +21,9 @@ exports.handler = async (event) => {
 		return {
 			headers: {
 				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+				'Access-Control-Allow-Headers':
+					'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
 			},
 			statusCode: 200,
 			body: JSON.stringify({ Items: res.Items }),
