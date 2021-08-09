@@ -9,7 +9,7 @@ Globals:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
       AllowOrigin: "'*'"
-      AllowMethods: "'OPTIONS, POST'"
+      AllowMethods: "'OPTIONS, POST, GET'"
     Auth:
       DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
       Authorizers:
@@ -17,7 +17,6 @@ Globals:
           UserPoolArn:
             - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
 
-    
 Resources:
   # Lambdas
   PublishToSnsFunction:
@@ -119,11 +118,11 @@ Resources:
   #     ApiId: !Ref WebSocketApi
   #     AuthorizerType: REQUEST
   #     Name: WebsocketAuthorizer
-  #     IdentitySource: 
+  #     IdentitySource:
   #       - route.request.header.Authorization
   #     AuthorizerCredentialsArn: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
   #     AuthorizerUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketAuthorizerLambda.Arn}/invocations'
-  #     # !Join 
+  #     # !Join
   #     #   - ''
   #     #   - - 'arn:'
   #     #     - !Ref 'AWS::Partition'
@@ -132,8 +131,7 @@ Resources:
   #     #     - ':lambda:path/2015-03-31/functions/'
   #     #     - !Ref 'DevAuthorizerLambda.Arn'
   #     #     - /invocations
-          
-  
+
   # Websocket API - heavily inspired from https://serverlessland.com/patterns/apigw-websocket-api-lambda
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
