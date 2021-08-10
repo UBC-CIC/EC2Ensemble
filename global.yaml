@@ -11,8 +11,8 @@ Globals:
       AllowOrigin: "'*'"
       AllowMethods: "'OPTIONS, POST, GET'"
     Auth:
-      AddDefaultAuthorizerToCorsPreflight: false
-      DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
+      # AddDefaultAuthorizerToCorsPreflight: False
+      # DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
       Authorizers:
         JacktripGlobalCognitoAuthorizer:
           UserPoolArn:
@@ -31,6 +31,9 @@ Resources:
           Properties:
             Method: post
             Path: /publishsns
+            # Auth: 
+            #   Authorizer: 
+            #     JacktripGlobalCognitoAuthorizer
             RequestParameters:
               - method.request.header.Authorization:
                   Required: true
@@ -55,6 +58,9 @@ Resources:
           Properties:
             Method: get
             Path: /user
+            Auth: 
+              Authorizer: 
+                JacktripGlobalCognitoAuthorizer
             RequestParameters:
               - method.request.querystring.user:
                   Required: true
