@@ -1,8 +1,6 @@
-var token;
 /* get rooms from db and update */
 export const queryRooms = (user) => async (dispatch) => {
-	const userId = user.username;
-	token = user.signInUserSession.getIdToken().getJwtToken();
+	const { userId, token } = getUserIdAndToken(user);
 
 	const requestOptions = {
 		method: 'GET',
@@ -13,9 +11,7 @@ export const queryRooms = (user) => async (dispatch) => {
 	};
 
 	await fetch(
-		`${process.env.REACT_APP_AWS_USERDB_BASE}?user=${encodeURIComponent(
-			userId
-		)}`,
+		`${process.env.REACT_APP_AWS_USERDB_BASE}?user=${encodeURIComponent(userId)}`,
 		requestOptions
 	)
 		.then((response) => response.json())
@@ -31,12 +27,12 @@ export const queryRooms = (user) => async (dispatch) => {
 };
 
 /* create a room server */
-export const createRoom =
-	(currUser, serverId, roomFormInfo) => async (dispatch) => {
+export const createRoom = (user, serverId, roomFormInfo) => async (dispatch) => {
 		const url = process.env.REACT_APP_AWS_API_BASE;
+		const { userId, token } = getUserIdAndToken(user);
 
 		const roomFormInfoUser = {
-			user: currUser,
+			user: userId,
 			serverId: serverId,
 			...roomFormInfo,
 			region: roomFormInfo.region.split(' ')[0], // remove "Recommend" text
@@ -44,9 +40,10 @@ export const createRoom =
 
 		const requestOptions = {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: 'Bearer ' + token,
+				Authorization: token,
 			},
 			body: JSON.stringify({
 				...roomFormInfoUser,
@@ -69,17 +66,22 @@ export const createRoom =
 			.catch((error) => {
 				console.log('Error in creating room', error);
 			});
-	};
+};
 
 /* delete a room server */
-export const deleteRoom = (currUser, region, serverId) => async (dispatch) => {
+export const deleteRoom = (user, region, serverId) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_API_BASE;
+	const { userId, token } = getUserIdAndToken(user);
 
 	const requestOptions = {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		credentials: 'include',
+		headers: { 
+			'Content-Type': 'application/json',
+			Authorization: token,
+		},
 		body: JSON.stringify({
-			user: currUser,
+			user: userId,
 			region: region,
 			serverId: serverId,
 			action: 'delete',
@@ -103,15 +105,19 @@ export const deleteRoom = (currUser, region, serverId) => async (dispatch) => {
 };
 
 /* terminate the room server session when pressed on Stop button */
-export const terminateRoom =
-	(currUser, region, serverId) => async (dispatch) => {
+export const terminateRoom = (user, region, serverId) => async (dispatch) => {
 		const url = process.env.REACT_APP_AWS_API_BASE;
+		const { userId, token } = getUserIdAndToken(user);
 
 		const requestOptions = {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			headers: { 
+				'Content-Type': 'application/json',
+				Authorization: token,
+			},
 			body: JSON.stringify({
-				user: currUser,
+				user: userId,
 				region: region,
 				serverId: serverId,
 				action: 'terminate',
@@ -134,17 +140,23 @@ export const terminateRoom =
 			.catch((error) => {
 				console.log('Error in terminating the room', error);
 			});
-	};
+};
 
 /* restart the room server session */
-export const restartRoom = (currUser, region, serverId) => async (dispatch) => {
+export const restartRoom = (user, region, serverId) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_API_BASE;
+	const { userId, token } = getUserIdAndToken(user);
+
 
 	const requestOptions = {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		credentials: 'include',
+		headers: { 
+			'Content-Type': 'application/json',
+			Authorization: token,
+		},
 		body: JSON.stringify({
-			user: currUser,
+			user: userId,
 			region: region,
 			serverId: serverId,
 			action: 'restart',
@@ -188,3 +200,11 @@ export const updateRoomStatus = (message) => (dispatch) => {
 		});
 	}
 };
+
+// helper get userId and token
+const getUserIdAndToken = (user) => {
+	return { 
+		userId: user.username, 
+		token : user.getSignInUserSession().getIdToken().getJwtToken()
+	}
+}

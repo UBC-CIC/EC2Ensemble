@@ -95,7 +95,7 @@ function Room(props) {
         ipAddress,
         serverId,
         roomList,
-        user
+        currUser
     } = props
 
 
@@ -119,11 +119,11 @@ function Room(props) {
     const dispatch = useDispatch();
 
     const handleRoomTermination = async (serverId) => {
-        dispatch(terminateRoom(user, roomList[serverId].region, serverId));
+        dispatch(terminateRoom(currUser, roomList[serverId].region, serverId));
     };
 
     const handleRoomRestart = async (serverId) => {
-        dispatch(restartRoom(user, roomList[serverId].region, serverId));
+        dispatch(restartRoom(currUser, roomList[serverId].region, serverId));
     };
 
 

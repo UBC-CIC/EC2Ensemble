@@ -66,8 +66,7 @@ function Home(props) {
     (async () => {
       await Auth.currentAuthenticatedUser()
         .then((user) => {
-          const userId = user.username;
-          setCurrUser(userId)
+          setCurrUser(user)
 
           // query rooms from db
           dispatch(queryRooms(user));
@@ -129,7 +128,7 @@ function Home(props) {
           {Object.values(roomList).map((room, index) => {
             return (
               <div key={`room-${index}`} className={classes.margin_vertical2}>
-                <Room {...room}/>
+                <Room currUser={currUser} {...room}/>
               </div>
             )
           }).reverse()}
