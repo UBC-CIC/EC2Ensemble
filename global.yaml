@@ -11,6 +11,7 @@ Globals:
       AllowOrigin: "'*'"
       AllowMethods: "'OPTIONS, POST, GET'"
     Auth:
+      AddDefaultAuthorizerToCorsPreflight: false
       DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
       Authorizers:
         JacktripGlobalCognitoAuthorizer:
