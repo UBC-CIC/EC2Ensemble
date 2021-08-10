@@ -8,8 +8,9 @@ Globals:
   Api:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
-      AllowOrigin: "'*'"
+      AllowOrigin: "'http://localhost:3000'"
       AllowMethods: "'OPTIONS, POST, GET'"
+      AllowCredentials: true
     Auth:
       # AddDefaultAuthorizerToCorsPreflight: False
       # DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
@@ -31,8 +32,8 @@ Resources:
           Properties:
             Method: post
             Path: /publishsns
-            # Auth: 
-            #   Authorizer: 
+            # Auth:
+            #   Authorizer:
             #     JacktripGlobalCognitoAuthorizer
             RequestParameters:
               - method.request.header.Authorization:
@@ -58,9 +59,8 @@ Resources:
           Properties:
             Method: get
             Path: /user
-            Auth: 
-              Authorizer: 
-                JacktripGlobalCognitoAuthorizer
+            Auth:
+              Authorizer: JacktripGlobalCognitoAuthorizer
             RequestParameters:
               - method.request.querystring.user:
                   Required: true
