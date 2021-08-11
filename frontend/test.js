@@ -1,4 +1,4 @@
-const ping = require('node-http-ping');
+const ping = require('ping');
 const regions = [
 	'us-east-2',
 	'us-east-1',
@@ -25,49 +25,14 @@ const regions = [
 	'us-gov-west-1',
 ];
 
-// Using axios
-// const main = async () => {
-// 	axios.interceptors.request.use(
-// 		function (config) {
-// 			config.metadata = { startTime: new Date() };
-// 			return config;
-// 		},
-// 		function (error) {
-// 			return Promise.reject(error);
-// 		}
-// 	);
-// 	axios.interceptors.response.use(
-// 		function (response) {
-// 			response.config.metadata.endTime = new Date();
-// 			response.duration =
-// 				response.config.metadata.endTime -
-// 				response.config.metadata.startTime;
-// 			return response;
-// 		},
-// 		function (error) {
-// 			error.config.metadata.endTime = new Date();
-// 			error.duration =
-// 				error.config.metadata.endTime - error.config.metadata.startTime;
-// 			return Promise.reject(error);
-// 		}
-// 	);
-// 	try {
-// 		await Promise.all(
-// 			regions.map(async (region) => {
-// 				const { duration } = await axios.get(
-// 					`https://dynamodb.${region}.amazonaws.com/`
-// 				);
-// 				console.log(`${region}: ${duration}`);
-// 			})
-// 		);
-// 	} catch (error) {
-// 		console.error(error);
-// 	}
-// };
-
 // Using node-http-ping
+const args = process.argv.slice(2);
 const main = async () => {
-	console.log(await ping('https://dynamodb.ca-central-1.amazonaws.com'));
+	console.log(args[0]);
+	const res = await ping.promise.probe(args[0], {
+		min_reply: 3,
+	});
+	console.log(res);
 };
 
 main();
