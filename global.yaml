@@ -113,26 +113,40 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
-  # # Websocket authorizer
-  # WebsocketAuthorizer:
-  #   Type: AWS::ApiGatewayV2::Authorizer
-  #   Properties:
-  #     ApiId: !Ref WebSocketApi
-  #     AuthorizerType: REQUEST
-  #     Name: WebsocketAuthorizer
-  #     IdentitySource:
-  #       - route.request.header.Authorization
-  #     AuthorizerCredentialsArn: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
-  #     AuthorizerUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketAuthorizerLambda.Arn}/invocations'
-  #     # !Join
-  #     #   - ''
-  #     #   - - 'arn:'
-  #     #     - !Ref 'AWS::Partition'
-  #     #     - ':apigateway:'
-  #     #     - !Ref 'AWS::Region'
-  #     #     - ':lambda:path/2015-03-31/functions/'
-  #     #     - !Ref 'DevAuthorizerLambda.Arn'
-  #     #     - /invocations
+  # Websocket authorizer with Lambda function
+  # https://github.com/aws-samples/simple-websockets-chat-app/issues/22
+  WebsocketAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref WebSocketApi
+      AuthorizerType: REQUEST
+      Name: WebsocketAuthorizer
+      # https://medium.com/swlh/implementing-secure-web-sockets-with-aws-api-gateway-cognito-dynamodb-and-lambda-b38e02314b42
+      # Web Browser’s WebSocket object does not allow you to send any custom header
+      IdentitySource:
+        - route.request.querystring.Authorization
+      AuthorizerUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketAuthorizerFunction.Arn}/invocations'
+  WebsocketAuthorizerFunction:
+      Type: 'AWS::Serverless::Function'
+      Properties:
+        FunctionName: !Sub '${AWS::StackName}-websocketAuthorizer-function'
+        CodeUri: ./backend/functions/global/websocketAuthorizer
+        Handler: websocketAuthorizer.handler
+  WebsocketAuthorizerFunctionPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref WebsocketAuthorizerFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  WebsocketAuthorizerIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      Description: WebsocketAuthorizer Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketAuthorizerFunction.Arn}/invocations'
+
 
   # Websocket API - heavily inspired from https://serverlessland.com/patterns/apigw-websocket-api-lambda
   WebSocketApi:
@@ -141,6 +155,7 @@ Resources:
       Name: !Sub '${AWS::StackName}-websocket-api'
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: '$request.body.route'
+  # https://currentlyunnamed-theclassic.blogspot.com/2018/12/mastering-cloudformation-for-api.html
   Deployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
@@ -190,7 +205,8 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketApi
       RouteKey: $connect
-      AuthorizationType: NONE
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref WebsocketAuthorizer
       OperationName: OnConnectRoute
       Target: !Join
         - '/'
@@ -230,7 +246,7 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketApi
       RouteKey: $disconnect
-      AuthorizationType: NONE
+      # AuthorizationType: NONE
       OperationName: OnDisconnectRoute
       Target: !Join
         - '/'
@@ -276,7 +292,7 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketApi
       RouteKey: heartbeat
-      AuthorizationType: NONE
+      # AuthorizationType: NONE
       OperationName: OnHeartbeatRoute
       Target: !Join
         - '/'

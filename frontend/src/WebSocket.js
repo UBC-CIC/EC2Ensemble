@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useDispatch } from "react-redux";
 
 import WebSocket from 'isomorphic-ws';
@@ -19,10 +19,8 @@ export default function WebSocketProvider (props) {
     (async () => {
       await Auth.currentAuthenticatedUser()
         .then(async (user) => {
-          const userId = user.username;
-
           // load ws
-          connectWS(userId);
+          connectWS(user);
         })
     })();
   }, [currentState]);
@@ -39,9 +37,12 @@ export default function WebSocketProvider (props) {
     setTimeout(heartbeat, 550000);
   }, [clientWebSocket]);
 
-  const connectWS = useCallback((userId) => {
+  const connectWS = useCallback((user) => {
+    const userId = user.username;
+
     if (!clientWebSocket.current) {
-      const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?user=${userId}`);
+      const token = user.getSignInUserSession().getIdToken().getJwtToken();
+      const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?Authorization=${token}&user=${userId}`);
       clientWebSocket.current = ws;
     }
 
@@ -54,7 +55,7 @@ export default function WebSocketProvider (props) {
     clientWebSocket.current.onclose = (event) => {
         clientWebSocket.current = null;
         // reconnect to websocket, onclose might be triggered by backend integrations
-        setTimeout(connectWS(userId), 1000);
+        setTimeout(connectWS(user), 1000);
     }
 
     // listening for messages from ws 
