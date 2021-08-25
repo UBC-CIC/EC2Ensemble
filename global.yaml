@@ -20,6 +20,10 @@ Globals:
             - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
 
 Resources:
+  ApiGatewayAccountSettings:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayLogRole.Arn
   # Lambdas
   PublishToSnsFunction:
     Type: AWS::Serverless::Function
@@ -127,11 +131,11 @@ Resources:
         - route.request.querystring.Authorization
       AuthorizerUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketAuthorizerFunction.Arn}/invocations'
   WebsocketAuthorizerFunction:
-      Type: 'AWS::Serverless::Function'
-      Properties:
-        FunctionName: !Sub '${AWS::StackName}-websocketAuthorizer-function'
-        CodeUri: ./backend/functions/global/websocketAuthorizer
-        Handler: websocketAuthorizer.handler
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-websocketAuthorizer-function'
+      CodeUri: ./backend/functions/global/websocketAuthorizer
+      Handler: websocketAuthorizer.handler
   WebsocketAuthorizerFunctionPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -146,7 +150,6 @@ Resources:
       Description: WebsocketAuthorizer Integration
       IntegrationType: AWS_PROXY
       IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketAuthorizerFunction.Arn}/invocations'
-
 
   # Websocket API - heavily inspired from https://serverlessland.com/patterns/apigw-websocket-api-lambda
   WebSocketApi:
@@ -166,11 +169,15 @@ Resources:
       ApiId: !Ref WebSocketApi
   Stage:
     Type: AWS::ApiGatewayV2::Stage
+    DependsOn:
+      - ApiGatewayAccountSettings
     Properties:
       StageName: dev
       Description: Dev Stage
       DeploymentId: !Ref Deployment
       ApiId: !Ref WebSocketApi
+      DefaultRouteSettings:
+        LoggingLevel: INFO
 
   # WebSocket Connect
   WebSocketOnConnectFunction:
@@ -331,6 +338,19 @@ Resources:
                   - lambda:InvokeFunction
                 Resource:
                   - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:jacktrip*
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+  ApiGatewayLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
 

@@ -4298,11 +4298,6 @@ bindings@^1.5.0:
   dependencies:
     file-uri-to-path "1.0.0"
 
-bluebird@^2.9.14:
-  version "2.11.0"
-  resolved "https://registry.npmjs.org/bluebird/-/bluebird-2.11.0.tgz"
-  integrity sha1-U0uQM8AiyVecVro7Plpcqvu2UOE=
-
 bluebird@^3.5.5:
   version "3.7.2"
   resolved "https://registry.npmjs.org/bluebird/-/bluebird-3.7.2.tgz"
@@ -9221,13 +9216,6 @@ node-forge@^0.10.0:
   version "0.10.0"
   resolved "https://registry.npmjs.org/node-forge/-/node-forge-0.10.0.tgz"
   integrity sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==
-
-node-http-ping@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.npmjs.org/node-http-ping/-/node-http-ping-0.3.1.tgz"
-  integrity sha512-4q295gTtUXhFYp3CRMsmUWAXwHoB0oKEz3czmO9ZueWDcTcS3sX4I8L5zvdiXRrZpCMhb/TBaY9I27Gi7/Pa1Q==
-  dependencies:
-    bluebird "^2.9.14"
 
 node-int64@^0.4.0:
   version "0.4.0"
