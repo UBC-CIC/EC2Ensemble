@@ -36,36 +36,8 @@ exports.handler = async (event) => {
 	};
 
 	if (body.action === 'create') {
-		if (!validateBody(requiredBodyCreate, body)) {
-			return {
-				statusCode: 400,
-				body: 'Incomplete request body for create',
-			};
-		}
-		const ddbParams = {
-			TableName: process.env.userServerTableName,
-			Item: {
-				user: body.user,
-				serverId: body.serverId,
-				roomName: body.roomName,
-				type: body.type,
-				region: body.region,
-				buffer: body.buffer,
-				frequency: body.frequency,
-				size: body.size,
-				description: body.description,
-				status: 'creating',
-			},
-			ConditionExpression: 'attribute_not_exists(#user)',
-			ExpressionAttributeNames: {
-				'#user': 'user',
-			},
-		};
-		console.log('DDB: ', ddbParams);
-
 		try {
-			const res = await ddb.put(ddbParams).promise();
-			console.log(res);
+			message = await createServer(body);
 		} catch (error) {
 			return {
 				statusCode: 400,
@@ -73,17 +45,8 @@ exports.handler = async (event) => {
 			};
 		}
 	} else if (body.action === 'terminate') {
-		const ddbParams = {
-			TableName: process.env.userServerTableName,
-			Key: {
-				user: body.user,
-				serverId: body.serverId,
-			},
-		};
 		try {
-			const res = await ddb.get(ddbParams).promise();
-			console.log(res);
-			message.instanceId = res.Item.instanceId;
+			message = await terminateServer(body);
 		} catch (error) {
 			return {
 				statusCode: 400,
@@ -91,30 +54,8 @@ exports.handler = async (event) => {
 			};
 		}
 	} else if (body.action === 'restart') {
-		const ddbParams = {
-			TableName: process.env.userServerTableName,
-			Key: {
-				user: body.user,
-				serverId: body.serverId,
-			},
-			UpdateExpression: 'SET #status = :newStatus',
-			ExpressionAttributeNames: {
-				'#status': 'status',
-			},
-			ExpressionAttributeValues: {
-				':newStatus': 'creating',
-				':terminated': 'terminated',
-			},
-			ConditionExpression: '#status = :terminated',
-			ReturnValues: 'ALL_NEW',
-		};
 		try {
-			const res = await ddb.update(ddbParams).promise();
-			console.log(res.Attributes);
-			message = { ...message, ...res.Attributes };
-			message.action = 'create';
-			message.time = new Date();
-			console.log(message);
+			message = await restartServer(body);
 		} catch (error) {
 			return {
 				statusCode: 400,
@@ -162,4 +103,94 @@ const validateBody = (required, body) => {
 	return required.every((item) => {
 		return Object.prototype.hasOwnProperty.call(body, item);
 	});
+};
+
+const createServer = async (body) => {
+	if (!validateBody(requiredBodyCreate, body)) {
+		throw new Error('Invalid body for create');
+	}
+	const ddbParams = {
+		TableName: process.env.userServerTableName,
+		Item: {
+			user: body.user,
+			serverId: body.serverId,
+			roomName: body.roomName,
+			type: body.type,
+			region: body.region,
+			buffer: body.buffer,
+			frequency: body.frequency,
+			size: body.size,
+			description: body.description,
+			status: 'creating',
+		},
+		ConditionExpression: 'attribute_not_exists(#user)',
+		ExpressionAttributeNames: {
+			'#user': 'user',
+		},
+	};
+	console.log('DDB: ', ddbParams);
+	const res = await ddb.put(ddbParams).promise();
+	console.log(res);
+	return {
+		action: body.action,
+		user: body.user,
+		serverId: body.serverId,
+		region: body.region,
+		jacktripParameter: {
+			buffer: body.buffer,
+			frequency: body.frequency,
+		},
+	};
+};
+
+const terminateServer = async () => {
+	const ddbParams = {
+		TableName: process.env.userServerTableName,
+		Key: {
+			user: body.user,
+			serverId: body.serverId,
+		},
+	};
+	const res = await ddb.get(ddbParams).promise();
+	console.log(res);
+	return {
+		action: body.action,
+		user: body.user,
+		serverId: body.serverId,
+		region: body.region,
+		instanceId: res.Item.instanceId,
+	};
+};
+
+const restartServer = async () => {
+	const ddbParams = {
+		TableName: process.env.userServerTableName,
+		Key: {
+			user: body.user,
+			serverId: body.serverId,
+		},
+		UpdateExpression: 'SET #status = :newStatus',
+		ExpressionAttributeNames: {
+			'#status': 'status',
+		},
+		ExpressionAttributeValues: {
+			':newStatus': 'creating',
+			':terminated': 'terminated',
+		},
+		ConditionExpression: '#status = :terminated',
+		ReturnValues: 'ALL_NEW',
+	};
+	const res = await ddb.update(ddbParams).promise();
+	console.log(res.Attributes);
+	return {
+		action: 'create',
+		user: body.user,
+		serverId: body.serverId,
+		region: body.region,
+		time: new Date(),
+		jacktripParameter: {
+			buffer: res.Attributes.buffer,
+			frequency: res.Attributes.frequency,
+		},
+	};
 };

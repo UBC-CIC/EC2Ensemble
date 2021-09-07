@@ -5,7 +5,7 @@ const ec2 = new AWS.EC2();
 exports.handler = async (event) => {
 	console.log(event);
 	const runParams = {
-		ImageId: 'ami-0721c9af7b9b75114',
+		ImageId: 'ami-0b7e74e3956276e5c',
 		InstanceType: 't2.micro',
 		MinCount: 1,
 		MaxCount: 1,
