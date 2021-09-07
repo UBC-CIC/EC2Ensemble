@@ -249,5 +249,5 @@ Resources:
                 - 'killall jackd && killall jacktrip'
                 - 'jackd -R -t500 -ddummy -r{{samplingRate}} -p{{bufferSize}}'
                 - './jacktrip -S'
-        DocumentType: Command
-        Name: 'runJacktrip'
+      DocumentType: Command
+      Name: 'runJacktrip'

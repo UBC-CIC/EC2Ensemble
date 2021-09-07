@@ -9,8 +9,8 @@ exports.handler = async (event) => {
 				DocumentName: process.env.commandName,
 				InstanceIds: [event.instanceId],
 				Parameters: {
-					samplingRate: [event.jacktripParameter.frequency],
-					bufferSize: [event.jacktripParameter.buffer],
+					samplingRate: [event.jacktripParameter.frequency.toString()],
+					bufferSize: [event.jacktripParameter.buffer.toString()],
 				},
 			})
 			.promise();
