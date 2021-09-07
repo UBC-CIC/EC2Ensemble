@@ -1,48 +1,84 @@
 const jwt = require('jsonwebtoken');
+const jwkToPem = require('jwk-to-pem');
 const fetch = require('node-fetch');
 
+
 const region = process.env.centralRegion;
+const userPoolId = process.env.userPoolId;
+const aud = process.env.aud;
 // https://aws.amazon.com/premiumsupport/knowledge-center/decode-verify-cognito-json-token/
 // Amazon Cognito generates two RSA key pairs for each user pool. 
 // The private key of each pair is used to sign the respective ID token or access token.
-// const url = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`;
-const url = `https://cognito-idp.${region}.amazonaws.com/ca-central-1_20ArNefjM/.well-known/jwks.json`;
+const iss = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
 
 exports.handler = async (event, context) => {
 	const methodArn = event.methodArn;
 	const token = event.queryStringParameters.Authorization;
 
-	console.log('Websocket auth invoked! event =', event, 'context =', context, 'token = ', token)
-
 	if (!token) {
         return context.fail('Unauthorized');
     } else {
+        // 1. decode the id token
+        // https://github.com/aws-samples/simple-websockets-chat-app/issues/22
 		const decodedJwt = jwt.decode(token, { complete: true })
-		console.log(decodedJwt)
-
 		if (!decodedJwt) {
 			console.log('Not a valid JWT token')
 			context.fail('Unauthorized')
 			return
 		}
+        // verify claims
+        // (aud) should match the app client ID that was created in the Amazon Cognito user pool.
+        if (decodedJwt.payload.aud !== aud) {
+            console.log('invalid app client ID')
+            context.fail('Unauthorized')
+            return
+        }
+        //Fail if token is not from your UserPool
+        if (decodedJwt.payload.iss !== iss) {
+            console.log('invalid issuer')
+            context.fail('Unauthorized')
+            return
+        }
+        //Reject the jwt if it's not an 'ID Token'
+        if (decodedJwt.payload.token_use !== 'id') {
+            console.log('Not an id token')
+            context.fail('Unauthorized')
+            return
+        }
 
+        // get local key id
         const kid = decodedJwt.header.kid;
 
 		// Fetch known valid keys
-        await fetch(url)
+        await fetch(iss+'/.well-known/jwks.json')
 			.then(res => res.json())
-			.then(data => {
+			.then(publicKeys => {
 				// https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html#amazon-cognito-user-pools-using-tokens-step-1
-				const keys = data['keys'];
-            	const foundKey = keys.find((key) => key.kid === kid);
+				// 2. compare local keyid to public kid
+                const jwkeys = publicKeys.keys;
+            	const jwk = jwkeys.find((key) => key.kid === kid);
 
-				console.log("fetched", keys, foundKey)
-				// context.succeed(generateAllow('me', methodArn)); // context.authorizer.principalId 
+                if (jwk) {
+                    return Promise.resolve(jwkToPem(jwk));
+                } else {
+                    return Promise.reject(new Error('Fail to find public key'))
+                }
 			})
+            .then(pem => {
+                // 3. Use the public key to verify the signature using your JWT library.
+                jwt.verify(token, pem, { issuer: iss, algorithms: ['RS256'] }, function(err, decodedToken) {
+                    if (err) {
+                        callback(null, generateDeny(decodedToken.sub, methodArn));
+				        context.fail('Unable to verify signature');
+                      } else {
+                        console.log('Success')
+                        context.succeed(generateAllow(decodedToken.sub, methodArn));
+                      }
+                });
+            })
 			.catch(err => {
 				console.error('Unable to verify token', err);
-				// callback(null, generatePolicy('user', 'Deny', event.methodArn));
-				context.fail('Signature verification failed');
+				context.fail('Unable to verify authentication');
 			})
 	}
 }
@@ -50,6 +86,10 @@ exports.handler = async (event, context) => {
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-use-lambda-authorizer.html
 var generateAllow = function(principalId, resource) {
     return generatePolicy(principalId, 'Allow', resource);
+}
+
+var generateDeny = function(principalId, resource) {
+    return generatePolicy(principalId, 'Deny', resource);
 }
 
 // Help function to generate an IAM policy
