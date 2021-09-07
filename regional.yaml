@@ -99,6 +99,17 @@ Resources:
                 - dynamodb:UpdateItem
               Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${UserServerTableName}'
 
+  RunJacktripFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/runJacktrip
+      Handler: runJacktrip.handler
+      Environment:
+        Variables:
+          commandName: !Ref RunJacktripDocument
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+
   ContactWebSocket:
     Type: AWS::Serverless::Function
     Properties:
@@ -159,15 +170,6 @@ Resources:
           FromPort: 0
           ToPort: 65535
           CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 65535
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: udp
-          FromPort: 0
-          ToPort: 65535
-          CidrIp: 0.0.0.0/0
 
   # SNS Subscription and SQS
   JacktripSqsSnsSubscription:
@@ -213,6 +215,7 @@ Resources:
         HandleFailFunctionArn: !GetAtt HandleFail.Arn
         HandleSuccessFunctionArn: !GetAtt HandleSuccess.Arn
         ContactWebSocketFunctionArn: !GetAtt ContactWebSocket.Arn
+        RunJacktripFunctionArn: !GetAtt RunJacktripFunction.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -224,3 +227,27 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub 'Jacktrip-StateMachine-LogGroup-${AWS::Region}'
+
+  RunJacktripDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Content:
+        schemaVersion: '2.2'
+        description: 'Run Jacktrip on EC2 instance'
+        parameters:
+          samplingRate:
+            type: String
+            description: 'Sampling rate parameter for Jacktrip (Required)'
+          bufferSize:
+            type: String
+            description: 'Buffer size parameter for Jacktrip (Required)'
+        mainSteps:
+          - action: aws:runShellScript
+            name: runCommands
+            inputs:
+              runCommand:
+                - 'killall jackd && killall jacktrip'
+                - 'jackd -R -t500 -ddummy -r{{samplingRate}} -p{{bufferSize}}'
+                - './jacktrip -S'
+        DocumentType: Command
+        Name: 'runJacktrip'

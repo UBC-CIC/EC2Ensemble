@@ -21,7 +21,7 @@
 			"Type": "Task",
 			"Comment": "Create Jacktrip Server",
 			"Resource": "${CreateServerFunctionArn}",
-			"ResultPath": "$.taskResult",
+			"ResultPath": "$.instanceId",
 			"Next": "WaitCreate",
 			"Catch": [
 				{
@@ -30,6 +30,12 @@
 					"Next": "HandleFail"
 				}
 			]
+		},
+		"RunJacktrip": {
+			"Type": "Task",
+			"Comment": "Run SSM document to run Jacktrip on the instance",
+			"Resource": "${RunJacktripFunctionArn}",
+			"Next": "HandleSuccess"
 		},
 		"TerminateServer": {
 			"Type": "Task",
@@ -68,7 +74,7 @@
 				{
 					"Variable": "$.getStatusResult.status",
 					"StringEquals": "running",
-					"Next": "HandleSuccess"
+					"Next": "RunJacktrip"
 				}
 			]
 		},
