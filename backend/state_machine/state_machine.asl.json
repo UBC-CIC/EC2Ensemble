@@ -35,7 +35,8 @@
 			"Type": "Task",
 			"Comment": "Run SSM document to run Jacktrip on the instance",
 			"Resource": "${RunJacktripFunctionArn}",
-			"Next": "HandleSuccess"
+			"Next": "HandleSuccess",
+			"ResultPath": null
 		},
 		"TerminateServer": {
 			"Type": "Task",

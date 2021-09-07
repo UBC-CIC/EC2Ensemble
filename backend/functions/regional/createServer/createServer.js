@@ -25,6 +25,9 @@ exports.handler = async (event) => {
 			},
 		],
 		SecurityGroups: [process.env.ec2SecurityGroup],
+		IamInstanceProfile: {
+			Name: "JacktripEC2InstanceProfile"
+		}
 	};
 	let runRes;
 	try {
