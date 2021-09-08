@@ -44,8 +44,8 @@ const DefaultButton = withStyles((theme) => ({
 }))(Button);
 
 
-export default function CreateRoomForm(props) {
-  const { open, loading } = props;
+export default function CreateEditRoomForm(props) {
+  const { open, loading, ...others } = props;
   const classes = useStyles();
 
   const initFormValues = {
@@ -61,14 +61,29 @@ export default function CreateRoomForm(props) {
   const [recommendRegion, setRecommendRegion] = useState([]);
 
   useEffect(() => {
+    // if roomInfo is passed through
+    if (!!others.roomInfo) {
+      setRoomFormInfo(
+        {
+          roomName: others.roomInfo.roomName,
+          description: others.roomInfo.description,
+          type: others.roomInfo.type,
+          region: others.roomInfo.region,
+          size: others.roomInfo.size,
+          frequency: others.roomInfo.frequency,
+          buffer: others.roomInfo.buffer
+        }
+      )
+    }
     // when the form's is closed, reset the roomFormInfo state
     if (!open) resetFormInfo()
+    // when the form is opened time, calculate recommended region to set the server
     else {
       (async () => {
         setRecommendRegion(await recommendRegionList);
       })();
     }
-  }, [open])
+  }, [, open])
 
   const checkLatency = useCallback(async (regions)=> {
     return Promise.all(
@@ -125,13 +140,14 @@ export default function CreateRoomForm(props) {
 
   const body = (
     <div className={classes.paper}>
-        <h2 id="modal-title" className={classes.text}>Create Room</h2>
+        <h2 id="modal-title" className={classes.text}>{!others.roomInfo ? "Create" : "Settings: Edit"} Room</h2>
         <form id="modal-form" onSubmit={(event)=>props.handleSubmit(event, roomFormInfo)}>
           <FormInput
               id={"roomName"} 
               inputLabel={"Room Name"} 
               required={true}
               onChange={handleChange}
+              value={roomFormInfo.roomName}
           /> 
           <FormInput
               id={"description"} 
@@ -140,6 +156,7 @@ export default function CreateRoomForm(props) {
               multiline
               rows={4}
               onChange={handleChange}
+              value={roomFormInfo.description}
           /> 
           <FormSelect
               id={"type"} 
@@ -147,6 +164,7 @@ export default function CreateRoomForm(props) {
               required={true}
               options={FormOptions.type}
               onChange={handleChange}
+              value={roomFormInfo.type}
           /> 
           <FormSelect
               id={"region"} 
@@ -154,6 +172,7 @@ export default function CreateRoomForm(props) {
               required={true}
               options={recommendRegion}
               onChange={handleChange}
+              value={roomFormInfo.region}
           /> 
           <FormSelect
               id={"size"} 
@@ -161,6 +180,7 @@ export default function CreateRoomForm(props) {
               required={true}
               options={FormOptions.size}
               onChange={handleChange}
+              value={roomFormInfo.size}
           /> 
           <FormSelect
               id={"frequency"} 
@@ -168,6 +188,7 @@ export default function CreateRoomForm(props) {
               required={true}
               options={FormOptions.frequency}
               onChange={handleChange}
+              value={roomFormInfo.frequency}
           /> 
           <FormSelect
               id={"buffer"} 
@@ -175,6 +196,7 @@ export default function CreateRoomForm(props) {
               required={true}
               options={FormOptions.buffer}
               onChange={handleChange}
+              value={roomFormInfo.buffer}
           /> 
           <div className={classes.button}>
             <DefaultButton disabled={!!loading} onClick={props.handleClose}>Cancel</DefaultButton>
@@ -208,7 +230,7 @@ export default function CreateRoomForm(props) {
 const FormOptions = {
   type: ["AWS"],
   region: ["us-west-2", "ca-central-1", "us-west-1"],
-  size: Array.from(Array(9), (_,i)=>i+2).concat([15,20]),
+  size: [2,3,4,5],
   frequency: [44100, 48000, 256000],
   buffer: [32, 64, 128, 256]
 }
