@@ -74,11 +74,6 @@
 				},
 				{
 					"Variable": "$.getStatusResult.status",
-					"StringEquals": "stopped",
-					"Next": "WaitCreate"
-				},
-				{
-					"Variable": "$.getStatusResult.status",
 					"StringEquals": "running",
 					"Next": "RunJacktrip"
 				}

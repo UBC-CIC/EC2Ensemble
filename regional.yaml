@@ -65,6 +65,7 @@ Resources:
               Action:
                 - ec2:DescribeInstances
               Resource: '*'
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
 
   HandleFail:
     Type: AWS::Serverless::Function
