@@ -17,7 +17,7 @@ exports.handler = async (event) => {
 			ReturnValues: 'UPDATED_NEW',
 			ExpressionAttributeValues: {
 				':newStatus': 'running',
-				':instanceId': event.taskResult,
+				':instanceId': event.instanceId,
 				':ip': event.getStatusResult.ip,
 			},
 			ExpressionAttributeNames: {

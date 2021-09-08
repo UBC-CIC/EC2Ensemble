@@ -34,6 +34,7 @@ Resources:
               Action:
                 - ec2:RunInstances
                 - ec2:CreateTags
+                - iam:PassRole
               Resource: '*'
       Environment:
         Variables:
@@ -102,6 +103,7 @@ Resources:
   RunJacktripFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Timeout: 120
       CodeUri: ./backend/functions/regional/runJacktrip
       Handler: runJacktrip.handler
       Environment:
@@ -247,7 +249,7 @@ Resources:
             inputs:
               runCommand:
                 - 'killall jackd && killall jacktrip'
-                - 'jackd -R -t500 -ddummy -r{{samplingRate}} -p{{bufferSize}}'
-                - './jacktrip -S'
-        DocumentType: Command
-        Name: 'runJacktrip'
+                - 'jackd -R -t500 -ddummy -r{{samplingRate}} -p{{bufferSize}} &'
+                - 'cd /home/ubuntu'
+                - './jacktrip -S &'
+      DocumentType: Command

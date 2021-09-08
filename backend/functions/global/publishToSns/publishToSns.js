@@ -31,9 +31,7 @@ exports.handler = async (event) => {
 		};
 	}
 
-	var message = {
-		...body,
-	};
+	var message;
 
 	if (body.action === 'create') {
 		try {
@@ -143,7 +141,7 @@ const createServer = async (body) => {
 	};
 };
 
-const terminateServer = async () => {
+const terminateServer = async (body) => {
 	const ddbParams = {
 		TableName: process.env.userServerTableName,
 		Key: {
@@ -162,7 +160,7 @@ const terminateServer = async () => {
 	};
 };
 
-const restartServer = async () => {
+const restartServer = async (body) => {
 	const ddbParams = {
 		TableName: process.env.userServerTableName,
 		Key: {

@@ -6,7 +6,7 @@ exports.handler = async (event) => {
 	console.log(event);
 
 	const params = {
-		InstanceIds: [event.taskResult],
+		InstanceIds: [event.instanceId],
 	};
 	const res = await ec2.describeInstances(params).promise();
 	console.log(res);
