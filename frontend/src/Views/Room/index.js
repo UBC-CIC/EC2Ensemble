@@ -10,6 +10,10 @@ import { connect, useDispatch } from 'react-redux';
 // actions
 import { restartRoom, terminateRoom } from '../../Actions/roomActions';
 
+// components
+import CreateEditRoomForm from '../CreateEditRoomForm';
+
+
 const useStyles = makeStyles((theme) => ({
 	root: {
 		backgroundColor: 'lightgray',
@@ -130,10 +134,30 @@ function Room(props) {
 		dispatch(restartRoom(currUser, roomList[serverId].region, serverId));
 	};
 	const testInstanceLatency = async (ip) => {
-		const res = await ping.promise.probe(ip, {
-			min_reply: 3,
-		});
-		setLatency(res.avg);
+		// const res = await ping.promise.probe(ip, {
+		// 	min_reply: 3,
+		// });
+		// setLatency(res.avg);
+	};
+
+	// modal
+	const [modalOpen, setModalOpen] = useState(false);
+	const [modalLoading, setModalLoading] = useState(false);
+
+	const handleModalClose = () => {
+		setModalOpen(false);
+	};
+
+	const handleFormSubmit = async (event, roomFormInfo) => {
+		event.preventDefault();
+
+		setModalLoading(true);
+		// TODO: dispatch 
+		
+		// let the buttons stop loading
+		setModalLoading(false);
+		// close the modal
+		handleModalClose();
 	};
 
 	return (
@@ -191,7 +215,20 @@ function Room(props) {
 					>
 						Test Latency: {latency}
 					</DefaultButton>
-					<DefaultButton>Setting</DefaultButton>
+					<DefaultButton
+						onClick={() => {
+							setModalOpen(true)
+						}}
+					>
+						Edit Settings
+					</DefaultButton>
+					<CreateEditRoomForm
+						open={modalOpen}
+						handleClose={handleModalClose}
+						handleSubmit={handleFormSubmit}
+						loading={modalLoading}
+						roomInfo={!!modalOpen && props}
+					/>
 					{status === 'terminated' && (
 						<DefaultButton
 							onClick={() => handleRoomRestart(serverId)}

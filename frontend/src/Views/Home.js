@@ -12,7 +12,7 @@ import { Button, Grid } from '@material-ui/core/';
 
 // internal imports
 import Room from './Room';
-import CreateRoomForm from './CreateRoomForm';
+import CreateEditRoomForm from './CreateEditRoomForm';
 import { SearchBar } from '../Components';
 
 // actions
@@ -108,7 +108,7 @@ function Home(props) {
             >
               Create Room
             </DefaultButton>
-            <CreateRoomForm 
+            <CreateEditRoomForm 
               open={open} 
               handleClose={handleFormClose} 
               handleSubmit={handleFormSubmit}
@@ -120,7 +120,7 @@ function Home(props) {
           <SearchBar/>
         </Grid>
         <Grid container item justifyContent="flex-end" alignItems="center" className={classes.margin_vertical3}>
-          <ArrowBackIosIcon fontSize="small"/><span className={classes.underlineText}>1</span><ForwardIcon fontSize="small"/>
+          {/* <ArrowBackIosIcon fontSize="small"/><span className={classes.underlineText}>1</span><ForwardIcon fontSize="small"/> */}
         </Grid>
 
         {/* load rooms in reverse order, showing the most recent one first*/}
