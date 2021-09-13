@@ -54,6 +54,23 @@ exports.handler = async (event) => {
 		} catch (error) {
 			throw new Error('DDB Update Failed: ' + JSON.stringify(error));
 		}
+	} else if (event.action === 'param_change') {
+		const params = {
+			TableName: process.env.userServerTableName,
+			Key: {
+				user: event.user,
+				serverId: event.serverId,
+				UpdateExpression: 'SET #status = running',
+				ExpressionAttributeNames: {
+					'#status': 'status',
+				},
+			},
+		};
+		try {
+			await ddb.update(params).promise();
+		} catch (error) {
+			throw new Error('DDB Update Failed: ' + JSON.stringify(error));
+		}
 	}
 	return {
 		...(event.action === 'create' && {

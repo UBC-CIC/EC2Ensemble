@@ -11,7 +11,6 @@ const requiredBodyCreate = [
 	'type',
 	'description',
 ];
-const allowedAction = ['create', 'terminate', 'restart'];
 
 exports.handler = async (event) => {
 	const body = JSON.parse(event.body);
@@ -24,42 +23,54 @@ exports.handler = async (event) => {
 		};
 	}
 
-	if (!allowedAction.includes(body.action)) {
-		return {
-			statusCode: 400,
-			body: 'Invalid action',
-		};
-	}
-
 	var message;
 
-	if (body.action === 'create') {
-		try {
-			message = await createServer(body);
-		} catch (error) {
+	switch (body.action) {
+		case 'create':
+			try {
+				message = await createServer(body);
+				break;
+			} catch (error) {
+				return {
+					statusCode: 400,
+					body: JSON.stringify(error),
+				};
+			}
+		case 'terminate':
+			try {
+				message = await terminateServer(body);
+				break;
+			} catch (error) {
+				return {
+					statusCode: 400,
+					body: JSON.stringify(error),
+				};
+			}
+		case 'restart':
+			try {
+				message = await restartServer(body);
+				break;
+			} catch (error) {
+				return {
+					statusCode: 400,
+					body: JSON.stringify(error),
+				};
+			}
+		case 'param_change':
+			try {
+				message = await changeServerParams(body);
+				break;
+			} catch (error) {
+				return {
+					statusCode: 400,
+					body: JSON.stringify(error),
+				};
+			}
+		default:
 			return {
 				statusCode: 400,
-				body: JSON.stringify(error),
+				body: 'Invalid action',
 			};
-		}
-	} else if (body.action === 'terminate') {
-		try {
-			message = await terminateServer(body);
-		} catch (error) {
-			return {
-				statusCode: 400,
-				body: JSON.stringify(error),
-			};
-		}
-	} else if (body.action === 'restart') {
-		try {
-			message = await restartServer(body);
-		} catch (error) {
-			return {
-				statusCode: 400,
-				body: JSON.stringify(error),
-			};
-		}
 	}
 
 	const snsParams = {
@@ -190,5 +201,49 @@ const restartServer = async (body) => {
 			buffer: res.Attributes.buffer,
 			frequency: res.Attributes.frequency,
 		},
+	};
+};
+
+const changeServerParams = async (body) => {
+	if (!body.buffer || !body.frequency) {
+		return {
+			statusCode: 400,
+			body: 'Missing Jacktrip parameters',
+		};
+	}
+
+	const ddbParams = {
+		TableName: process.env.userServerTableName,
+		Key: {
+			user: body.user,
+			serverId: body.serverId,
+		},
+		UpdateExpression:
+			'SET #buffer = :newBuffer, #frequency = :newFrequency, #status = change_params',
+		ExpressionAttributeNames: {
+			'#buffer': 'buffer',
+			'#frequency': 'frequency',
+			'#status': 'status',
+		},
+		ExpressionAttributeValues: {
+			':newBuffer': body.buffer,
+			':newFrequency': body.frequency,
+		},
+		ConditionExpression: '#status = running',
+		ReturnValues: 'ALL_NEW',
+	};
+	const res = await ddb.update(ddbParams).promise();
+	console.log(res);
+	return {
+		action: 'param_change',
+		user: body.user,
+		serverId: body.serverId,
+		region: body.region,
+		time: new Date(),
+		jacktripParameter: {
+			buffer: res.Attributes.buffer,
+			frequency: res.Attributes.frequency,
+		},
+		instanceId: res.Attributes.instanceId,
 	};
 };
