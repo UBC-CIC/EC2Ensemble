@@ -219,7 +219,7 @@ const changeServerParams = async (body) => {
 			serverId: body.serverId,
 		},
 		UpdateExpression:
-			'SET #buffer = :newBuffer, #frequency = :newFrequency, #status = change_params',
+			'SET #buffer = :newBuffer, #frequency = :newFrequency, #status = param_change',
 		ExpressionAttributeNames: {
 			'#buffer': 'buffer',
 			'#frequency': 'frequency',
