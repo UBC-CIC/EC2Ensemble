@@ -7,14 +7,14 @@ const roomReducer = (currentState = {}, action) => {
             return roomObjs
         }
         case "CREATE_ROOM" : {
-            const { serverId, roomInfo } = action.payload;
+            const serverId = action.payload.serverId;
             return {
                 ...currentState, 
-                [serverId] : roomInfo
+                [serverId] : action.payload
             }
         }
         case "DELETE_ROOM" : {
-            const serverId = action.payload;
+            const { serverId } = action.payload;
             delete currentState[serverId];
             return currentState
         }

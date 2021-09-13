@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from "react-redux";
-import { v4 as uuidv4 } from 'uuid';
 
 // aws
 import { Auth } from "aws-amplify";
@@ -86,10 +85,8 @@ function Home(props) {
   const handleFormSubmit = async (event, roomFormInfo) => {
     event.preventDefault();
 
-    const serverId = uuidv4();
-
     setLoading(true);
-    await dispatch(createRoom(currUser, serverId, roomFormInfo));
+    await dispatch(createRoom(currUser, roomFormInfo))
     // let the buttons stop loading
     setLoading(false);
     // close the modal

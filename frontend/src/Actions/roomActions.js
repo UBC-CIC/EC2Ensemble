@@ -27,15 +27,13 @@ export const queryRooms = (user) => async (dispatch) => {
 };
 
 /* create a room server */
-export const createRoom = (user, serverId, roomFormInfo) => async (dispatch) => {
+export const createRoom = (user, roomFormInfo) => async (dispatch) => {
 		const url = process.env.REACT_APP_AWS_API_BASE;
 		const { userId, token } = getUserIdAndToken(user);
 
 		const roomFormInfoUser = {
 			user: userId,
-			serverId: serverId,
 			...roomFormInfo,
-			region: roomFormInfo.region.split(' ')[0], // remove "Recommend" text
 		};
 
 		const requestOptions = {
@@ -47,7 +45,7 @@ export const createRoom = (user, serverId, roomFormInfo) => async (dispatch) => 
 			},
 			body: JSON.stringify({
 				...roomFormInfoUser,
-				action: 'create',
+				action: roomFormInfo.type === 'AWS' ? 'create' : 'externalCreate',
 			}),
 		};
 
@@ -57,10 +55,7 @@ export const createRoom = (user, serverId, roomFormInfo) => async (dispatch) => 
 				// if successful, update the room list
 				dispatch({
 					type: 'CREATE_ROOM',
-					payload: {
-						serverId: serverId,
-						roomInfo: roomFormInfoUser,
-					},
+					payload: roomFormInfoUser
 				});
 			})
 			.catch((error) => {

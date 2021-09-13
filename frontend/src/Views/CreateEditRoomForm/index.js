@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import { Button, CircularProgress, Modal } from '@material-ui/core';
-import { FormInput, FormSelect } from '../../Components';
+import { FormButtonGroup, FormInput, FormSelect } from '../../Components';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -56,6 +57,7 @@ export default function CreateEditRoomForm(props) {
     size: FormOptions.size[0],
     frequency: FormOptions.frequency[0],
     buffer: FormOptions.buffer[0],
+    ipAddress: '',
   }
   const [roomFormInfo, setRoomFormInfo] = useState(initFormValues);
   const [recommendRegion, setRecommendRegion] = useState([]);
@@ -71,7 +73,8 @@ export default function CreateEditRoomForm(props) {
           region: others.roomInfo.region,
           size: others.roomInfo.size,
           frequency: others.roomInfo.frequency,
-          buffer: others.roomInfo.buffer
+          buffer: others.roomInfo.buffer,
+          ipAddress: others.roomInfo.ipAddress
         }
       )
     }
@@ -129,8 +132,10 @@ export default function CreateEditRoomForm(props) {
     return returnValue;
   }, []);
 
-  const handleChange = (event) => {
-    setRoomFormInfo({...roomFormInfo, [event.target.name]: event.target.value});
+  const handleChange = (event, type=null) => {
+    // check if type is passed through
+    if (!!type) setRoomFormInfo({...roomFormInfo, type: type});
+    else setRoomFormInfo({...roomFormInfo, [event.target.name]: event.target.value});
   }
 
   // reset the roomFormInfo state
@@ -138,10 +143,37 @@ export default function CreateEditRoomForm(props) {
     setRoomFormInfo(initFormValues)
   }
 
+  const submitForm = (event) => {
+    let roomForm;
+
+    if (roomFormInfo.type === "AWS") {
+      const serverId = uuidv4();
+
+      // remove the ip address
+      delete roomFormInfo.ipAddress;
+
+      roomForm = {
+        ...roomFormInfo,
+        serverId: serverId,
+        region: roomFormInfo.region.split(' ')[0], // remove "Recommend" text
+      }
+    } else {
+      roomForm = {
+        roomName: roomFormInfo.roomName,
+        description: roomFormInfo.description,
+        type: roomFormInfo.type,
+        ipAddress: roomFormInfo.ipAddress,
+        serverId: roomFormInfo.ipAddress
+      }
+    }
+    
+    props.handleSubmit(event, roomForm)
+  }
+
   const body = (
     <div className={classes.paper}>
         <h2 id="modal-title" className={classes.text}>{!others.roomInfo ? "Create" : "Settings: Edit"} Room</h2>
-        <form id="modal-form" onSubmit={(event)=>props.handleSubmit(event, roomFormInfo)}>
+        <form id="modal-form" onSubmit={submitForm}>
           <FormInput
               id={"roomName"} 
               inputLabel={"Room Name"} 
@@ -157,50 +189,66 @@ export default function CreateEditRoomForm(props) {
               rows={4}
               onChange={handleChange}
               value={roomFormInfo.description}
-          /> 
-          <FormSelect
+          />
+          <FormButtonGroup
               id={"type"} 
               inputLabel={"Type"} 
-              required={true}
               options={FormOptions.type}
               onChange={handleChange}
               value={roomFormInfo.type}
-          /> 
-          <FormSelect
-              id={"region"} 
-              inputLabel={"Region"} 
-              required={true}
-              options={recommendRegion}
-              onChange={handleChange}
-              value={roomFormInfo.region}
-          /> 
-          <FormSelect
-              id={"size"} 
-              inputLabel={"Room Size"} 
-              required={true}
-              options={FormOptions.size}
-              onChange={handleChange}
-              value={roomFormInfo.size}
-          /> 
-          <FormSelect
-              id={"frequency"} 
-              inputLabel={"Sampling Frequency (Hz)"} 
-              required={true}
-              options={FormOptions.frequency}
-              onChange={handleChange}
-              value={roomFormInfo.frequency}
-          /> 
-          <FormSelect
-              id={"buffer"} 
-              inputLabel={"Buffer Size (Frames per Period)"} 
-              required={true}
-              options={FormOptions.buffer}
-              onChange={handleChange}
-              value={roomFormInfo.buffer}
-          /> 
+          />
+          {
+            roomFormInfo.type === "AWS" && 
+            <>
+              <FormSelect
+                  id={"region"} 
+                  inputLabel={"Region"} 
+                  required={true}
+                  options={recommendRegion}
+                  onChange={handleChange}
+                  value={roomFormInfo.region}
+              /> 
+              <FormSelect
+                  id={"size"} 
+                  inputLabel={"Room Size"} 
+                  required={true}
+                  options={FormOptions.size}
+                  onChange={handleChange}
+                  value={roomFormInfo.size}
+              /> 
+              <FormSelect
+                  id={"frequency"} 
+                  inputLabel={"Sampling Frequency (Hz)"} 
+                  required={true}
+                  options={FormOptions.frequency}
+                  onChange={handleChange}
+                  value={roomFormInfo.frequency}
+              /> 
+              <FormSelect
+                  id={"buffer"} 
+                  inputLabel={"Buffer Size (Frames per Period)"} 
+                  required={true}
+                  options={FormOptions.buffer}
+                  onChange={handleChange}
+                  value={roomFormInfo.buffer}
+              />
+            </>
+          }
+          {
+            roomFormInfo.type !== "AWS" && 
+            <>
+              <FormInput
+                id={"ipAddress"} 
+                inputLabel={"IP Address"} 
+                required={true}
+                onChange={handleChange}
+                value={roomFormInfo.ipAddress}
+              />
+            </>
+          }
           <div className={classes.button}>
             <DefaultButton disabled={!!loading} onClick={props.handleClose}>Cancel</DefaultButton>
-            <DefaultButton type="submit" disabled={!!loading}>
+            <DefaultButton type="submit" disabled={!!loading} variant={"contained"}>
               Submit
               {/* if it is loading, show the loading indicator */}
               {!!loading && <div className={classes.progress}><CircularProgress size={15}/></div>}
@@ -228,7 +276,7 @@ export default function CreateEditRoomForm(props) {
 // the options that users can choose from when filling out the form
 // the first one in the list is the default value that the user will see
 const FormOptions = {
-  type: ["AWS"],
+  type: ["AWS", "External Setup"],
   region: ["us-west-2", "ca-central-1", "us-west-1"],
   size: [2,3,4,5],
   frequency: [44100, 48000, 256000],

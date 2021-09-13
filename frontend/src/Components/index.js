@@ -13,6 +13,8 @@ import {
     IconButton,
 } from '@material-ui/core/';
 
+import { ToggleButton, ToggleButtonGroup} from '@material-ui/lab';
+
 // icons
 import SearchIcon from '@material-ui/icons/Search';
 
@@ -95,7 +97,50 @@ export const FormSelect = (props) => {
     )
 }
 
+export const FormButtonGroup = (props) => {
+    const {id, inputLabel, options, value, onChange} = props;
 
+    const useStyles = makeStyles((theme) => ({
+        root: {
+            margin: theme.spacing(2,0,3,0)
+        },
+        fullWidth: {
+            width: '100%',
+        },
+        input: {
+            marginTop: "-13px",
+            marginBottom: "5px"
+        }
+    }));
+
+    const classes = useStyles();
+
+    return (
+        <div className={classes.root}>
+            <InputLabel htmlFor={id} className={classes.input}>
+                {inputLabel}
+            </InputLabel>
+            <ToggleButtonGroup
+                size="small"
+                className={classes.fullWidth}
+                exclusive
+                id={id}
+                value={value}
+            >
+                {options.map((option, index) => 
+                    <ToggleButton 
+                        key={`${id}-${index}`} 
+                        value={option} 
+                        className={classes.fullWidth}
+                        onClick={onChange}
+                    >
+                        {option}
+                    </ToggleButton>
+                )}
+            </ToggleButtonGroup>
+        </div>
+    )
+}
 
 // https://github.com/mui-org/material-ui/issues/13570
 const BorderTextField = withStyles({
