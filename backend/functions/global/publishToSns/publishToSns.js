@@ -17,10 +17,7 @@ exports.handler = async (event) => {
 	console.log(body);
 
 	if (!validateBody(requiredBody, body)) {
-		return {
-			statusCode: 400,
-			body: 'Incomplete body 1',
-		};
+		return createResponse(false, 'Invalid body');
 	}
 
 	var message;
@@ -31,56 +28,38 @@ exports.handler = async (event) => {
 				message = await createServer(body);
 				break;
 			} catch (error) {
-				return {
-					statusCode: 400,
-					body: JSON.stringify(error),
-				};
+				return createResponse(false, error);
 			}
 		case 'terminate':
 			try {
 				message = await terminateServer(body);
 				break;
 			} catch (error) {
-				return {
-					statusCode: 400,
-					body: JSON.stringify(error),
-				};
+				return createResponse(false, error);
 			}
 		case 'restart':
 			try {
 				message = await restartServer(body);
 				break;
 			} catch (error) {
-				return {
-					statusCode: 400,
-					body: JSON.stringify(error),
-				};
+				return createResponse(false, error);
 			}
 		case 'param_change':
 			try {
 				message = await changeServerParams(body);
 				break;
 			} catch (error) {
-				return {
-					statusCode: 400,
-					body: JSON.stringify(error),
-				};
+				return createResponse(false, error);
 			}
 		case 'region_change':
 			try {
 				message = await changeRegion(body);
 				break;
 			} catch (error) {
-				return {
-					statusCode: 400,
-					body: JSON.stringify(error),
-				};
+				return createResponse(false, error);
 			}
 		default:
-			return {
-				statusCode: 400,
-				body: 'Invalid action',
-			};
+			return createResponse(false, 'Invalid action');
 	}
 
 	const snsParams = {
@@ -111,10 +90,7 @@ exports.handler = async (event) => {
 		};
 	} catch (error) {
 		// TODO: Delete ddb entry to cleanup
-		return {
-			statusCode: 400,
-			body: JSON.stringify(error),
-		};
+		return createResponse(false, error);
 	}
 };
 
@@ -216,10 +192,7 @@ const restartServer = async (body) => {
 
 const changeServerParams = async (body) => {
 	if (!body.buffer || !body.frequency) {
-		return {
-			statusCode: 400,
-			body: 'Missing Jacktrip parameters',
-		};
+		return createResponse(false, 'Missing Jacktrip Parameters');
 	}
 
 	const ddbParams = {
@@ -229,7 +202,7 @@ const changeServerParams = async (body) => {
 			serverId: body.serverId,
 		},
 		UpdateExpression:
-			'SET #buffer = :newBuffer, #frequency = :newFrequency, #status = param_change',
+			'SET #buffer = :newBuffer, #frequency = :newFrequency, #status = :newStatus',
 		ExpressionAttributeNames: {
 			'#buffer': 'buffer',
 			'#frequency': 'frequency',
@@ -238,8 +211,10 @@ const changeServerParams = async (body) => {
 		ExpressionAttributeValues: {
 			':newBuffer': body.buffer,
 			':newFrequency': body.frequency,
+			':newStatus': 'param_change',
+			':conditionStatus': 'running',
 		},
-		ConditionExpression: '#status = running',
+		ConditionExpression: '#status = :conditionStatus',
 		ReturnValues: 'ALL_NEW',
 	};
 	const res = await ddb.update(ddbParams).promise();
@@ -266,7 +241,7 @@ const changeRegion = async (body) => {
 			serverId: body.serverId,
 		},
 		UpdateExpression:
-			'SET #region = :newRegion, #buffer = :newBuffer, #frequency := newFrequency, #status = creating',
+			'SET #region = :newRegion, #buffer = :newBuffer, #frequency = :newFrequency, #status = :creating',
 		ExpressionAttributeNames: {
 			'#region': 'region',
 			'#status': 'status',
@@ -277,8 +252,10 @@ const changeRegion = async (body) => {
 			':newRegion': body.region,
 			':newBuffer': body.buffer,
 			':newFrequency': body.frequency,
+			':creating': 'creating',
+			':terminated': 'terminated',
 		},
-		ConditionExpression: '#status = terminated',
+		ConditionExpression: '#status = :terminated',
 		ReturnValues: 'ALL_NEW',
 	};
 	const res = await ddb.update(ddbParams).promise();
@@ -294,3 +271,15 @@ const changeRegion = async (body) => {
 		},
 	};
 };
+
+const createResponse = (success, message) => ({
+	statusCode: success ? 200 : 400,
+	body: JSON.stringify(message),
+	headers: {
+		'Access-Control-Allow-Origin': 'http://localhost:3000',
+		'Access-Control-Allow-Credentials': true,
+		'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+		'Access-Control-Allow-Headers':
+			'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
+	},
+});
