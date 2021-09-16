@@ -253,4 +253,5 @@ Resources:
                 - 'jackd -R -t500 -ddummy -r{{samplingRate}} -p{{bufferSize}} &'
                 - 'cd /home/ubuntu'
                 - './jacktrip -S &'
+                - 'echo "Run Jacktrip Successfull"'
       DocumentType: Command

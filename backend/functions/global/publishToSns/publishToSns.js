@@ -66,6 +66,16 @@ exports.handler = async (event) => {
 					body: JSON.stringify(error),
 				};
 			}
+		case 'region_change':
+			try {
+				message = await changeRegion(body);
+				break;
+			} catch (error) {
+				return {
+					statusCode: 400,
+					body: JSON.stringify(error),
+				};
+			}
 		default:
 			return {
 				statusCode: 400,
@@ -245,5 +255,42 @@ const changeServerParams = async (body) => {
 			frequency: res.Attributes.frequency,
 		},
 		instanceId: res.Attributes.instanceId,
+	};
+};
+
+const changeRegion = async (body) => {
+	const ddbParams = {
+		TableName: process.env.userServerTableName,
+		Key: {
+			user: body.user,
+			serverId: body.serverId,
+		},
+		UpdateExpression:
+			'SET #region = :newRegion, #buffer = :newBuffer, #frequency := newFrequency, #status = creating',
+		ExpressionAttributeNames: {
+			'#region': 'region',
+			'#status': 'status',
+			'#buffer': 'buffer',
+			'#frequency': 'frequency',
+		},
+		ExpressionAttributeValues: {
+			':newRegion': body.region,
+			':newBuffer': body.buffer,
+			':newFrequency': body.frequency,
+		},
+		ConditionExpression: '#status = terminated',
+		ReturnValues: 'ALL_NEW',
+	};
+	const res = await ddb.update(ddbParams).promise();
+	return {
+		action: 'create',
+		user: body.user,
+		serverId: body.serverId,
+		region: body.region,
+		time: new Date(),
+		jacktripParameter: {
+			buffer: res.Attributes.buffer,
+			frequency: res.Attributes.frequency,
+		},
 	};
 };
