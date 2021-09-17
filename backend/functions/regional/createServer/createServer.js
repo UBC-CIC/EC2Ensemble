@@ -1,11 +1,17 @@
 const AWS = require('aws-sdk');
 
 const ec2 = new AWS.EC2();
+const ssm = new AWS.SSM();
 
 exports.handler = async (event) => {
 	console.log(event);
+	const ami = await ssm
+		.getParameter({
+			Name: 'JacktripAMIId',
+		})
+		.promise();
 	const runParams = {
-		ImageId: 'ami-0b7e74e3956276e5c',
+		ImageId: ami.Parameter.Value,
 		InstanceType: 't2.micro',
 		MinCount: 1,
 		MaxCount: 1,
@@ -26,8 +32,8 @@ exports.handler = async (event) => {
 		],
 		SecurityGroups: [process.env.ec2SecurityGroup],
 		IamInstanceProfile: {
-			Name: "JacktripEC2InstanceProfile"
-		}
+			Name: 'JacktripEC2InstanceProfile',
+		},
 	};
 	let runRes;
 	try {

@@ -12,13 +12,15 @@ exports.handler = async (event) => {
 			user: event.user,
 			serverId: event.serverId,
 		},
-		UpdateExpression: 'SET #status = :newStatus, reason = :reason',
+		UpdateExpression: 'SET #status = :newStatus',
 		ReturnValues: 'UPDATED_NEW',
 		ExpressionAttributeValues: {
 			':newStatus': `fail_${event.action}`,
+			// ':reason': event.errorInfo.Error,
 		},
 		ExpressionAttributeNames: {
 			'#status': 'status',
+			// '#reason': 'reason',
 		},
 	};
 	try {

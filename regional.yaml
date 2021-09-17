@@ -35,6 +35,7 @@ Resources:
                 - ec2:RunInstances
                 - ec2:CreateTags
                 - iam:PassRole
+                - ssm:GetParameter
               Resource: '*'
       Environment:
         Variables:

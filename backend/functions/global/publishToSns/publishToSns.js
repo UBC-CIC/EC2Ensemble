@@ -11,6 +11,7 @@ const requiredBodyCreate = [
 	'type',
 	'description',
 ];
+const tableName = process.env.userServerTableName;
 
 exports.handler = async (event) => {
 	const body = JSON.parse(event.body);
@@ -47,6 +48,9 @@ exports.handler = async (event) => {
 		case 'param_change':
 			try {
 				message = await changeServerParams(body);
+				if (!message) {
+					return createResponse(true, 'Param change success');
+				}
 				break;
 			} catch (error) {
 				return createResponse(false, error);
@@ -105,7 +109,7 @@ const createServer = async (body) => {
 		throw new Error('Invalid body for create');
 	}
 	const ddbParams = {
-		TableName: process.env.userServerTableName,
+		TableName: tableName,
 		Item: {
 			user: body.user,
 			serverId: body.serverId,
@@ -140,7 +144,7 @@ const createServer = async (body) => {
 
 const terminateServer = async (body) => {
 	const ddbParams = {
-		TableName: process.env.userServerTableName,
+		TableName: tableName,
 		Key: {
 			user: body.user,
 			serverId: body.serverId,
@@ -159,7 +163,7 @@ const terminateServer = async (body) => {
 
 const restartServer = async (body) => {
 	const ddbParams = {
-		TableName: process.env.userServerTableName,
+		TableName: tableName,
 		Key: {
 			user: body.user,
 			serverId: body.serverId,
@@ -191,74 +195,57 @@ const restartServer = async (body) => {
 };
 
 const changeServerParams = async (body) => {
-	if (!body.buffer || !body.frequency) {
-		return createResponse(false, 'Missing Jacktrip Parameters');
-	}
+	const jacktripChange = body.buffer || body.frequency;
+	const newEntry = {
+		...body,
+		...(jacktripChange && {
+			status: 'param_change',
+		}),
+	};
+	delete newEntry.action;
 
-	const ddbParams = {
-		TableName: process.env.userServerTableName,
-		Key: {
+	const res = await updateEntry(
+		tableName,
+		newEntry,
+		'user',
+		'serverId',
+		null,
+		'ALL_OLD'
+	);
+	console.log(res);
+	if (res.status === 'terminated') {
+		return null;
+	} else {
+		return {
+			action: 'param_change',
 			user: body.user,
 			serverId: body.serverId,
-		},
-		UpdateExpression:
-			'SET #buffer = :newBuffer, #frequency = :newFrequency, #status = :newStatus',
-		ExpressionAttributeNames: {
-			'#buffer': 'buffer',
-			'#frequency': 'frequency',
-			'#status': 'status',
-		},
-		ExpressionAttributeValues: {
-			':newBuffer': body.buffer,
-			':newFrequency': body.frequency,
-			':newStatus': 'param_change',
-			':conditionStatus': 'running',
-		},
-		ConditionExpression: '#status = :conditionStatus',
-		ReturnValues: 'ALL_NEW',
-	};
-	const res = await ddb.update(ddbParams).promise();
-	console.log(res);
-	return {
-		action: 'param_change',
-		user: body.user,
-		serverId: body.serverId,
-		region: body.region,
-		time: new Date(),
-		jacktripParameter: {
-			buffer: res.Attributes.buffer,
-			frequency: res.Attributes.frequency,
-		},
-		instanceId: res.Attributes.instanceId,
-	};
+			region: body.region,
+			time: new Date(),
+			jacktripParameter: {
+				buffer: body.buffer,
+				frequency: body.frequency,
+			},
+			instanceId: res.instanceId,
+		};
+	}
 };
 
 const changeRegion = async (body) => {
-	const ddbParams = {
-		TableName: process.env.userServerTableName,
-		Key: {
-			user: body.user,
-			serverId: body.serverId,
-		},
-		UpdateExpression:
-			'SET #region = :newRegion, #buffer = :newBuffer, #frequency = :newFrequency, #status = :creating',
-		ExpressionAttributeNames: {
-			'#region': 'region',
-			'#status': 'status',
-			'#buffer': 'buffer',
-			'#frequency': 'frequency',
-		},
-		ExpressionAttributeValues: {
-			':newRegion': body.region,
-			':newBuffer': body.buffer,
-			':newFrequency': body.frequency,
-			':creating': 'creating',
-			':terminated': 'terminated',
-		},
-		ConditionExpression: '#status = :terminated',
-		ReturnValues: 'ALL_NEW',
+	const newEntry = {
+		...body,
+		status: 'creating',
 	};
-	const res = await ddb.update(ddbParams).promise();
+	delete newEntry.action;
+
+	const res = await updateEntry(
+		tableName,
+		newEntry,
+		'user',
+		'serverId',
+		'terminated',
+		'ALL_NEW'
+	);
 	return {
 		action: 'create',
 		user: body.user,
@@ -266,8 +253,8 @@ const changeRegion = async (body) => {
 		region: body.region,
 		time: new Date(),
 		jacktripParameter: {
-			buffer: res.Attributes.buffer,
-			frequency: res.Attributes.frequency,
+			buffer: res.buffer,
+			frequency: res.frequency,
 		},
 	};
 };
@@ -283,3 +270,54 @@ const createResponse = (success, message) => ({
 			'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
 	},
 });
+
+const updateEntry = async (
+	tableName,
+	item,
+	partitionKey,
+	sortKey = null,
+	condition,
+	returnValues
+) => {
+	var params = {
+		TableName: tableName,
+		Key: {},
+		ExpressionAttributeValues: {},
+		ExpressionAttributeNames: {
+			'#status': 'status',
+		},
+		UpdateExpression: '',
+		ReturnValues: returnValues,
+		ConditionExpression: '',
+	};
+
+	params['Key'][partitionKey] = item[partitionKey];
+	if (sortKey) {
+		params['Key'][sortKey] = item[sortKey];
+	}
+
+	let prefix = 'set ';
+	let attributes = Object.keys(item);
+	for (let i = 0; i < attributes.length; i++) {
+		let attribute = attributes[i];
+		if (attribute != partitionKey && attribute != sortKey) {
+			params['UpdateExpression'] +=
+				prefix + '#' + attribute + ' = :' + attribute;
+			params['ExpressionAttributeValues'][':' + attribute] =
+				item[attribute];
+			params['ExpressionAttributeNames']['#' + attribute] = attribute;
+			prefix = ', ';
+		}
+	}
+	if (condition) {
+		params['ExpressionAttributeValues'][':' + condition] = condition;
+		params['ConditionExpression'] = '#status = :' + condition;
+	}
+	try {
+		const res = await ddb.update(params).promise();
+		return res.Attributes;
+	} catch (error) {
+		console.error(error);
+		throw Error(`Error updating ${partitionKey}`);
+	}
+};
