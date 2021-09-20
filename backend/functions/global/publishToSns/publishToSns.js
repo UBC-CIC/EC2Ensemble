@@ -152,13 +152,17 @@ const terminateServer = async (body) => {
 	};
 	const res = await ddb.get(ddbParams).promise();
 	console.log(res);
-	return {
-		action: body.action,
-		user: body.user,
-		serverId: body.serverId,
-		region: body.region,
-		instanceId: res.Item.instanceId,
-	};
+	if (res.Item.status !== 'running') {
+		throw new Error('Server is not running');
+	} else {
+		return {
+			action: body.action,
+			user: body.user,
+			serverId: body.serverId,
+			region: body.region,
+			instanceId: res.Item.instanceId,
+		};
+	}
 };
 
 const restartServer = async (body) => {
@@ -259,17 +263,20 @@ const changeRegion = async (body) => {
 	};
 };
 
-const createResponse = (success, message) => ({
-	statusCode: success ? 200 : 400,
-	body: JSON.stringify(message),
-	headers: {
-		'Access-Control-Allow-Origin': 'http://localhost:3000',
-		'Access-Control-Allow-Credentials': true,
-		'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
-		'Access-Control-Allow-Headers':
-			'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
-	},
-});
+const createResponse = (success, message) => {
+	console.log('Response message: ', message);
+	return {
+		statusCode: success ? 200 : 400,
+		body: JSON.stringify(message),
+		headers: {
+			'Access-Control-Allow-Origin': 'http://localhost:3000',
+			'Access-Control-Allow-Credentials': true,
+			'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+			'Access-Control-Allow-Headers':
+				'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
+		},
+	};
+};
 
 const updateEntry = async (
 	tableName,
@@ -288,7 +295,6 @@ const updateEntry = async (
 		},
 		UpdateExpression: '',
 		ReturnValues: returnValues,
-		ConditionExpression: '',
 	};
 
 	params['Key'][partitionKey] = item[partitionKey];

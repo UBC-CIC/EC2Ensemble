@@ -329,7 +329,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:jacktrip*
+                  - Fn::Sub: arn:*:lambda:${AWS::Region}:${AWS::AccountId}:function:jacktrip*
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
 
@@ -356,6 +356,16 @@ Resources:
             Principal:
               Service: ec2.amazonaws.com
             Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ContactWebsocketLambdaInvoke
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:jacktrip-regional-resources*
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 

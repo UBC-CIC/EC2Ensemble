@@ -6,6 +6,7 @@ Globals:
   Function:
     Runtime: nodejs14.x
 Parameters:
+  # Need websocket endpoint parameter too and state machine role
   CentralRegion:
     Type: String
     Default: ca-central-1
@@ -34,9 +35,13 @@ Resources:
               Action:
                 - ec2:RunInstances
                 - ec2:CreateTags
-                - iam:PassRole
                 - ssm:GetParameter
+                - iam:PassRole
               Resource: '*'
+            # - Effect: Allow
+            #   Action:
+            #     - iam:PassRole
+            #   Resource: !Sub 'arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*'
       Environment:
         Variables:
           ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
@@ -174,6 +179,10 @@ Resources:
           FromPort: 0
           ToPort: 65535
           CidrIp: 0.0.0.0/0
+      # SecurityGroupEgress:
+      #   - Description: Allow all outbound traffic
+      #     IpProtocol: '-1'
+      #     CidrIp: 0.0.0.0/0
 
   # SNS Subscription and SQS
   JacktripSqsSnsSubscription:
@@ -254,5 +263,6 @@ Resources:
                 - 'jackd -R -t500 -ddummy -r{{samplingRate}} -p{{bufferSize}} &'
                 - 'cd /home/ubuntu'
                 - './jacktrip -S &'
-                - 'echo "Run Jacktrip Successfull"'
+                - 'python3 -m http.server 8000'
+                - 'echo "Run Jacktrip Successful"'
       DocumentType: Command
