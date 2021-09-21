@@ -263,7 +263,6 @@ Resources:
                 - 'jackd -R -t500 -ddummy -r{{samplingRate}} -p{{bufferSize}} &'
                 - 'cd /home/ubuntu'
                 - './jacktrip -S &'
-                - 'python3 -m http.server 8000 &'
                 - 'echo "Run Jacktrip Successful"'
       DocumentType: Command
 

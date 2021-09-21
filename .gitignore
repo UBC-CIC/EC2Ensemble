@@ -1,4 +1,5 @@
 cli.txt
+*.sh
 .aws-sam*/
 stacksetpolicy.json
 AWSCloudFormationStackSet*.yml

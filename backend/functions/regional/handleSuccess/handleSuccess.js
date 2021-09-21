@@ -60,10 +60,13 @@ exports.handler = async (event) => {
 			Key: {
 				user: event.user,
 				serverId: event.serverId,
-				UpdateExpression: 'SET #status = running',
-				ExpressionAttributeNames: {
-					'#status': 'status',
-				},
+			},
+			UpdateExpression: 'SET #status = :running',
+			ExpressionAttributeNames: {
+				'#status': 'status',
+			},
+			ExpressionAttributeValues: {
+				':running': 'running',
 			},
 		};
 		try {
