@@ -329,7 +329,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - Fn::Sub: arn:*:lambda:${AWS::Region}:${AWS::AccountId}:function:jacktrip*
+                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:jacktrip*
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
 
@@ -364,8 +364,17 @@ Resources:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
+                  - lambda:ListFunctions
                 Resource:
                   - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:jacktrip-regional-resources*
+        - PolicyName: Ec2DescribeTags
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeTags
+                Resource: '*'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
