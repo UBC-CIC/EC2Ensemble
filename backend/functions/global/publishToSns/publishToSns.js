@@ -152,8 +152,8 @@ const terminateServer = async (body) => {
 	};
 	const res = await ddb.get(ddbParams).promise();
 	console.log(res);
-	if (res.Item.status !== 'running') {
-		throw new Error('Server is not running');
+	if (res.Item.status === 'terminated') {
+		throw new Error('Server is already terminated');
 	} else {
 		return {
 			action: body.action,
@@ -180,7 +180,7 @@ const restartServer = async (body) => {
 			':newStatus': 'creating',
 			':terminated': 'terminated',
 		},
-		ConditionExpression: '#status = :terminated',
+		ConditionExpression: 'NOT #status = :running',
 		ReturnValues: 'ALL_NEW',
 	};
 	const res = await ddb.update(ddbParams).promise();
