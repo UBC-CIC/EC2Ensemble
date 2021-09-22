@@ -9,7 +9,7 @@ Globals:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
       AllowOrigin: "'http://localhost:3000'"
-      AllowMethods: "'OPTIONS, POST, GET'"
+      AllowMethods: "'OPTIONS, POST, GET, DELETE'"
       AllowCredentials: true
     Auth:
       AddDefaultAuthorizerToCorsPreflight: False
@@ -83,6 +83,47 @@ Resources:
           Properties:
             Method: delete
             Path: /user/{user}/room/{serverId}
+            RequestParameters:
+              - method.request.path.user:
+                  Required: true
+              - method.request.path.serverId:
+                  Required: true
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+
+  CreateExternalRoom:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/global/createExternalRoom
+      Handler: createExternalRoom.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: post
+            Path: /external
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+
+  UpdateExternalRoom:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/global/updateExternalRoom
+      Handler: updateExternalRoom.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: put
+            Path: /user/{user}/external/{serverId}
             RequestParameters:
               - method.request.path.user:
                   Required: true

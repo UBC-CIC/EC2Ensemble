@@ -3,31 +3,25 @@ const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 exports.handler = async (event) => {
 	console.log(event);
+	console.log(event.body);
 
 	const ddbParams = {
 		TableName: process.env.userServerTableName,
-		Key: {
-			user: event.pathParameters.user,
-			serverId: event.pathParameters.serverId,
-		},
-		ConditionExpression: '#status = :terminated',
-		ExpressionAttributeValues: {
-			':terminated': 'terminated',
-		},
+		Item: event.body,
+		ConditionExpression: 'attribute_not_exists(#user)',
 		ExpressionAttributeNames: {
-			'#status': 'status',
+			'#user': 'user',
 		},
-		ReturnValues: 'ALL_OLD',
 	};
 
 	try {
-		const res = await ddb.delete(ddbParams).promise();
+		const res = await ddb.put(ddbParams).promise();
 		console.log(res);
 		return {
 			headers: {
 				'Access-Control-Allow-Origin': 'http://localhost:3000',
 				'Access-Control-Allow-Credentials': true,
-				'Access-Control-Allow-Methods': 'OPTIONS,DELETE',
+				'Access-Control-Allow-Methods': 'OPTIONS,POST',
 				'Access-Control-Allow-Headers':
 					'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
 			},
@@ -40,7 +34,7 @@ exports.handler = async (event) => {
 			headers: {
 				'Access-Control-Allow-Origin': 'http://localhost:3000',
 				'Access-Control-Allow-Credentials': true,
-				'Access-Control-Allow-Methods': 'OPTIONS,DELETE',
+				'Access-Control-Allow-Methods': 'OPTIONS,POST',
 				'Access-Control-Allow-Headers':
 					'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
 			},
