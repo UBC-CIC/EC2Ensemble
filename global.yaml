@@ -72,6 +72,29 @@ Resources:
         Variables:
           userServerTableName: !Ref UserServerTable
 
+  DeleteRoom:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/global/deleteRoom
+      Handler: deleteRoom.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: delete
+            Path: /user/{user}/room/{serverId}
+            RequestParameters:
+              - method.request.path.user:
+                  Required: true
+              - method.request.path.serverId:
+                  Required: true
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+
   # DynamoDB
   UserServerTable:
     Type: AWS::DynamoDB::Table

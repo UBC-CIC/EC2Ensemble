@@ -76,6 +76,7 @@ exports.handler = async (event) => {
 		}
 	}
 	return {
+		// Websocket Message
 		...(event.action === 'create' && {
 			ipAddress: event.getStatusResult.ip,
 		}),
