@@ -1,4 +1,4 @@
-# Student Engagement Application
+# PMCA-CIC
 
 ## Project Overview
 

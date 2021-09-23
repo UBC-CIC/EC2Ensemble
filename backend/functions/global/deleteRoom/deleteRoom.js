@@ -4,21 +4,17 @@ const ddb = new AWS.DynamoDB.DocumentClient();
 exports.handler = async (event) => {
 	console.log(event);
 
+	const user = decodeURIComponent(event.pathParameters.user);
+	const serverId = decodeURIComponent(event.pathParameters.serverId);
 	const ddbParams = {
 		TableName: process.env.userServerTableName,
 		Key: {
-			user: event.pathParameters.user,
-			serverId: event.pathParameters.serverId,
-		},
-		ConditionExpression: '#status = :terminated',
-		ExpressionAttributeValues: {
-			':terminated': 'terminated',
-		},
-		ExpressionAttributeNames: {
-			'#status': 'status',
+			user,
+			serverId,
 		},
 		ReturnValues: 'ALL_OLD',
 	};
+	console.log(ddbParams);
 
 	try {
 		const res = await ddb.delete(ddbParams).promise();
@@ -35,6 +31,7 @@ exports.handler = async (event) => {
 			body: JSON.stringify(res.Attributes),
 		};
 	} catch (error) {
+		console.log(error);
 		return {
 			statusCode: 400,
 			headers: {

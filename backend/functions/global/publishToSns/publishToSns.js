@@ -62,6 +62,13 @@ exports.handler = async (event) => {
 			} catch (error) {
 				return createResponse(false, error);
 			}
+		case 'restart_jacktrip':
+			try {
+				message = await restartJacktrip(body);
+				break;
+			} catch (error) {
+				return createResponse(false, error);
+			}
 		default:
 			return createResponse(false, 'Invalid action');
 	}
@@ -178,7 +185,7 @@ const restartServer = async (body) => {
 		},
 		ExpressionAttributeValues: {
 			':newStatus': 'creating',
-			':terminated': 'terminated',
+			':running': 'running',
 		},
 		ConditionExpression: 'NOT #status = :running',
 		ReturnValues: 'ALL_NEW',
@@ -231,6 +238,34 @@ const changeServerParams = async (body) => {
 				frequency: body.frequency,
 			},
 			instanceId: res.instanceId,
+		};
+	}
+};
+
+const restartJacktrip = async (body) => {
+	const ddbParams = {
+		TableName: tableName,
+		Key: {
+			user: body.user,
+			serverId: body.serverId,
+		},
+	};
+	const res = await ddb.get(ddbParams).promise();
+	console.log(res);
+	if (res.Item.status === 'terminated') {
+		throw new Error('Server is not running');
+	} else {
+		return {
+			action: 'restart_jacktrip',
+			user: body.user,
+			serverId: body.serverId,
+			region: body.region,
+			time: new Date(),
+			instanceId: res.Item.instanceId,
+			jacktripParameter: {
+				buffer: res.Item.buffer,
+				frequency: res.Item.frequency,
+			},
 		};
 	}
 };

@@ -3,14 +3,15 @@ const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 exports.handler = async (event) => {
 	console.log(event);
-	console.log(event.body);
+	const body = JSON.parse(event.body);
+	console.log(body);
 
-	const user = event.pathParameters.user;
-	const serverId = event.pathParameters.serverId;
+	const user = decodeURIComponent(event.pathParameters.user);
+	const serverId = decodeURIComponent(event.pathParameters.serverId);
 	try {
 		const res = await updateEntry(
 			process.env.userServerTableName,
-			event.body,
+			body,
 			user,
 			serverId
 		);
@@ -27,6 +28,7 @@ exports.handler = async (event) => {
 			body: JSON.stringify(res.Attributes),
 		};
 	} catch (error) {
+		console.log(error);
 		return {
 			statusCode: 400,
 			headers: {
@@ -46,6 +48,7 @@ const updateEntry = async (tableName, item, partitionKey, sortKey = null) => {
 		TableName: tableName,
 		Key: {},
 		ExpressionAttributeValues: {},
+		ExpressionAttributeNames: {},
 		UpdateExpression: '',
 	};
 
@@ -68,6 +71,7 @@ const updateEntry = async (tableName, item, partitionKey, sortKey = null) => {
 		}
 	}
 	try {
+		console.log('Params: ', params);
 		const res = await ddb.update(params).promise();
 		return res.Attributes;
 	} catch (error) {

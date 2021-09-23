@@ -9,7 +9,7 @@ Globals:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
       AllowOrigin: "'http://localhost:3000'"
-      AllowMethods: "'OPTIONS, POST, GET, DELETE'"
+      AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
       AllowCredentials: true
     Auth:
       AddDefaultAuthorizerToCorsPreflight: False
@@ -180,6 +180,9 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+      TimeToLiveSpecification:
+        AttributeName: expiration
+        Enabled: true
 
   # Websocket authorizer with Lambda function
   # https://github.com/aws-samples/simple-websockets-chat-app/issues/22
