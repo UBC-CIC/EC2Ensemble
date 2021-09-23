@@ -249,10 +249,18 @@ const restartJacktrip = async (body) => {
 			user: body.user,
 			serverId: body.serverId,
 		},
+		UpdateExpression: 'SET #status = :restart',
+		ExpressionAttributeNames: {
+			'#status': 'status',
+		},
+		ExpressionAttributeValues: {
+			':restart': 'restart_jacktrip',
+		},
+		ReturnValues: 'ALL_NEW',
 	};
-	const res = await ddb.get(ddbParams).promise();
+	const res = await ddb.update(ddbParams).promise();
 	console.log(res);
-	if (res.Item.status === 'terminated') {
+	if (res.Attributes.status === 'terminated') {
 		throw new Error('Server is not running');
 	} else {
 		return {
@@ -261,10 +269,10 @@ const restartJacktrip = async (body) => {
 			serverId: body.serverId,
 			region: body.region,
 			time: new Date(),
-			instanceId: res.Item.instanceId,
+			instanceId: res.Attributes.instanceId,
 			jacktripParameter: {
-				buffer: res.Item.buffer,
-				frequency: res.Item.frequency,
+				buffer: res.Attributes.buffer,
+				frequency: res.Attributes.frequency,
 			},
 		};
 	}

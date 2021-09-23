@@ -16,7 +16,7 @@
 					"Next": "TerminateServer"
 				},
 				{
-					"And": [
+					"Or": [
 						{
 							"Variable": "$.action",
 							"StringEquals": "param_change"

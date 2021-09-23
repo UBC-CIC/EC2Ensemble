@@ -8,12 +8,14 @@ exports.handler = async (event) => {
 
 	const user = decodeURIComponent(event.pathParameters.user);
 	const serverId = decodeURIComponent(event.pathParameters.serverId);
+	body.user = user;
+	body.serverId = serverId;
 	try {
 		const res = await updateEntry(
 			process.env.userServerTableName,
 			body,
-			user,
-			serverId
+			'user',
+			'serverId'
 		);
 		console.log(res);
 		return {
@@ -25,7 +27,7 @@ exports.handler = async (event) => {
 					'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
 			},
 			statusCode: 200,
-			body: JSON.stringify(res.Attributes),
+			body: JSON.stringify(res),
 		};
 	} catch (error) {
 		console.log(error);
@@ -50,6 +52,7 @@ const updateEntry = async (tableName, item, partitionKey, sortKey = null) => {
 		ExpressionAttributeValues: {},
 		ExpressionAttributeNames: {},
 		UpdateExpression: '',
+		ReturnValues: 'ALL_NEW',
 	};
 
 	params['Key'][partitionKey] = item[partitionKey];

@@ -41,7 +41,7 @@ exports.handler = async (event) => {
 					'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
 			},
 			statusCode: 200,
-			body: JSON.stringify(res.Attributes),
+			body: JSON.stringify(res),
 		};
 	} catch (error) {
 		return {

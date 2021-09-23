@@ -63,8 +63,8 @@ Resources:
             RequestParameters:
               - method.request.querystring.user:
                   Required: true
-              - method.request.header.Authorization:
-                  Required: true
+            Auth:
+              Authorizer: NONE
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserServerTable
