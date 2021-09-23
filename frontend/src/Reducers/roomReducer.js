@@ -10,41 +10,30 @@ const roomReducer = (currentState = {}, action) => {
             const serverId = action.payload.serverId;
             return {
                 ...currentState, 
-                [serverId] : action.payload
+                [serverId] : {
+                    ...action.payload,
+                    userCount: 0,
+                    status: 'creating'
+                }
             }
         }
         case "DELETE_ROOM" : {
             const { serverId } = action.payload;
             delete currentState[serverId];
-            return currentState
+            return {
+                ...currentState
+            }
         }
-        case "UPDATE_ROOM_STATUS": {
-            const { serverId, status, ...others } = action.payload;
+        case "UPDATE_ROOM_INFO": {
+            const { serverId, ...others } = action.payload;
             const currRoomInfo = currentState[serverId];
             return {
                 ...currentState,
                 [serverId]: {
                     ...currRoomInfo,
-                    ...others,
-                    status: status,
+                    ...others
                 }
             }
-        }
-        case "UPDATE_ROOM_STATUS_SUCCESS": {
-            const { serverId, ipAddress } = action.payload;
-            // check if the current room still exists, in case it gets deleted
-            if (currentState[serverId]) {
-                const currRoomInfo = currentState[serverId];
-                return {
-                    ...currentState,
-                    [serverId]: {
-                        ...currRoomInfo,
-                        status: 'running',
-                        ipAddress: ipAddress,
-                    }
-                }
-            }
-            return currentState
         }
         default:
             return currentState

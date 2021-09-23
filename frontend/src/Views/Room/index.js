@@ -1,18 +1,21 @@
-import ping from 'ping';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import { Button, Divider, Grid } from '@material-ui/core/';
 
+// react
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+
 // icons
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
-import { useEffect, useState } from 'react';
-import { connect, useDispatch } from 'react-redux';
+import IconButton from '@material-ui/core/IconButton';
+import ShareIcon from '@material-ui/icons/Share';
 
 // actions
-import { restartRoom, terminateRoom } from '../../Actions/roomActions';
+import { changeRoomParams, deleteRoom, restartRoom, terminateRoom } from '../../Actions/roomActions';
 
 // components
 import CreateEditRoomForm from '../CreateEditRoomForm';
-
+import ShareRoomModal from '../ShareRooms'
 
 const useStyles = makeStyles((theme) => ({
 	root: {
@@ -69,6 +72,13 @@ const useStyles = makeStyles((theme) => ({
 	terminated: {
 		color: '#9c9c9c',
 	},
+	error: {
+		color: 'red'
+	},
+	alignCenter: {
+		display: 'flex',
+		alignItems: 'center'
+	}
 }));
 
 const SmallOutlinedButton = (props) => {
@@ -98,8 +108,9 @@ function Room(props) {
 		status,
 		ipAddress,
 		serverId,
-		roomList,
 		currUser,
+		userCount,
+		type
 	} = props;
 
 	/* there are three connection status
@@ -108,36 +119,64 @@ function Room(props) {
 	 * terminated === no connection to room, most likely been terminated
 	 * */
 	const [connectionStyle, setConnectionStyle] = useState(classes.terminated);
-	const [latency, setLatency] = useState('');
+	// const [latency, setLatency] = useState('');
+	const [regionChangeInfo, setRegionChangeInfo] = useState('');
+	const [deletionStatus, setDeletionStatus] = useState(false);
+	const [shareModalOpen, setShareModalOpen] = useState(false);
+
+	console.log(status, deletionStatus)
 
 	useEffect(() => {
-		if (status === 'running') {
+		if (status === 'running' || type === 'External Setup') {
 			setConnectionStyle(classes.running);
-		} else if (
-			status === 'creating' ||
-			status === undefined ||
-			status === 'terminating'
-		) {
-			setConnectionStyle(classes.creating);
-		} else {
+		} else if (status === 'terminated') {
 			setConnectionStyle(classes.terminated);
+			if (regionChangeInfo) {
+				// if regionChangeInfo is not empty, which means the region param is changed
+				dispatch(changeRoomParams(currUser, serverId, regionChangeInfo, "region"));
+				// reset regionChangeInfo
+				setRegionChangeInfo('');
+			}
+			if (deletionStatus) {
+				dispatch(deleteRoom(currUser, serverId))
+				setDeletionStatus(false)
+			}
+		} else if (!!status && status.includes('fail')) {
+			setConnectionStyle(classes.error);
+		} else {
+			setConnectionStyle(classes.creating);
 		}
-	}, [status]);
+	}, [status, regionChangeInfo, deletionStatus]);
 
 	const dispatch = useDispatch();
 
-	const handleRoomTermination = async (serverId) => {
-		dispatch(terminateRoom(currUser, roomList[serverId].region, serverId));
+	const handleRoomTermination = () => {
+		dispatch(terminateRoom(currUser, region, serverId));
 	};
 
-	const handleRoomRestart = async (serverId) => {
-		dispatch(restartRoom(currUser, roomList[serverId].region, serverId));
+	const handleRoomRestart = () => {
+		dispatch(restartRoom(currUser, region, serverId));
 	};
-	const testInstanceLatency = async (ip) => {
-		// const res = await ping.promise.probe(ip, {
-		// 	min_reply: 3,
-		// });
-		// setLatency(res.avg);
+
+	const handleRoomDeletion = () => {
+		if ((status !== 'terminated') && 
+			(status !== 'fail_create') &&
+			(type !== 'External Setup')
+		) {
+			// need to terminate the room first if it is running
+			handleRoomTermination();
+			setDeletionStatus(true)
+		} else {
+			dispatch(deleteRoom(currUser, serverId))
+		}
+	};
+
+	const handleShareModalOpen = () => {
+		setShareModalOpen(true);
+	};
+	
+	const handleShareModalClose = () => {
+		setShareModalOpen(false);
 	};
 
 	// modal
@@ -152,8 +191,23 @@ function Room(props) {
 		event.preventDefault();
 
 		setModalLoading(true);
-		// TODO: dispatch 
-		
+		// change room params
+		if (roomFormInfo.region !== region) {
+			// if room is not terminated, terminate the room first
+			if (status !== 'terminated') {
+				handleRoomTermination();
+			}
+			setRegionChangeInfo(roomFormInfo)
+		} else if (	((roomFormInfo.type ===  "AWS") && 
+						((roomFormInfo.roomName !== roomName) || 
+						(roomFormInfo.description !== description) ||
+						(roomFormInfo.buffer !== buffer) ||
+						(roomFormInfo.frequency !== frequency))
+					) ||
+					((roomFormInfo.type ===  "External Setup") && (roomFormInfo.ipAddress !== ipAddress)))
+		{
+			dispatch(changeRoomParams(currUser, serverId, roomFormInfo))
+		}
 		// let the buttons stop loading
 		setModalLoading(false);
 		// close the modal
@@ -163,14 +217,38 @@ function Room(props) {
 	return (
 		<Grid container alignContent="flex-start" className={classes.root}>
 			<Grid container item alignItems="center">
-				<div>{roomName}</div>
+				<div className={classes.alignCenter}>
+					<div>{roomName}</div>
+					{type !== "External Setup" &&
+						<IconButton 
+							fontSize="small" 
+							variant="contained"
+							color="default"
+							className={classes.margin_horizontal}
+							onClick={handleShareModalOpen}
+						>
+							<ShareIcon fontSize="small"/>
+						</IconButton>
+					}
+					<ShareRoomModal 
+						open={shareModalOpen}
+						handleClose={handleShareModalClose}
+						id={serverId}
+					/>
+				</div>
 				<div className={`${classes.flexEnd}`}>
-					{(status === 'running' && <span>7 users active</span>) ||
-						((status === 'creating' || status === undefined) && (
+					{
+						(status === 'running' && 
+						<span>
+							{userCount ? userCount : 0} active
+						</span>) ||
+						((type === "AWS") && (status === 'creating' || status === undefined) && (
 							<span>In Creation</span>
 						)) ||
-						(status === 'terminating' && <span>Stopping...</span>)}
-					<FiberManualRecordIcon className={connectionStyle} />
+						((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
+						((status === 'updating' || status === 'param_change') && <span>Updating Settings...</span>)
+					}
+					{status}<FiberManualRecordIcon className={connectionStyle} />
 				</div>
 			</Grid>
 			<Grid item xs={12} className={classes.margin_horizontal2}>
@@ -194,14 +272,23 @@ function Room(props) {
 									<DefaultButton>Copy</DefaultButton>
 								)}
 							</div>
-							<div>Region: {region}</div>
-							<div>Capacity: {size}</div>
+							{
+								(type === "AWS") &&
+								<>
+									<div>Region: {region}</div>
+									<div>Capacity: {size}</div>
+								</>
+							}
 						</Grid>
 					</Grid>
-					<Grid item className={classes.innerHeight}>
-						<div>Sampling Frequency: {frequency}</div>
-						<div>Buffer Size: {buffer}</div>
-					</Grid>
+
+					{
+						(type === "AWS") &&
+						<Grid item className={classes.innerHeight}>
+							<div>Sampling Frequency: {frequency}</div>
+							<div>Buffer Size: {buffer}</div>
+						</Grid>
+					}
 				</Grid>
 			</Grid>
 			<Grid container item alignItems="center">
@@ -209,13 +296,28 @@ function Room(props) {
 					className={`${classes.flexEnd} ${classes.margin_innerLeft}`}
 				>
 					<DefaultButton
-						onClick={() => {
-							testInstanceLatency(ipAddress);
-						}}
+						disabled={
+							(connectionStyle === classes.creating) &&
+							(status !== 'param_change')
+						}
+						onClick={handleRoomDeletion}
 					>
-						Test Latency: {latency}
+						Delete
 					</DefaultButton>
+					{/* <DefaultButton
+						disabled={
+							connectionStyle !== classes.terminated &&
+							connectionStyle !== classes.running
+						}
+						// onClick={testInstanceLatency}
+					>
+						Test Latency {latency && `:${latency}`}
+					</DefaultButton> */}
 					<DefaultButton
+						disabled={
+							connectionStyle !== classes.terminated &&
+							connectionStyle !== classes.running
+						}
 						onClick={() => {
 							setModalOpen(true)
 						}}
@@ -229,25 +331,28 @@ function Room(props) {
 						loading={modalLoading}
 						roomInfo={!!modalOpen && props}
 					/>
-					{status === 'terminated' && (
+					{((status === 'terminated') || (status === 'fail_create')) && (
 						<DefaultButton
-							onClick={() => handleRoomRestart(serverId)}
+							onClick={handleRoomRestart}
 						>
-							Start
+							{status === 'terminated' ? 'Start' : 'Retry'}
 						</DefaultButton>
 					)}
-					{status !== 'terminated' && (
+					{(status !== 'terminated') && 
+					(type !== 'External Setup') && 
+					(!status.includes('fail')) && 
+					(status !== 'param_change') && 
+					(
 						<DefaultButton
 							disabled={
-								status === 'terminating' ||
-								!status ||
-								status === 'creating'
+								connectionStyle !== classes.terminated &&
+								connectionStyle !== classes.running
 							}
-							onClick={() => handleRoomTermination(serverId)}
+							onClick={handleRoomTermination}
 						>
 							{status === 'terminating'
 								? 'Stopping...'
-								: !status || status === 'creating'
+								: connectionStyle !== classes.running
 								? 'Starting...'
 								: 'Stop'}
 						</DefaultButton>
@@ -258,10 +363,5 @@ function Room(props) {
 	);
 }
 
-const mapStateToProps = (state) => {
-	return {
-		roomList: state.roomsState,
-	};
-};
 
-export default connect(mapStateToProps, null)(Room);
+export default Room;

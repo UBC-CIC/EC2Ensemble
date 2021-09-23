@@ -1,5 +1,6 @@
 /* get rooms from db and update */
 export const queryRooms = (user) => async (dispatch) => {
+	const url = process.env.REACT_APP_AWS_USERDB_BASE;
 	const { userId, token } = getUserIdAndToken(user);
 
 	const requestOptions = {
@@ -11,7 +12,7 @@ export const queryRooms = (user) => async (dispatch) => {
 	};
 
 	await fetch(
-		`${process.env.REACT_APP_AWS_USERDB_BASE}?user=${encodeURIComponent(userId)}`,
+		`${url}/user?user=${encodeURIComponent(userId)}`,
 		requestOptions
 	)
 		.then((response) => response.json())
@@ -29,6 +30,7 @@ export const queryRooms = (user) => async (dispatch) => {
 /* create a room server */
 export const createRoom = (user, roomFormInfo) => async (dispatch) => {
 		const url = process.env.REACT_APP_AWS_API_BASE;
+		const dbURL=process.env.REACT_APP_AWS_USERDB_BASE;
 		const { userId, token } = getUserIdAndToken(user);
 
 		const roomFormInfoUser = {
@@ -42,14 +44,31 @@ export const createRoom = (user, roomFormInfo) => async (dispatch) => {
 			headers: {
 				'Content-Type': 'application/json',
 				Authorization: token,
-			},
-			body: JSON.stringify({
-				...roomFormInfoUser,
-				action: roomFormInfo.type === 'AWS' ? 'create' : 'externalCreate',
-			}),
+			}
 		};
 
-		await fetch(url, requestOptions)
+		let res;
+
+		if (roomFormInfo.type === 'AWS') {
+			res = fetch(url, {
+					...requestOptions, 
+					body: JSON.stringify({
+						...roomFormInfoUser,
+						action: 'create'
+					})
+				}
+			)
+		} else {
+			res = fetch(`${dbURL}/external`, 
+				{
+					...requestOptions, 
+					body: JSON.stringify({
+						...roomFormInfoUser,
+					})
+				}
+			)
+		}
+		await res
 			.then((response) => response.json())
 			.then((data) => {
 				// if successful, update the room list
@@ -64,26 +83,20 @@ export const createRoom = (user, roomFormInfo) => async (dispatch) => {
 };
 
 /* delete a room server */
-export const deleteRoom = (user, region, serverId) => async (dispatch) => {
-	const url = process.env.REACT_APP_AWS_API_BASE;
+export const deleteRoom = (user, serverId) => async (dispatch) => {
+	const url = process.env.REACT_APP_AWS_USERDB_BASE;
 	const { userId, token } = getUserIdAndToken(user);
 
 	const requestOptions = {
-		method: 'POST',
+		method: 'DELETE',
 		credentials: 'include',
 		headers: { 
 			'Content-Type': 'application/json',
 			Authorization: token,
 		},
-		body: JSON.stringify({
-			user: userId,
-			region: region,
-			serverId: serverId,
-			action: 'delete',
-		}),
 	};
 
-	await fetch(url, requestOptions)
+	await fetch(`${url}/user/${userId}/room/${encodeURI(serverId)}`, requestOptions)
 		.then((response) => response.json())
 		.then((data) => {
 			// if successful, delete the room from the list
@@ -124,7 +137,7 @@ export const terminateRoom = (user, region, serverId) => async (dispatch) => {
 			.then((data) => {
 				// if successful posted, change room state to in process of "terminating" the session
 				dispatch({
-					type: 'UPDATE_ROOM_STATUS',
+					type: 'UPDATE_ROOM_INFO',
 					payload: {
 						serverId: serverId,
 						status: 'terminating',
@@ -163,7 +176,7 @@ export const restartRoom = (user, region, serverId) => async (dispatch) => {
 		.then((data) => {
 			// if successful, restart the room
 			dispatch({
-				type: 'UPDATE_ROOM_STATUS',
+				type: 'UPDATE_ROOM_INFO',
 				payload: {
 					serverId: serverId,
 					status: undefined,
@@ -171,29 +184,125 @@ export const restartRoom = (user, region, serverId) => async (dispatch) => {
 			});
 		})
 		.catch((error) => {
-			console.log('Error in deleting the room', error);
+			console.log('Error in restarting the room', error);
+		});
+};
+
+export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="param") => async (dispatch) => {
+	const url = process.env.REACT_APP_AWS_API_BASE;
+	const dbURL=process.env.REACT_APP_AWS_USERDB_BASE;
+
+	const { userId, token } = getUserIdAndToken(user);
+
+	const requestOptions = {
+		method: updatedRoomParams.type === 'AWS' ? 'POST' : 'PUT',
+		credentials: 'include',
+		headers: { 
+			'Content-Type': 'application/json',
+			Authorization: token,
+		}
+	};
+
+	let res;
+	if (updatedRoomParams.type === 'AWS') {
+		res = fetch(url, 
+			{
+				...requestOptions, 
+				body: JSON.stringify({
+					user: userId,
+					serverId: serverId,
+					action: updateType === 'param' ? 'param_change' : 'region_change',
+					region: updatedRoomParams.region,
+					buffer: updatedRoomParams.buffer,
+					frequency: updatedRoomParams.frequency,
+					roomName: updatedRoomParams.roomName,
+					description: updatedRoomParams.description
+				})
+			}
+		)
+	} else {
+		console.log(token)
+		res = fetch(`${dbURL}/user/${userId}/external/${encodeURI(serverId)}`, 
+				{
+					...requestOptions, 
+					body: JSON.stringify({
+						roomName: updatedRoomParams.roomName,
+						description: updatedRoomParams.description,
+						ipAddress: updatedRoomParams.ipAddress
+					})
+				}
+			)
+	}
+	await res
+		.then((response) => response.json())
+		.then((data) => {
+			// if successful, update the params in the room
+			dispatch({
+				type: 'UPDATE_ROOM_INFO',
+				payload: {
+					...updatedRoomParams,
+					serverId: serverId,
+					status: 'updating'
+				},
+			});
+		})
+		.catch((error) => {
+			console.log('Error in changing room params', error);
 		});
 };
 
 /* get messages from websocket and update the room status */
 export const updateRoomStatus = (message) => (dispatch) => {
-	if (message.action === 'create' && message.success === true) {
-		dispatch({
-			type: 'UPDATE_ROOM_STATUS_SUCCESS',
-			payload: {
-				serverId: message.serverId,
-				ipAddress: message.ipAddress,
-			},
-		});
-	} else if (message.action === 'terminate') {
-		dispatch({
-			type: 'UPDATE_ROOM_STATUS',
-			payload: {
-				serverId: message.serverId,
-				status: 'terminated',
-			},
-		});
+	console.log("updateRoomStatus", message, message.action)
+	if (message.success === true) {
+		switch(message.action) {
+			case "create": {
+				dispatch({
+					type: 'UPDATE_ROOM_INFO',
+					payload: {
+						serverId: message.serverId,
+						ipAddress: message.ipAddress,
+						status: 'running'
+					},
+				});
+				break;
+			}
+			case "terminate": {
+				dispatch({
+					type: 'UPDATE_ROOM_INFO',
+					payload: {
+						serverId: message.serverId,
+						status: 'terminated',
+					},
+				});
+				break;
+			}
+			case "connection_count": {
+				dispatch({
+					type: 'UPDATE_ROOM_INFO',
+					payload: {
+						serverId: message.serverId,
+						userCount: parseInt(message.count),
+					},
+				});
+				break;
+			}
+			case "param_change": {
+				dispatch({
+					type: 'UPDATE_ROOM_INFO',
+					payload: {
+						serverId: message.serverId,
+						status: 'param_change'
+					},
+				});
+				break;
+			}
+			default: {
+				break
+			}
+		}
 	}
+	
 };
 
 // helper get userId and token

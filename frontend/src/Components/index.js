@@ -98,7 +98,7 @@ export const FormSelect = (props) => {
 }
 
 export const FormButtonGroup = (props) => {
-    const {id, inputLabel, options, value, onChange} = props;
+    const {id, inputLabel, options, value, onChange, disabled} = props;
 
     const useStyles = makeStyles((theme) => ({
         root: {
@@ -133,6 +133,7 @@ export const FormButtonGroup = (props) => {
                         value={option} 
                         className={classes.fullWidth}
                         onClick={onChange}
+                        disabled={disabled}
                     >
                         {option}
                     </ToggleButton>
