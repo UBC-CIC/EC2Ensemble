@@ -60,7 +60,7 @@ export default function WebSocketProvider (props) {
 
     // listening for messages from ws 
     clientWebSocket.current.onmessage = (event) => {
-      if (JSON.parse(event.data).message === "__thump__") {
+      if (JSON.parse(event.data) && JSON.parse(event.data).message === "__thump__") {
         // listen for heartbeats from server
       } else {
         onWebSocketMessage(event.data);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { connect, useDispatch } from "react-redux";
 
 // aws
-import { Auth } from "aws-amplify";
+import { Auth } from 'aws-amplify';
 
 
 // materialUI
@@ -13,6 +13,7 @@ import { Button, Grid } from '@material-ui/core/';
 import Room from './Room';
 import CreateEditRoomForm from './CreateEditRoomForm';
 import { SearchBar } from '../Components';
+import Navbar from '../Components/Navbar';
 
 // actions
 import { createRoom, queryRooms } from '../Actions/roomActions';
@@ -24,6 +25,12 @@ import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 const useStyles = makeStyles((theme) => ({
   flexEnd: {
     marginLeft: "auto",
+    // [theme.breakpoints.up('sm')]: {
+		// 	marginLeft: 'auto',
+		// 	width: '100%',
+		// 	flexDirection: 'column',
+		// },
+		// alignItems: 'center',
   },
   margin_vertical2: {
     margin: theme.spacing(2, 'auto')
@@ -31,9 +38,24 @@ const useStyles = makeStyles((theme) => ({
   margin_vertical3: {
     margin: theme.spacing(3, 'auto')
   },
+  margin_horizontal: {
+    margin: theme.spacing(0, 1),
+    background: "#c4c4c4"
+  },
   underlineText: {
     textDecoration: "underline",
     textUnderlineOffset: "0.1em"
+  },
+  navBar: {
+    height: '50px',
+    background: '#c4c4c4',
+    padding: theme.spacing(0, 2)
+  },
+  flex: {
+    display: 'flex'
+  },
+  alignCenter: {
+    alignItems: 'center'
   }
 }))
 
@@ -56,7 +78,7 @@ function Home(props) {
 
   const classes = useStyles();
 
-  const [open, setOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currUser, setCurrUser] = useState("");
   const dispatch = useDispatch();
@@ -75,30 +97,33 @@ function Home(props) {
 
 
   const handleFormOpen = () => {
-    setOpen(true);
+    setFormOpen(true);
   };
 
   const handleFormClose = () => {
-    setOpen(false);
+    setFormOpen(false);
   };
 
   const handleFormSubmit = async (event, roomFormInfo) => {
     event.preventDefault();
 
     setLoading(true);
-    await dispatch(createRoom(currUser, roomFormInfo))
+    await dispatch(createRoom(currUser, roomFormInfo));
     // let the buttons stop loading
     setLoading(false);
     // close the modal
-    setOpen(false);
+    handleFormClose();
   };
 
   return (
     <Grid container justifyContent="center">
+      <Navbar/>
       <Grid item xs={11} sm={10}>
-        <Grid container item justifyContent="center" alignItems="center" className={classes.margin_vertical2}>
-          <div><h2>All Rooms</h2></div>
-          <div className={`${classes.flexEnd}`}>
+        <Grid container item direction="row" alignItems="center" className={classes.margin_vertical2}>
+          <div className={`${classes.flex} ${classes.alignCenter}`}>
+            <h2>All Rooms</h2>
+          </div>
+          <div className={classes.flexEnd}>
             <DefaultButton 
               variant="contained"
               onClick={handleFormOpen}
@@ -106,7 +131,7 @@ function Home(props) {
               Create Room
             </DefaultButton>
             <CreateEditRoomForm 
-              open={open} 
+              open={formOpen} 
               handleClose={handleFormClose} 
               handleSubmit={handleFormSubmit}
               loading={loading}

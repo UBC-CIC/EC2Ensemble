@@ -145,25 +145,29 @@ export default function CreateEditRoomForm(props) {
 
   const submitForm = (event) => {
     let roomForm;
+    const serverId = uuidv4();
 
     if (roomFormInfo.type === "AWS") {
-      const serverId = uuidv4();
-
       // remove the ip address
       delete roomFormInfo.ipAddress;
-
+      
       roomForm = {
-        ...roomFormInfo,
+        roomName: roomFormInfo.roomName.trim(),
+        description: roomFormInfo.description.trim(),
+        type: roomFormInfo.type,
+        size: roomFormInfo.size,
+        frequency: roomFormInfo.frequency,
+        buffer: roomFormInfo.buffer,
         serverId: serverId,
         region: roomFormInfo.region.split(' ')[0], // remove "Recommend" text
       }
     } else {
       roomForm = {
-        roomName: roomFormInfo.roomName,
-        description: roomFormInfo.description,
+        roomName: roomFormInfo.roomName.trim(),
+        description: roomFormInfo.description.trim(),
         type: roomFormInfo.type,
-        ipAddress: roomFormInfo.ipAddress,
-        serverId: roomFormInfo.ipAddress
+        ipAddress: roomFormInfo.ipAddress.trim(),
+        serverId: serverId
       }
     }
     
@@ -196,6 +200,7 @@ export default function CreateEditRoomForm(props) {
               options={FormOptions.type}
               onChange={handleChange}
               value={roomFormInfo.type}
+              disabled={!!others.roomInfo}
           />
           {
             roomFormInfo.type === "AWS" && 
@@ -215,6 +220,7 @@ export default function CreateEditRoomForm(props) {
                   options={FormOptions.size}
                   onChange={handleChange}
                   value={roomFormInfo.size}
+                  disabled={!!others.roomInfo}
               /> 
               <FormSelect
                   id={"frequency"} 
