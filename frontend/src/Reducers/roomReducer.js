@@ -12,8 +12,7 @@ const roomReducer = (currentState = {}, action) => {
                 ...currentState, 
                 [serverId] : {
                     ...action.payload,
-                    userCount: 0,
-                    status: 'creating'
+                    userCount: 0
                 }
             }
         }

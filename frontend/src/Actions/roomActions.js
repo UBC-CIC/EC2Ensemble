@@ -74,7 +74,10 @@ export const createRoom = (user, roomFormInfo) => async (dispatch) => {
 				// if successful, update the room list
 				dispatch({
 					type: 'CREATE_ROOM',
-					payload: roomFormInfoUser
+					payload: {
+						...roomFormInfoUser,
+						status: roomFormInfo.type === 'AWS' ? 'creating' : undefined
+					}
 				});
 			})
 			.catch((error) => {
@@ -221,7 +224,6 @@ export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="
 			}
 		)
 	} else {
-		console.log(token)
 		res = fetch(`${dbURL}/user/${userId}/external/${encodeURI(serverId)}`, 
 				{
 					...requestOptions, 
@@ -242,12 +244,49 @@ export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="
 				payload: {
 					...updatedRoomParams,
 					serverId: serverId,
-					status: 'updating'
+					status: updatedRoomParams.type === 'AWS' ? 'updating' : undefined
 				},
 			});
 		})
 		.catch((error) => {
 			console.log('Error in changing room params', error);
+		});
+};
+
+export const restartJackTrip = (user, region, serverId) => async (dispatch) => {
+	const url = process.env.REACT_APP_AWS_API_BASE;
+	const { userId, token } = getUserIdAndToken(user);
+
+
+	const requestOptions = {
+		method: 'POST',
+		credentials: 'include',
+		headers: { 
+			'Content-Type': 'application/json',
+			Authorization: token,
+		},
+		body: JSON.stringify({
+			user: userId,
+			region: region,
+			serverId: serverId,
+			action: 'restart_jacktrip',
+		}),
+	};
+
+	await fetch(url, requestOptions)
+		.then((response) => response.json())
+		.then((data) => {
+			// if successful, restart jacktrip
+			dispatch({
+				type: 'UPDATE_ROOM_INFO',
+				payload: {
+					serverId: serverId,
+					status: 'restart_jacktrip',
+				},
+			});
+		})
+		.catch((error) => {
+			console.log('Error in restarting jacktrip', error);
 		});
 };
 

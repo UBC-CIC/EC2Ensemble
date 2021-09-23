@@ -148,7 +148,6 @@ function Home(props) {
         {/* load rooms in reverse order, showing the most recent one first*/}
         <Grid>
           {Object.values(roomList).map((room, index) => {
-            console.log(room)
             return (
               <div key={`room-${index}`} className={classes.margin_vertical2}>
                 <Room currUser={currUser} {...room}/>

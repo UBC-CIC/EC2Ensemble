@@ -11,7 +11,7 @@ import IconButton from '@material-ui/core/IconButton';
 import ShareIcon from '@material-ui/icons/Share';
 
 // actions
-import { changeRoomParams, deleteRoom, restartRoom, terminateRoom } from '../../Actions/roomActions';
+import { changeRoomParams, deleteRoom, restartJackTrip, restartRoom, terminateRoom } from '../../Actions/roomActions';
 
 // components
 import CreateEditRoomForm from '../CreateEditRoomForm';
@@ -124,8 +124,6 @@ function Room(props) {
 	const [deletionStatus, setDeletionStatus] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
 
-	console.log(status, deletionStatus)
-
 	useEffect(() => {
 		if (status === 'running' || type === 'External Setup') {
 			setConnectionStyle(classes.running);
@@ -158,6 +156,10 @@ function Room(props) {
 		dispatch(restartRoom(currUser, region, serverId));
 	};
 
+	const handleJacktripRestart = () => {
+		dispatch(restartJackTrip(currUser, region, serverId));
+	};
+	
 	const handleRoomDeletion = () => {
 		if ((status !== 'terminated') && 
 			(status !== 'fail_create') &&
@@ -219,7 +221,7 @@ function Room(props) {
 			<Grid container item alignItems="center">
 				<div className={classes.alignCenter}>
 					<div>{roomName}</div>
-					{type !== "External Setup" &&
+					{(status === 'running') &&
 						<IconButton 
 							fontSize="small" 
 							variant="contained"
@@ -246,7 +248,8 @@ function Room(props) {
 							<span>In Creation</span>
 						)) ||
 						((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
-						((status === 'updating' || status === 'param_change') && <span>Updating Settings...</span>)
+						((status === 'updating' || status === 'param_change') && <span>Updating Settings...</span>) ||
+						((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>)
 					}
 					{status}<FiberManualRecordIcon className={connectionStyle} />
 				</div>
@@ -297,8 +300,9 @@ function Room(props) {
 				>
 					<DefaultButton
 						disabled={
-							(connectionStyle === classes.creating) &&
-							(status !== 'param_change')
+							((connectionStyle === classes.creating) &&
+							(status !== 'param_change')) ||
+							(!!status && status.includes('fail'))
 						}
 						onClick={handleRoomDeletion}
 					>
@@ -313,6 +317,11 @@ function Room(props) {
 					>
 						Test Latency {latency && `:${latency}`}
 					</DefaultButton> */}
+					{(status === 'running') &&
+						<DefaultButton onClick={handleJacktripRestart}>
+							Restart Jacktrip
+						</DefaultButton>
+					}
 					<DefaultButton
 						disabled={
 							connectionStyle !== classes.terminated &&
@@ -340,8 +349,7 @@ function Room(props) {
 					)}
 					{(status !== 'terminated') && 
 					(type !== 'External Setup') && 
-					(!status.includes('fail')) && 
-					(status !== 'param_change') && 
+					(!!status && !status.includes('fail')) && 
 					(
 						<DefaultButton
 							disabled={
