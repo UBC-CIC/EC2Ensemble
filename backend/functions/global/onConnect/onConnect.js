@@ -21,6 +21,7 @@ exports.handler = async (event) => {
 			user,
 			domainName,
 			stage,
+			expiration: Math.floor(Date.now() / 1000) + 3600,
 		},
 	};
 

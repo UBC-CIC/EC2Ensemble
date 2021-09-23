@@ -16,8 +16,16 @@
 					"Next": "TerminateServer"
 				},
 				{
-					"Variable": "$.action",
-					"StringEquals": "param_change",
+					"And": [
+						{
+							"Variable": "$.action",
+							"StringEquals": "param_change"
+						},
+						{
+							"Variable": "$.action",
+							"StringEquals": "restart_jacktrip"
+						}
+					],
 					"Next": "RunJacktrip"
 				}
 			]
