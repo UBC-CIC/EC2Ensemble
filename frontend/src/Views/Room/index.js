@@ -25,9 +25,7 @@ const useStyles = makeStyles((theme) => ({
 		padding: theme.spacing(3, 4),
 	},
 	flexEnd: {
-		[theme.breakpoints.up('sm')]: {
-			marginLeft: 'auto',
-		},
+		marginLeft: 'auto',
 		display: 'flex',
 		alignItems: 'center',
 	},
@@ -48,8 +46,19 @@ const useStyles = makeStyles((theme) => ({
 	},
 	margin_innerLeft: {
 		display: 'flex',
-		'& > button:not(:first-child)': {
-			marginLeft: '16px',
+		[theme.breakpoints.up('sm')]: {
+			'& > button:not(:first-child)': {
+				marginLeft: '16px',
+			},
+		},
+		[theme.breakpoints.down('xs')]: {
+			flexDirection: 'column',
+			width: '100%',
+			'& > button': {
+				width: '100%',
+				margin: theme.spacing(1, 0),
+				padding: theme.spacing(1, 0)
+			},
 		},
 	},
 	divider: {
