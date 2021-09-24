@@ -25,6 +25,13 @@
           "sortKeyName": "serverId",
           "sortKeyType": "S"
         }
+      },
+      "function": {
+        "getOneRoomLambda": {
+          "tableName": "jacktrip-global-UserServerTable-1CV4VPDXSCTB2",
+          "deploymentBucketName": "amplify-pcmacic-dev-162425-deployment",
+          "s3Key": "amplify-builds/getOneRoomLambda-594b694958772f31757a-build.zip"
+        }
       }
     }
   }

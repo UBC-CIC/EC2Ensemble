@@ -1,4 +1,6 @@
 {
+    "identityPoolName": "pcmacicauth_identitypool_e495af3e",
+    "allowUnauthenticatedIdentities": true,
     "resourceNameTruncated": "pcmacib1bb4fad",
     "userPoolName": "pcmacicb1bb4fad_userpool_b1bb4fad",
     "autoVerifiedAttributes": [
@@ -10,10 +12,10 @@
     ],
     "smsAuthenticationMessage": "Your authentication code is {####}",
     "smsVerificationMessage": "Your verification code is {####}",
-    "emailVerificationSubject": "Your verification code",
+    "emailVerificationSubject": "Your verification code for PCMA-CIC",
     "emailVerificationMessage": "Your verification code is {####}",
     "defaultPasswordPolicy": true,
-    "passwordPolicyMinLength": 8,
+    "passwordPolicyMinLength": "8",
     "passwordPolicyCharacters": [
         "Requires Lowercase",
         "Requires Uppercase",
@@ -41,7 +43,7 @@
     "userpoolClientSetAttributes": true,
     "sharedId": "b1bb4fad",
     "resourceName": "pcmacicauth",
-    "authSelections": "userPoolOnly",
+    "authSelections": "identityPoolAndUserPool",
     "authRoleArn": {
         "Fn::GetAtt": [
             "AuthRole",
