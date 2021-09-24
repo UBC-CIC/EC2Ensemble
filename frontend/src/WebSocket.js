@@ -37,13 +37,23 @@ export default function WebSocketProvider (props) {
     setTimeout(heartbeat, 550000);
   }, [clientWebSocket]);
 
-  const connectWS = useCallback((user) => {
+  const connectWS = (user) => {
     const userId = user.username;
 
     if (!clientWebSocket.current) {
-      const token = user.getSignInUserSession().getIdToken().getJwtToken();
-      const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?Authorization=${token}&user=${userId}`);
-      clientWebSocket.current = ws;
+      user.getSession((err, session) => {
+        if (err) {
+          console.log("err", err)
+          return false;
+        }
+        if (session.isValid()) {
+          const token = session.getIdToken().getJwtToken();
+          const ws = new WebSocket(`${process.env.REACT_APP_WS_BASE}?Authorization=${token}&user=${userId}`);
+          clientWebSocket.current = ws;
+          return true;
+        }
+        return false;
+      });
     }
 
     // listening for open connection
@@ -72,7 +82,7 @@ export default function WebSocketProvider (props) {
     clientWebSocket.current.onerror = (error) => {
         console.log("error", error)
     }
-  }, []);
+  };
 
   const onWebSocketMessage = useCallback((data) => {
     const message = JSON.parse(data);
