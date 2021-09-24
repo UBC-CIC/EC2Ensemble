@@ -38,7 +38,8 @@ export const FormInput = (props) => {
   
     const useStyles = makeStyles((theme) => ({
         root: {
-            margin: theme.spacing(2,0)
+            margin: theme.spacing(2,0),
+            width: '100%'
         }
     }));
   

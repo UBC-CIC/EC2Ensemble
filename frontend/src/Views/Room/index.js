@@ -1,5 +1,6 @@
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Divider, Grid } from '@material-ui/core/';
+import { Button, Divider, Grid, Snackbar } from '@material-ui/core/';
+import Alert from '@material-ui/lab/Alert';
 
 // react
 import { useEffect, useState } from 'react';
@@ -123,6 +124,7 @@ function Room(props) {
 	const [regionChangeInfo, setRegionChangeInfo] = useState('');
 	const [deletionStatus, setDeletionStatus] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
+	const [alert, handleAlert] = useState(false)
 
 	useEffect(() => {
 		if (status === 'running' || type === 'External Setup') {
@@ -216,6 +218,15 @@ function Room(props) {
 		handleModalClose();
 	};
 
+	const handleAlertOpen = () => {
+		navigator.clipboard.writeText(ipAddress)
+		handleAlert(true)
+	}
+	
+	const handleAlertClose = () => {
+		handleAlert(false);
+	};
+
 	return (
 		<Grid container alignContent="flex-start" className={classes.root}>
 			<Grid container item alignItems="center">
@@ -251,7 +262,7 @@ function Room(props) {
 						((status === 'updating') && <span>Updating Settings...</span>) ||
 						((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>)
 					}
-					{status}<FiberManualRecordIcon className={connectionStyle} />
+					<FiberManualRecordIcon className={connectionStyle} />
 				</div>
 			</Grid>
 			<Grid item xs={12} className={classes.margin_horizontal2}>
@@ -272,12 +283,20 @@ function Room(props) {
 									{!!ipAddress ? ipAddress : 'N/A'}
 								</span>
 								{!!ipAddress && (
-									<DefaultButton
-										onClick={()=>navigator.clipboard.writeText(ipAddress)}
-									>
+									<DefaultButton onClick={handleAlertOpen}>
 										Copy
-								  	</DefaultButton>
-								)}
+									</DefaultButton>
+							  	)}
+							  	<Snackbar 
+								  	anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+									open={alert} 
+									autoHideDuration={2500} 
+									onClose={handleAlertClose}
+								>
+									<Alert severity="success" sx={{ width: '100%' }}>
+										Successfully copied ip address for room {roomName}!
+									</Alert>
+								</Snackbar>
 							</div>
 							{
 								(type === "AWS") &&

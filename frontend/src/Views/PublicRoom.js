@@ -4,7 +4,7 @@ import { connect, useDispatch } from "react-redux";
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import Alert from '@material-ui/lab/Alert';
-import { Button, Divider, Grid, Slide, Snackbar } from '@material-ui/core/';
+import { Button, Divider, Grid } from '@material-ui/core/';
 
 // internal imports
 import Navbar from '../Components/Navbar';
@@ -53,6 +53,12 @@ const useStyles = makeStyles((theme) => ({
   },
   columnTitle: {
     width: 130,
+  },
+  full: {
+    height: '100vh'
+  },
+  textCenter: {
+    textAlign: 'center'
   }
 }))
 
@@ -77,32 +83,50 @@ function PublicRoom(props) {
   const { room } = props;
   const classes = useStyles();
   const dispatch = useDispatch();
-  const [copy, handleCopyButton] = useState(false)
+  const [alert, handleAlert] = useState(false);
+  const [loading, handleLoading] = useState(true);
+  const [emptyRoom, handleEmptyRoom] = useState(false);
 
   useEffect(() => {
     (async () => {
       // remove the "/" in the pathname to get the userLinkID
       const roomId = new URLSearchParams(props.location.search).get("room");
       if (roomId) {
-        await dispatch(queryOneRoom(roomId));
+          await dispatch(queryOneRoom(roomId));
+          if (JSON.stringify(room) === '{}') {
+            handleEmptyRoom(true);
+          } else {
+            handleLoading(false);
+          }
       }
     })();
   }, []);
 
-  const handleCopy = () => {
+  const handleAlertOpen = () => {
     navigator.clipboard.writeText(room.ipAddress)
-    handleCopyButton(true)
+    handleAlert(true)
   }
 
-  const handleClose = () => {
-    handleCopyButton(false);
+  const handleAlertClose = () => {
+    handleAlert(false);
   };
 
 
   return (
     <Grid container justifyContent="center">
       <Navbar/>
-      <Grid item xs={11} sm={10}>
+      { !!loading &&
+        <Grid container alignItems="center" justifyContent="center" className={classes.full}>
+          {!emptyRoom ? <h1>Loading...</h1> : (
+            <div className={classes.textCenter}>
+              <h1>Invalid Room</h1>
+              <h3>Please check if you entered the correct link</h3>
+            </div>
+          )}
+        </Grid>
+      }
+      {!loading &&
+        <Grid item xs={11} sm={10}>
         <Grid container item direction="row" alignItems="center" className={classes.margin_vertical2}>
           <div className={`${classes.flex} ${classes.alignCenter}`}>
             <h2>SHARE ROOM: {room.roomName}</h2>
@@ -121,11 +145,11 @@ function PublicRoom(props) {
                 <p>{room.ipAddress}</p>
                 {!!room.ipAddress && (
                   <Grid container item xs direction="row" alignItems="center">
-									  <DefaultButton onClick={handleCopy}>
+									  <DefaultButton onClick={handleAlertOpen}>
                       Copy
                     </DefaultButton>
-                    { copy && setTimeout(() => {
-                      handleClose()
+                    { alert && setTimeout(() => {
+                      handleAlertClose()
                     }, 2500) && 
                       (
                         <Alert severity="success" sx={{ width: '100%' }}>
@@ -160,6 +184,7 @@ function PublicRoom(props) {
           </div>
         </Grid>
       </Grid>
+    }
     </Grid>
   );
 }
