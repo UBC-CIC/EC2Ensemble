@@ -16,7 +16,7 @@ import { SearchBar } from '../Components';
 import Navbar from '../Components/Navbar';
 
 // actions
-import { createRoom, queryRooms } from '../Actions/roomActions';
+import { createRoom, queryUserRooms } from '../Actions/roomActions';
 
 // icons
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
@@ -90,7 +90,7 @@ function Home(props) {
           setCurrUser(user)
 
           // query rooms from db
-          dispatch(queryRooms(user));
+          dispatch(queryUserRooms(user));
         })
     })();
   }, [loginState]);

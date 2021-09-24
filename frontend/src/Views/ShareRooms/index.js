@@ -55,7 +55,7 @@ export default function ShareRoomModal(props) {
             <div id="share-modal-body">
                 <FormInput
                     id={"share-link"} 
-                    value={`${window.location.href.slice(0,-1)}?room=${id}`}
+                    value={`${window.location.href.slice(0,-1)}/share?room=${id}`}
                     disabled
                 />
                 <div id="share-modal-des">

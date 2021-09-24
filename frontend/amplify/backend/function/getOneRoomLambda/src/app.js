@@ -19,12 +19,10 @@ const dynamodb = new AWS.DynamoDB.DocumentClient();
 
 let tableName = process.env.tableName;
 
-const userIdPresent = false; // TODO: update in case is required to use that definition
 const partitionKeyName = "serverId";
 const partitionKeyType = "RANGE";
 const hashKeyPath = '/:' + partitionKeyName;
 const path = "/room";
-const UNAUTH = "UNAUTH";
 // declare a new express app
 var app = express()
 app.use(bodyParser.json())
@@ -52,19 +50,6 @@ const convertUrlType = (param, type) => {
  ********************************/
 
 app.get(path + hashKeyPath, function(req, res) {
-  // var condition = {}
-
-  // if (userIdPresent && req.apiGateway) {
-  //   condition[partitionKeyName]['AttributeValueList'] = [req.apiGateway.event.requestContext.identity.cognitoIdentityId || UNAUTH ];
-  // } else {
-  //   try {
-  //     condition[partitionKeyName]['AttributeValueList'] = [ convertUrlType(req.params[partitionKeyName], partitionKeyType) ];
-  //   } catch(err) {
-  //     res.statusCode = 500;
-  //     res.json({error: 'Wrong column type ' + err});
-  //   }
-  // }
-
   let queryParams = {
     TableName: tableName,
     FilterExpression: `#serverId = :serverId`,
@@ -85,7 +70,19 @@ app.get(path + hashKeyPath, function(req, res) {
       if (data.Items.length === 1) {
         res.statusCode = 200;
         console.log("success?", data.Items)
-        res.json({ body: JSON.stringify(data.Items) });
+        const info = data.Items[0]
+        res.json({ 
+          body: JSON.stringify({
+            buffer: info.buffer,
+            ipAddress: info.ipAddress,
+            frequency: info.frequency,
+            status: info.status,
+            roomName: info.roomName,
+            region: info.region,
+            description: info.description,
+            type: info.type
+          })
+       });
       } else {
         res.statusCode = 500;
         console.log("wrong items?", data.Items)

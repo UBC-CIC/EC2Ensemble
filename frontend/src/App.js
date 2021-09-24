@@ -8,6 +8,7 @@ import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
 import { connect } from "react-redux";
 import {updateLoginState} from "./Actions/loginActions";
 import WebSocketClient from './WebSocket';
+import PublicRoom from './Views/PublicRoom';
 
 
 function App(props) {
@@ -70,11 +71,13 @@ function App(props) {
                                     )
                                 )} 
                         />
-                        <Route path={"/sharing/:userLinkID"} render={props => 
-                            <WebSocketClient currentState={currentLoginState}>
-                                <Home {...props}/>
-                            </WebSocketClient>
-                        }/>
+                        <Route 
+                            exact
+                            path={"/share"} 
+                            render={props => 
+                                <PublicRoom {...props}/>
+                            }
+                        />
                         <Redirect to="/" />
                     </Switch>
                 </BrowserRouter>

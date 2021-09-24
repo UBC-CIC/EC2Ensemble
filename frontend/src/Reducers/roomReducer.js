@@ -1,6 +1,9 @@
 
 const roomReducer = (currentState = {}, action) => {
     switch(action.type) {
+        case "QUERY_ONE_ROOM": {
+            return action.payload
+        }
         case "QUERY_ROOMS": {
             // change data structures from arr to obj for easier filtering access
             const roomObjs = convertArrayToObject(action.payload, 'serverId');

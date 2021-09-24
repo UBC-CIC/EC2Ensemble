@@ -1,5 +1,22 @@
+import { API } from 'aws-amplify';
+
+/* get only one room server */
+export const queryOneRoom = (roomId) => async (dispatch) => {
+	await API.get('getOneRoom', `/room/${roomId}`)
+		.then((response) => {
+			const data = JSON.parse(response.body);
+			dispatch({
+				type: 'QUERY_ONE_ROOM',
+				payload: data,
+			});
+		})
+		.catch((error) => {
+			console.log('Error in querying room', error);
+		});
+};
+
 /* get rooms from db and update */
-export const queryRooms = (user) => async (dispatch) => {
+export const queryUserRooms = (user) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_USERDB_BASE;
 	const { userId, token } = getUserIdAndToken(user);
 
@@ -191,6 +208,7 @@ export const restartRoom = (user, region, serverId) => async (dispatch) => {
 		});
 };
 
+/* change room info */
 export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="param") => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_API_BASE;
 	const dbURL=process.env.REACT_APP_AWS_USERDB_BASE;
@@ -253,6 +271,7 @@ export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="
 		});
 };
 
+/* restart the jacktrip server */
 export const restartJackTrip = (user, region, serverId) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_API_BASE;
 	const { userId, token } = getUserIdAndToken(user);
@@ -326,12 +345,14 @@ export const updateRoomStatus = (message) => (dispatch) => {
 				});
 				break;
 			}
-			case "param_change": {
+			case "param_change":
+			case "restart_jacktrip":
+			{
 				dispatch({
 					type: 'UPDATE_ROOM_INFO',
 					payload: {
 						serverId: message.serverId,
-						status: 'param_change'
+						status: 'running'
 					},
 				});
 				break;

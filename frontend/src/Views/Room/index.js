@@ -248,7 +248,7 @@ function Room(props) {
 							<span>In Creation</span>
 						)) ||
 						((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
-						((status === 'updating' || status === 'param_change') && <span>Updating Settings...</span>) ||
+						((status === 'updating') && <span>Updating Settings...</span>) ||
 						((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>)
 					}
 					{status}<FiberManualRecordIcon className={connectionStyle} />
@@ -272,7 +272,11 @@ function Room(props) {
 									{!!ipAddress ? ipAddress : 'N/A'}
 								</span>
 								{!!ipAddress && (
-									<DefaultButton>Copy</DefaultButton>
+									<DefaultButton
+										onClick={()=>navigator.clipboard.writeText(ipAddress)}
+									>
+										Copy
+								  	</DefaultButton>
 								)}
 							</div>
 							{
@@ -300,8 +304,7 @@ function Room(props) {
 				>
 					<DefaultButton
 						disabled={
-							((connectionStyle === classes.creating) &&
-							(status !== 'param_change')) ||
+							(connectionStyle === classes.creating) ||
 							(!!status && status.includes('fail'))
 						}
 						onClick={handleRoomDeletion}
