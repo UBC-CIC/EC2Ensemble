@@ -56,10 +56,6 @@ const useStyles = makeStyles((theme) => ({
         fontWeight: 500, 
         lineHeight: 1.75, 
     },
-    // activeButton: {
-    //     borderRadius: 50, 
-    //     width: "100%", 
-    // },
     themeColor: {
         backgroundColor: "#012144", 
     },
@@ -79,6 +75,11 @@ const useStyles = makeStyles((theme) => ({
     centerBox: {
         justifyContent: "center",
         alignItems: "center"
+    },
+    titleLogo: {
+        [theme.breakpoints.up('md')]: {
+            marginBottom: '27vh'
+        },
     }
 }));
 
@@ -161,6 +162,11 @@ function Login(props) {
             }
         }
         retrieveUser();
+
+        // unmount
+        return () => {
+            setLoading(false) // ***
+        }
     }, []);
 
     function clearErrors() {
@@ -443,20 +449,20 @@ function Login(props) {
                         <source src={process.env.PUBLIC_URL + "/Assets/Videos/video.mp4"} type="video/mp4" />
                     </video>
                     : null}
-                <Grid container item xs={12} md={6} className={`page-info ${classes.centerBox}`}>
+                <Grid container item xs={12} md={6} className={`page-info ${classes.centerBox} ${classes.titleLogo}`}>
                     <Grid container item justifyContent={"space-evenly"} alignItems={"center"} /*style={{height: "60vh"}}*/>
                         <Grid xs item className={`typewriter ${classes.marginHorizontal}`}> 
                             <p className={`${classes.textAlignCenter} ${(animateTitle) ? 
                                 (darkMode) ? "line anim-typewriter" : "line anim-typewriter-light lightMode" 
                                 :
-                                (darkMode) ? "line-static" : "line-static lightMode-static"
+                                (darkMode) ? "line-static" : "line-static lightMode-static lightMode"
                                 }`}
                             >
                                 {title}
                             </p>
                         </Grid>
                         <Grid container item xs={12} justifyContent={"center"}>
-                            <Grid item xs={10}>
+                            <Grid item sm={7} md={10}>
                                 {(logo !== "none")? <img className="logo" alt="background" src={process.env.PUBLIC_URL + logoType}/> : null}
                             </Grid>
                         </Grid>

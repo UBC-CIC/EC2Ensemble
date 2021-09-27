@@ -12,11 +12,11 @@ import { Button, Grid } from '@material-ui/core/';
 // internal imports
 import Room from './Room';
 import CreateEditRoomForm from './CreateEditRoomForm';
-import { SearchBar } from '../Components';
+import SearchBar from '../Components/SearchBar';
 import Navbar from '../Components/Navbar';
 
 // actions
-import { createRoom, queryRooms } from '../Actions/roomActions';
+import { createRoom, queryUserRooms } from '../Actions/roomActions';
 
 // icons
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
@@ -66,21 +66,17 @@ const DefaultButton = withStyles((theme) => ({
   },
 }))(Button);
 
-
-const ForwardIcon = withStyles((theme) => ({
-  root: {
-    transform: "rotate(-180deg)"
-  },
-}))(ArrowBackIosIcon);
-
 function Home(props) {
-  const {loginState, roomList} = props;
+  const {roomList} = props;
 
   const classes = useStyles();
 
   const [formOpen, setFormOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currUser, setCurrUser] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchCategory, setSearchCategory] = useState("");
+  const filteredRoomList = updateSearchInput(roomList, searchInput, searchCategory);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -90,11 +86,10 @@ function Home(props) {
           setCurrUser(user)
 
           // query rooms from db
-          dispatch(queryRooms(user));
+          dispatch(queryUserRooms(user));
         })
     })();
-  }, [loginState]);
-
+  }, []);
 
   const handleFormOpen = () => {
     setFormOpen(true);
@@ -114,6 +109,12 @@ function Home(props) {
     // close the modal
     handleFormClose();
   };
+
+  const handleSearch = (input, category) => {
+    // updateSearchInput(input, category)
+    setSearchInput(input);
+    setSearchCategory(category)
+  }
 
   return (
     <Grid container justifyContent="center">
@@ -138,8 +139,12 @@ function Home(props) {
             />
           </div>
         </Grid>
-        <Grid className={classes.margin_vertical2}>
-          <SearchBar/>
+        <Grid item>
+          <SearchBar
+            input={searchInput}
+            handleSearch={handleSearch}
+            options={["All", ...Object.keys(RoomInfoCategory)]}
+          />
         </Grid>
         <Grid container item justifyContent="flex-end" alignItems="center" className={classes.margin_vertical3}>
           {/* <ArrowBackIosIcon fontSize="small"/><span className={classes.underlineText}>1</span><ForwardIcon fontSize="small"/> */}
@@ -147,7 +152,7 @@ function Home(props) {
 
         {/* load rooms in reverse order, showing the most recent one first*/}
         <Grid>
-          {Object.values(roomList).map((room, index) => {
+          {filteredRoomList.map((room, index) => {
             return (
               <div key={`room-${index}`} className={classes.margin_vertical2}>
                 <Room currUser={currUser} {...room}/>
@@ -160,6 +165,34 @@ function Home(props) {
     </Grid>
   );
 }
+
+const updateSearchInput = (roomList, input, category) => {
+  if (!input) {
+    return Object.values(roomList);
+  }
+
+  if (category === "All") {
+    const categories = Object.values(RoomInfoCategory);
+    return Object.values(roomList).filter(room => {
+      return !!categories.filter((c) => room[c].toString().toLowerCase().includes(input.toLowerCase())).length
+     })
+  } else {
+    const mappedCategory = RoomInfoCategory[category];
+    return Object.values(roomList).filter(room => {
+      return room[mappedCategory].toString().toLowerCase().includes(input.toLowerCase())
+     })
+  }
+
+}
+
+const RoomInfoCategory = {
+  "Room Name": "roomName", 
+  "Description": "description",
+  "IP Address": "ipAddress", 
+  "Region": "region", 
+  "Frequency": "frequency",
+  "Buffer Size": "buffer"
+};
 
 const mapStateToProps = (state) => {
   return {

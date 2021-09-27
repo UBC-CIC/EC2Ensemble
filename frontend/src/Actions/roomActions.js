@@ -1,5 +1,5 @@
 /* get rooms from db and update */
-export const queryRooms = (user) => async (dispatch) => {
+export const queryUserRooms = (user) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_USERDB_BASE;
 	const { userId, token } = getUserIdAndToken(user);
 
@@ -191,6 +191,7 @@ export const restartRoom = (user, region, serverId) => async (dispatch) => {
 		});
 };
 
+/* change room info */
 export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="param") => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_API_BASE;
 	const dbURL=process.env.REACT_APP_AWS_USERDB_BASE;
@@ -253,6 +254,7 @@ export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="
 		});
 };
 
+/* restart the jacktrip server */
 export const restartJackTrip = (user, region, serverId) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_API_BASE;
 	const { userId, token } = getUserIdAndToken(user);
@@ -292,7 +294,6 @@ export const restartJackTrip = (user, region, serverId) => async (dispatch) => {
 
 /* get messages from websocket and update the room status */
 export const updateRoomStatus = (message) => (dispatch) => {
-	console.log("updateRoomStatus", message, message.action)
 	if (message.success === true) {
 		switch(message.action) {
 			case "create": {
@@ -326,12 +327,14 @@ export const updateRoomStatus = (message) => (dispatch) => {
 				});
 				break;
 			}
-			case "param_change": {
+			case "param_change":
+			case "restart_jacktrip":
+			{
 				dispatch({
 					type: 'UPDATE_ROOM_INFO',
 					payload: {
 						serverId: message.serverId,
-						status: 'param_change'
+						status: 'running'
 					},
 				});
 				break;

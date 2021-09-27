@@ -104,14 +104,18 @@ function Navbar(props) {
     const renderMenu = (
         <Menu
             anchorEl={anchorEl}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
             id={menuId}
             keepMounted
-            transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
             open={isMenuOpen}
             onClose={handleMenuClose}
         >
-            <MenuItem onClick={handleLogout}><span>Logout</span><ExitToAppIcon color={"secondary"}/></MenuItem>
+            {!user ? 
+                <MenuItem onClick={()=>history.push('/')}><span>Sign in/Sign Up</span></MenuItem>
+                :
+                <MenuItem onClick={handleLogout}><span>Logout</span><ExitToAppIcon color={"secondary"}/></MenuItem>
+            }
         </Menu>
     );
 
@@ -126,10 +130,16 @@ function Navbar(props) {
             open={isMobileMenuOpen}
             onClose={handleMobileMenuClose}
         >
-            <MenuItem disabled>
-                <AccountBoxIcon /><Typography variant={"subtitle1"} noWrap>{user}</Typography>
-            </MenuItem>
-            <MenuItem onClick={handleLogout}><span>Logout</span><ExitToAppIcon color={"secondary"}/></MenuItem>
+            {user ? 
+                <MenuItem disabled>
+                    <AccountBoxIcon /><Typography variant={"subtitle1"} noWrap>{user}</Typography>
+                </MenuItem>
+                :
+                <MenuItem onClick={()=>history.push('/')}><span>Sign in/Sign Up</span></MenuItem>
+            }
+            { user &&
+                <MenuItem onClick={handleLogout}><span>Logout</span><ExitToAppIcon color={"secondary"}/></MenuItem>
+            }
 
         </Menu>
     );
@@ -140,10 +150,15 @@ function Navbar(props) {
                 const returnedUser = await Auth.currentAuthenticatedUser();
                 setUser(`${returnedUser.attributes.given_name} ${returnedUser.attributes.family_name}`);
             } catch (e) {
-                //
+                if (e.includes('not authenticated')) {
+                    setUser("")
+                }
             }
         }
         retrieveUser();
+
+        // unmount
+        return () => setUser("");
     }, [loginState])
 
     async function onSignOut() {

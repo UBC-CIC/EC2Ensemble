@@ -1,0 +1,42 @@
+{
+    "paths": [
+        {
+            "name": "/room",
+            "lambdaFunction": "getOneRoomLambda",
+            "privacy": {
+                "protected": true,
+                "auth": [
+                    "/GET"
+                ],
+                "unauth": [
+                    "/GET"
+                ]
+            },
+            "policyResourceName": "/room"
+        }
+    ],
+    "resourceName": "getOneRoom",
+    "apiName": "getOneRoom",
+    "functionArns": [
+        {
+            "lambdaFunction": "getOneRoomLambda"
+        }
+    ],
+    "privacy": {
+        "auth": 1,
+        "unauth": 1,
+        "authRoleName": "amplify-pcmacic-dev-162425-authRole",
+        "unAuthRoleName": "amplify-pcmacic-dev-162425-unauthRole"
+    },
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "getOneRoomLambda",
+            "attributes": [
+                "Name",
+                "Arn"
+            ]
+        }
+    ],
+    "uuid": "765a9aa8"
+}

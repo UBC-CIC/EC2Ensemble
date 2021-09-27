@@ -7,16 +7,10 @@ import {
 
     FormControl,
     InputLabel,
-    Select,
-
-    InputAdornment,
-    IconButton,
+    Select
 } from '@material-ui/core/';
 
 import { ToggleButton, ToggleButtonGroup} from '@material-ui/lab';
-
-// icons
-import SearchIcon from '@material-ui/icons/Search';
 
 const CustomFormControl = withStyles((theme) => ({
     root: {
@@ -38,7 +32,8 @@ export const FormInput = (props) => {
   
     const useStyles = makeStyles((theme) => ({
         root: {
-            margin: theme.spacing(2,0)
+            margin: theme.spacing(2,0),
+            width: '100%'
         }
     }));
   
@@ -64,7 +59,7 @@ export const FormInput = (props) => {
 }
 
 export const FormSelect = (props) => {
-    const {id, inputLabel, required, options, ...others } = props;
+    const {id, inputLabel, required, options, fullWidth, ...others } = props;
 
     const useStyles = makeStyles((theme) => ({
         root: {
@@ -74,8 +69,8 @@ export const FormSelect = (props) => {
   
     const classes = useStyles();
     return (
-        <div className={classes.root}>
-            <CustomFormControl variant="outlined" size="small" fullWidth>
+        <div className={!inputLabel ? "" : classes.root}>
+            <CustomFormControl variant="outlined" size="small" fullWidth={fullWidth === false ? false : true}>
                 <InputLabel htmlFor={id}>
                     {inputLabel}
                 </InputLabel>
@@ -142,34 +137,3 @@ export const FormButtonGroup = (props) => {
         </div>
     )
 }
-
-// https://github.com/mui-org/material-ui/issues/13570
-const BorderTextField = withStyles({
-    root: {
-      '& .MuiOutlinedInput-root': {
-        '& fieldset': {
-          borderRadius: "50px",
-        },
-      },
-    },
-})(TextField);
-
-export const SearchBar = () => {
-    return (
-      <BorderTextField
-          fullWidth={true}
-          placeholder="Search"
-          variant="outlined"
-          size="small"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                  <IconButton type="submit" size="small" aria-label="search-button">
-                      <SearchIcon />
-                  </IconButton>
-              </InputAdornment>
-            ),
-          }}
-      />
-    )
-  }

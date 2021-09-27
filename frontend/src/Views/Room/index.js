@@ -1,5 +1,6 @@
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Divider, Grid } from '@material-ui/core/';
+import { Button, Divider, Grid, Snackbar } from '@material-ui/core/';
+import Alert from '@material-ui/lab/Alert';
 
 // react
 import { useEffect, useState } from 'react';
@@ -24,9 +25,7 @@ const useStyles = makeStyles((theme) => ({
 		padding: theme.spacing(3, 4),
 	},
 	flexEnd: {
-		[theme.breakpoints.up('sm')]: {
-			marginLeft: 'auto',
-		},
+		marginLeft: 'auto',
 		display: 'flex',
 		alignItems: 'center',
 	},
@@ -47,8 +46,19 @@ const useStyles = makeStyles((theme) => ({
 	},
 	margin_innerLeft: {
 		display: 'flex',
-		'& > button:not(:first-child)': {
-			marginLeft: '16px',
+		[theme.breakpoints.up('sm')]: {
+			'& > button:not(:first-child)': {
+				marginLeft: '16px',
+			},
+		},
+		[theme.breakpoints.down('xs')]: {
+			flexDirection: 'column',
+			width: '100%',
+			'& > button': {
+				width: '100%',
+				margin: theme.spacing(1, 0),
+				padding: theme.spacing(1, 0)
+			},
 		},
 	},
 	divider: {
@@ -123,6 +133,7 @@ function Room(props) {
 	const [regionChangeInfo, setRegionChangeInfo] = useState('');
 	const [deletionStatus, setDeletionStatus] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
+	const [alert, handleAlert] = useState(false)
 
 	useEffect(() => {
 		if (status === 'running' || type === 'External Setup') {
@@ -216,6 +227,15 @@ function Room(props) {
 		handleModalClose();
 	};
 
+	const handleAlertOpen = () => {
+		navigator.clipboard.writeText(ipAddress)
+		handleAlert(true)
+	}
+	
+	const handleAlertClose = () => {
+		handleAlert(false);
+	};
+
 	return (
 		<Grid container alignContent="flex-start" className={classes.root}>
 			<Grid container item alignItems="center">
@@ -248,10 +268,10 @@ function Room(props) {
 							<span>In Creation</span>
 						)) ||
 						((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
-						((status === 'updating' || status === 'param_change') && <span>Updating Settings...</span>) ||
+						((status === 'updating') && <span>Updating Settings...</span>) ||
 						((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>)
 					}
-					{status}<FiberManualRecordIcon className={connectionStyle} />
+					<FiberManualRecordIcon className={connectionStyle} />
 				</div>
 			</Grid>
 			<Grid item xs={12} className={classes.margin_horizontal2}>
@@ -272,8 +292,20 @@ function Room(props) {
 									{!!ipAddress ? ipAddress : 'N/A'}
 								</span>
 								{!!ipAddress && (
-									<DefaultButton>Copy</DefaultButton>
-								)}
+									<DefaultButton onClick={handleAlertOpen}>
+										Copy
+									</DefaultButton>
+							  	)}
+							  	<Snackbar 
+								  	anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+									open={alert} 
+									autoHideDuration={2500} 
+									onClose={handleAlertClose}
+								>
+									<Alert severity="success" sx={{ width: '100%' }}>
+										Successfully copied ip address for room {roomName}!
+									</Alert>
+								</Snackbar>
 							</div>
 							{
 								(type === "AWS") &&
@@ -300,8 +332,7 @@ function Room(props) {
 				>
 					<DefaultButton
 						disabled={
-							((connectionStyle === classes.creating) &&
-							(status !== 'param_change')) ||
+							(connectionStyle === classes.creating) ||
 							(!!status && status.includes('fail'))
 						}
 						onClick={handleRoomDeletion}
