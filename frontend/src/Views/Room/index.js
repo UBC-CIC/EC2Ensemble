@@ -128,7 +128,6 @@ function Room(props) {
 		roomName,
 		description,
 		region,
-		size,
 		frequency,
 		buffer,
 		status,
@@ -145,7 +144,6 @@ function Room(props) {
 	 * terminated === no connection to room, most likely been terminated
 	 * */
 	const [connectionStyle, setConnectionStyle] = useState(classes.terminated);
-	// const [latency, setLatency] = useState('');
 	const [regionChangeInfo, setRegionChangeInfo] = useState('');
 	const [deletionStatus, setDeletionStatus] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -422,7 +420,7 @@ function Room(props) {
 							}
 							onClick={handleRoomTermination}
 							startIcon={
-								(status !== 'terminating' || connectionStyle === classes.running)
+								(connectionStyle === classes.running)
 									? 
 									<StopIcon/>
 									:
