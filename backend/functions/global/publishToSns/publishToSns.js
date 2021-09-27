@@ -7,7 +7,7 @@ const requiredBodyCreate = [
 	'roomName',
 	'frequency',
 	'buffer',
-	'size',
+	// 'size',
 	'type',
 	'description',
 ];
@@ -125,7 +125,7 @@ const createServer = async (body) => {
 			region: body.region,
 			buffer: body.buffer,
 			frequency: body.frequency,
-			size: body.size,
+			// size: body.size,
 			description: body.description,
 			status: 'creating',
 		},
