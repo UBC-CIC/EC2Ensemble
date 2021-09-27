@@ -11,7 +11,6 @@ const ddb = new AWS.DynamoDB.DocumentClient({
 exports.handler = async (event) => {
 	console.log(event);
 	const { user, webSocketMessage } = event;
-	console.log(user);
 	console.log(webSocketMessage);
 
 	const ddbParams = {

@@ -54,7 +54,10 @@ exports.handler = async (event) => {
 		} catch (error) {
 			throw new Error('DDB Update Failed: ' + JSON.stringify(error));
 		}
-	} else if (event.action === 'param_change') {
+	} else if (
+		event.action === 'param_change' ||
+		event.action === 'restart_jacktrip'
+	) {
 		const params = {
 			TableName: process.env.userServerTableName,
 			Key: {
@@ -75,7 +78,7 @@ exports.handler = async (event) => {
 			throw new Error('DDB Update Failed: ' + JSON.stringify(error));
 		}
 	}
-	return {
+	const message = {
 		// Websocket Message
 		...(event.action === 'create' && {
 			ipAddress: event.getStatusResult.ip,
@@ -85,4 +88,6 @@ exports.handler = async (event) => {
 		user: event.user,
 		success: true,
 	};
+	console.log(message);
+	return message;
 };
