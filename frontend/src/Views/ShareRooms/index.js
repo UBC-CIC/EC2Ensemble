@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Grid, Modal } from '@material-ui/core';
+import { Button, Modal } from '@material-ui/core';
 import Alert from '@material-ui/lab/Alert';
 
 // internal
 import { FormInput } from '../../Components';
+
+// icons
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -46,10 +49,17 @@ const DefaultButton = withStyles((theme) => ({
   root: {
       borderRadius: 5, 
       padding: theme.spacing(0.8, 3),
-      backgroundColor: "#c4c4c4",
       margin: theme.spacing(0, 0, 0, 2)
   },
 }))(Button);
+
+const SubmitButton = withStyles((theme) => ({
+  root: {
+    '&:hover': {
+      background: '#ffba24'
+    }
+  },
+}))(DefaultButton);
 
 export default function ShareRoomModal(props) {
     const { open, handleClose, id } = props;
@@ -85,7 +95,11 @@ export default function ShareRoomModal(props) {
                       value={`${window.location.href}share?room=${id}`}
                       disabled
                   />
-                  <DefaultButton onClick={handleAlertOpen}>
+                  <DefaultButton 
+                    onClick={handleAlertOpen} 
+                    variant="outlined" color="secondary"
+                    startIcon={<FileCopyIcon/>}
+                  >
                     Copy
                   </DefaultButton>
                 </div>
@@ -96,7 +110,9 @@ export default function ShareRoomModal(props) {
                 </div>
             </div>
             <div className={classes.button}>
-                <DefaultButton onClick={handleClose}>Done</DefaultButton>
+                <SubmitButton onClick={handleClose} variant="contained" color="secondary">
+                  Done
+                </SubmitButton>
             </div>
         </div>
     );

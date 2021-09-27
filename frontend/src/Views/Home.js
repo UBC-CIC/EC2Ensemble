@@ -19,18 +19,12 @@ import Navbar from '../Components/Navbar';
 import { createRoom, queryUserRooms } from '../Actions/roomActions';
 
 // icons
-import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
 
 
 const useStyles = makeStyles((theme) => ({
   flexEnd: {
     marginLeft: "auto",
-    // [theme.breakpoints.up('sm')]: {
-		// 	marginLeft: 'auto',
-		// 	width: '100%',
-		// 	flexDirection: 'column',
-		// },
-		// alignItems: 'center',
   },
   margin_vertical2: {
     margin: theme.spacing(2, 'auto')
@@ -38,18 +32,9 @@ const useStyles = makeStyles((theme) => ({
   margin_vertical3: {
     margin: theme.spacing(3, 'auto')
   },
-  margin_horizontal: {
-    margin: theme.spacing(0, 1),
-    background: "#c4c4c4"
-  },
   underlineText: {
     textDecoration: "underline",
     textUnderlineOffset: "0.1em"
-  },
-  navBar: {
-    height: '50px',
-    background: '#c4c4c4',
-    padding: theme.spacing(0, 2)
   },
   flex: {
     display: 'flex'
@@ -63,6 +48,8 @@ const DefaultButton = withStyles((theme) => ({
   root: {
       borderRadius: 5, 
       padding: theme.spacing(1, 3),
+      background: '#E69F00',
+      borderColor: 'black',
   },
 }))(Button);
 
@@ -126,8 +113,10 @@ function Home(props) {
           </div>
           <div className={classes.flexEnd}>
             <DefaultButton 
-              variant="contained"
+              variant="outlined"
               onClick={handleFormOpen}
+              // color="secondary"
+              startIcon={<AddCircleIcon/>}
             >
               Create Room
             </DefaultButton>

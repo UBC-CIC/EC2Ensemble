@@ -44,6 +44,13 @@ const DefaultButton = withStyles((theme) => ({
   },
 }))(Button);
 
+const SubmitButton = withStyles((theme) => ({
+  root: {
+      '&:hover': {
+        background: '#ffba24'
+      }
+  },
+}))(DefaultButton);
 
 export default function CreateEditRoomForm(props) {
   const { open, loading, ...others } = props;
@@ -54,7 +61,7 @@ export default function CreateEditRoomForm(props) {
     description: '',
     type: FormOptions.type[0],
     region: FormOptions.region[0],
-    size: FormOptions.size[0],
+    // size: FormOptions.size[0],
     frequency: FormOptions.frequency[0],
     buffer: FormOptions.buffer[0],
     ipAddress: '',
@@ -71,7 +78,7 @@ export default function CreateEditRoomForm(props) {
           description: others.roomInfo.description,
           type: others.roomInfo.type,
           region: others.roomInfo.region,
-          size: others.roomInfo.size,
+          // size: others.roomInfo.size,
           frequency: others.roomInfo.frequency,
           buffer: others.roomInfo.buffer,
           ipAddress: others.roomInfo.ipAddress
@@ -155,7 +162,7 @@ export default function CreateEditRoomForm(props) {
         roomName: roomFormInfo.roomName.trim(),
         description: roomFormInfo.description.trim(),
         type: roomFormInfo.type,
-        size: roomFormInfo.size,
+        // size: roomFormInfo.size,
         frequency: roomFormInfo.frequency,
         buffer: roomFormInfo.buffer,
         serverId: serverId,
@@ -213,7 +220,7 @@ export default function CreateEditRoomForm(props) {
                   onChange={handleChange}
                   value={roomFormInfo.region}
               /> 
-              <FormSelect
+              {/* <FormSelect
                   id={"size"} 
                   inputLabel={"Room Size"} 
                   required={true}
@@ -221,7 +228,7 @@ export default function CreateEditRoomForm(props) {
                   onChange={handleChange}
                   value={roomFormInfo.size}
                   disabled={!!others.roomInfo}
-              /> 
+              />  */}
               <FormSelect
                   id={"frequency"} 
                   inputLabel={"Sampling Frequency (Hz)"} 
@@ -254,11 +261,11 @@ export default function CreateEditRoomForm(props) {
           }
           <div className={classes.button}>
             <DefaultButton disabled={!!loading} onClick={props.handleClose}>Cancel</DefaultButton>
-            <DefaultButton type="submit" disabled={!!loading} variant={"contained"}>
+            <SubmitButton type="submit" disabled={!!loading} variant={"contained"} color="secondary">
               Submit
               {/* if it is loading, show the loading indicator */}
               {!!loading && <div className={classes.progress}><CircularProgress size={15}/></div>}
-            </DefaultButton>
+            </SubmitButton>
           </div>
         </form>
     </div>

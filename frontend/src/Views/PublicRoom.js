@@ -10,6 +10,9 @@ import { Button, Divider, Grid } from '@material-ui/core/';
 // internal imports
 import Navbar from '../Components/Navbar';
 
+// icons
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -154,7 +157,10 @@ function PublicRoom(props) {
                 <p>{room.ipAddress}</p>
                 {!!room.ipAddress && (
                   <Grid container item xs direction="row" alignItems="center">
-									  <DefaultButton onClick={handleAlertOpen}>
+									  <DefaultButton 
+                      onClick={handleAlertOpen}
+                      startIcon={<FileCopyIcon/>}
+                    >
                       Copy
                     </DefaultButton>
                     { alert && setTimeout(() => {

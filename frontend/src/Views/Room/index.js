@@ -1,5 +1,5 @@
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Divider, Grid, Snackbar } from '@material-ui/core/';
+import { Button, CircularProgress, Divider, Grid, Snackbar } from '@material-ui/core/';
 import Alert from '@material-ui/lab/Alert';
 
 // react
@@ -10,6 +10,12 @@ import { useDispatch } from 'react-redux';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import IconButton from '@material-ui/core/IconButton';
 import ShareIcon from '@material-ui/icons/Share';
+import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/Edit';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+import StopIcon from '@material-ui/icons/Stop';
+import RefreshIcon from '@material-ui/icons/Refresh';
 
 // actions
 import { changeRoomParams, deleteRoom, restartJackTrip, restartRoom, terminateRoom } from '../../Actions/roomActions';
@@ -20,9 +26,12 @@ import ShareRoomModal from '../ShareRooms'
 
 const useStyles = makeStyles((theme) => ({
 	root: {
-		backgroundColor: 'lightgray',
+		backgroundColor: theme.palette.quaternary.main,
+		borderStyle: 'solid',
 		borderRadius: '10px',
+		borderWidth: '2px',
 		padding: theme.spacing(3, 4),
+		color: theme.palette.getContrastText(theme.palette.quaternary.main)
 	},
 	flexEnd: {
 		marginLeft: 'auto',
@@ -62,7 +71,7 @@ const useStyles = makeStyles((theme) => ({
 		},
 	},
 	divider: {
-		background: 'black',
+		background: '#a88843',
 	},
 	info: {
 		marginBottom: '10px',
@@ -88,13 +97,17 @@ const useStyles = makeStyles((theme) => ({
 	alignCenter: {
 		display: 'flex',
 		alignItems: 'center'
+	},
+	progress: {
+		display: "flex",
+		padding: theme.spacing(0, 1)
 	}
 }));
 
 const SmallOutlinedButton = (props) => {
 	const { children, ...others } = props;
 	return (
-		<Button size="small" variant="outlined" {...others}>
+		<Button size="small" variant="contained" color="secondary" {...others}>
 			{children}
 		</Button>
 	);
@@ -103,6 +116,9 @@ const DefaultButton = withStyles((theme) => ({
 	root: {
 		borderRadius: 5,
 		padding: theme.spacing(0.5, 1),
+		'&:hover': {
+			background: theme.palette.tertiary.main
+		}
 	},
 }))(SmallOutlinedButton);
 
@@ -245,7 +261,7 @@ function Room(props) {
 						<IconButton 
 							fontSize="small" 
 							variant="contained"
-							color="default"
+							color="secondary"
 							className={classes.margin_horizontal}
 							onClick={handleShareModalOpen}
 						>
@@ -265,13 +281,21 @@ function Room(props) {
 							{userCount ? userCount : 0} active
 						</span>) ||
 						((type === "AWS") && (status === 'creating' || status === undefined) && (
-							<span>In Creation</span>
+							<span>In Creation
+							</span>
 						)) ||
 						((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
 						((status === 'updating') && <span>Updating Settings...</span>) ||
 						((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>)
 					}
-					<FiberManualRecordIcon className={connectionStyle} />
+					{
+						(type === "AWS") && (status === 'creating' || status === undefined) ? 
+						<div className={classes.progress}>
+							<CircularProgress className={connectionStyle} size={15}/>
+						</div>
+						:
+						<FiberManualRecordIcon className={connectionStyle} />
+					}
 				</div>
 			</Grid>
 			<Grid item xs={12} className={classes.margin_horizontal2}>
@@ -292,7 +316,10 @@ function Room(props) {
 									{!!ipAddress ? ipAddress : 'N/A'}
 								</span>
 								{!!ipAddress && (
-									<DefaultButton onClick={handleAlertOpen}>
+									<DefaultButton 
+										onClick={handleAlertOpen}
+										startIcon={<FileCopyIcon/>}
+									>
 										Copy
 									</DefaultButton>
 							  	)}
@@ -311,7 +338,7 @@ function Room(props) {
 								(type === "AWS") &&
 								<>
 									<div>Region: {region}</div>
-									<div>Capacity: {size}</div>
+									{/* <div>Capacity: {size}</div> */}
 								</>
 							}
 						</Grid>
@@ -336,6 +363,7 @@ function Room(props) {
 							(!!status && status.includes('fail'))
 						}
 						onClick={handleRoomDeletion}
+						startIcon={<DeleteIcon />}
 					>
 						Delete
 					</DefaultButton>
@@ -349,7 +377,10 @@ function Room(props) {
 						Test Latency {latency && `:${latency}`}
 					</DefaultButton> */}
 					{(status === 'running') &&
-						<DefaultButton onClick={handleJacktripRestart}>
+						<DefaultButton 
+							onClick={handleJacktripRestart}
+							startIcon={<RefreshIcon/>}
+						>
 							Restart Jacktrip
 						</DefaultButton>
 					}
@@ -361,6 +392,7 @@ function Room(props) {
 						onClick={() => {
 							setModalOpen(true)
 						}}
+						startIcon={<EditIcon/>}
 					>
 						Edit Settings
 					</DefaultButton>
@@ -374,6 +406,7 @@ function Room(props) {
 					{((status === 'terminated') || (status === 'fail_create')) && (
 						<DefaultButton
 							onClick={handleRoomRestart}
+							startIcon={<PlayArrowIcon/>}
 						>
 							{status === 'terminated' ? 'Start' : 'Retry'}
 						</DefaultButton>
@@ -388,6 +421,13 @@ function Room(props) {
 								connectionStyle !== classes.running
 							}
 							onClick={handleRoomTermination}
+							startIcon={
+								(status !== 'terminating' || connectionStyle === classes.running)
+									? 
+									<StopIcon/>
+									:
+									<CircularProgress size={15}/>
+							}
 						>
 							{status === 'terminating'
 								? 'Stopping...'

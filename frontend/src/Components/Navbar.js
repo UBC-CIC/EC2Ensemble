@@ -56,6 +56,9 @@ const useStyles = makeStyles((theme) => ({
         zIndex: theme.zIndex.drawer + 1,
         color: '#fff',
     },
+    navbarBg: {
+        background: theme.palette.primary.main
+    }
 }));
 
 function Navbar(props) {
@@ -114,7 +117,7 @@ function Navbar(props) {
             {!user ? 
                 <MenuItem onClick={()=>history.push('/')}><span>Sign in/Sign Up</span></MenuItem>
                 :
-                <MenuItem onClick={handleLogout}><span>Logout</span><ExitToAppIcon color={"secondary"}/></MenuItem>
+                <MenuItem onClick={handleLogout}><span>Logout</span><ExitToAppIcon style={{ color: theme.palette.orange.main }}/></MenuItem>
             }
         </Menu>
     );
@@ -169,10 +172,10 @@ function Navbar(props) {
 
     return(
         <Grid item xs={12} className={classes.appBar}>
-            <AppBar position="static" style={{ background: '#c4c4c4' }}>
+            <AppBar position="static" className={classes.navbarBg}>
                 <Toolbar>
                     <Typography className={classes.title} variant="h6" component={"h1"} noWrap>
-                        <span><span>PCMA</span><span style={{color: `${theme.palette.secondary.main}`}}>/</span><span>CIC</span></span>
+                        <span><span>PCMA</span><span style={{color: `${theme.palette.orange.main}`}}>/</span><span>CIC</span></span>
                     </Typography>
                     <img className={classes.logo} style={{width: "270px", height: "30px"}} src={process.env.PUBLIC_URL + './Assets/Images/logo_inverse.png'} alt="..."/>
                     <div className={classes.grow} />
