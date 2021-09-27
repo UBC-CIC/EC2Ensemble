@@ -156,6 +156,9 @@ function Navbar(props) {
             }
         }
         retrieveUser();
+
+        // unmount
+        return () => setUser("");
     }, [loginState])
 
     async function onSignOut() {

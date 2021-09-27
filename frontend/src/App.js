@@ -2,7 +2,8 @@ import {Grid} from '@material-ui/core';
 import './App.css';
 import Login from "./Views/Authentication/Login";
 import Home from './Views/Home';
-import { Hub } from "aws-amplify";
+import { Hub, Auth } from "aws-amplify";
+
 import React, {useState, useEffect} from "react";
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
 import { connect } from "react-redux";
@@ -14,23 +15,34 @@ import PublicRoom from './Views/PublicRoom';
 function App(props) {
     const {loginState, updateLoginState} = props;
 
-    const [currentLoginState, updateCurrentLoginState] = useState(loginState);
-
     useEffect(() => {
         setAuthListener();
     }, []);
 
-    useEffect(() => {
-        updateCurrentLoginState(loginState);
-    }, [loginState]);
+    // useEffect(() => {
+    //     async function retrieveUser() {
+    //         try {
+    //             Auth.currentAuthenticatedUser().then(user => {
+    //                 updateLoginState("signedIn");
+    //             }).catch(err => {
+    //                 updateLoginState("signIn");
+    //             })
 
-    async function setAuthListener() {
-        Hub.listen('auth', (data)=> {
+    //         } catch (e) {
+
+    //         }
+    //     }
+    //     retrieveUser();
+    // }, []);
+
+    function setAuthListener() {
+        Hub.listen('auth', async (data)=> {
             switch(data.payload.event) {
                 case "signOut":
                     updateLoginState("signIn");
                     break;
                 default:
+                    console.log("setAuthListener", data.payload.event)
                     break;
             }
         })
@@ -44,7 +56,7 @@ function App(props) {
                     <Switch>
                         <Route  exact path="/" 
                                 render={() =>(
-                                    currentLoginState !== "signedIn" ? (
+                                    loginState !== "signedIn" ? (
                                         <Route render={() =>
                                             /* Login component options:
                                             *
@@ -64,7 +76,7 @@ function App(props) {
                                         } />
                                         ) : (
                                         <Route render={props => 
-                                            <WebSocketClient currentState={currentLoginState}>
+                                            <WebSocketClient currentState={loginState}>
                                                 <Home {...props}/>
                                             </WebSocketClient>
                                         }/>
