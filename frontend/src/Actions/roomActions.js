@@ -1,20 +1,3 @@
-import { API } from 'aws-amplify';
-
-/* get only one room server */
-export const queryOneRoom = (roomId) => async (dispatch) => {
-	await API.get('getOneRoom', `/room/${roomId}`)
-		.then((response) => {
-			const data = JSON.parse(response.body);
-			dispatch({
-				type: 'QUERY_ONE_ROOM',
-				payload: data,
-			});
-		})
-		.catch((error) => {
-			console.log('Error in querying room', error);
-		});
-};
-
 /* get rooms from db and update */
 export const queryUserRooms = (user) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_USERDB_BASE;

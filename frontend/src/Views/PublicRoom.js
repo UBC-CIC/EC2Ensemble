@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { connect, useDispatch } from "react-redux";
+import { API } from 'aws-amplify';
+
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
@@ -8,10 +9,6 @@ import { Button, Divider, Grid } from '@material-ui/core/';
 
 // internal imports
 import Navbar from '../Components/Navbar';
-
-// actions
-import { queryOneRoom } from '../Actions/roomActions';
-
 
 
 const useStyles = makeStyles((theme) => ({
@@ -80,27 +77,39 @@ const DefaultButton = withStyles((theme) => ({
 
 
 function PublicRoom(props) {
-  const { room } = props;
   const classes = useStyles();
-  const dispatch = useDispatch();
   const [alert, handleAlert] = useState(false);
   const [loading, handleLoading] = useState(true);
+  const [room, setRoom] = useState("");
   const [emptyRoom, handleEmptyRoom] = useState(false);
 
   useEffect(() => {
     (async () => {
       // remove the "/" in the pathname to get the userLinkID
       const roomId = new URLSearchParams(props.location.search).get("room");
+      
       if (roomId) {
-          await dispatch(queryOneRoom(roomId));
-          if (JSON.stringify(room) === '{}') {
+        await API.get('getOneRoom', `/room/${roomId}`)
+          .then((response) => {
+            const data = JSON.parse(response.body);
+            updateRoom(data);
+          })
+          .catch((error) => {
             handleEmptyRoom(true);
-          } else {
-            handleLoading(false);
-          }
+            console.log('Error in querying room', error);
+          });
       }
     })();
   }, []);
+
+  const updateRoom = (room) => {
+    if (JSON.stringify(room) === '{}') {
+      handleEmptyRoom(true);
+    } else {
+      setRoom(room)
+      handleLoading(false);
+    }
+  }
 
   const handleAlertOpen = () => {
     navigator.clipboard.writeText(room.ipAddress)
@@ -189,10 +198,4 @@ function PublicRoom(props) {
   );
 }
 
-const mapStateToProps = (state) => {
-  return {
-      room: state.roomsState
-  };
-};
-
-export default connect(mapStateToProps, null)(PublicRoom);
+export default PublicRoom;
