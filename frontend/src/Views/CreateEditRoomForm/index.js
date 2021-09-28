@@ -134,7 +134,7 @@ export default function CreateEditRoomForm(props) {
 
     const minLatency = Math.min.apply(null, tempLatencies);
     const index = tempLatencies.indexOf(minLatency);
-    returnValue = [`${regions[index]} (Recommend)`, ...regions.filter((ele, idx) => idx !== index)]
+    returnValue = [`${regions[index]} (Recommended)`, ...regions.filter((ele, idx) => idx !== index)]
     
     return returnValue;
   }, []);
@@ -166,7 +166,7 @@ export default function CreateEditRoomForm(props) {
         frequency: roomFormInfo.frequency,
         buffer: roomFormInfo.buffer,
         serverId: serverId,
-        region: roomFormInfo.region.split(' ')[0], // remove "Recommend" text
+        region: roomFormInfo.region.split(' ')[0], // remove "Recommended" text
       }
     } else {
       roomForm = {

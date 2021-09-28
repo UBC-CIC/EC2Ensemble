@@ -294,9 +294,10 @@ export const restartJackTrip = (user, region, serverId) => async (dispatch) => {
 
 /* get messages from websocket and update the room status */
 export const updateRoomStatus = (message) => (dispatch) => {
-	if (message.success === true) {
-		switch(message.action) {
-			case "create": {
+	console.log(message)
+	switch(message.action) {
+		case "create": {
+			if (message.success === true) {
 				dispatch({
 					type: 'UPDATE_ROOM_INFO',
 					payload: {
@@ -305,9 +306,11 @@ export const updateRoomStatus = (message) => (dispatch) => {
 						status: 'running'
 					},
 				});
-				break;
 			}
-			case "terminate": {
+			break;
+		}
+		case "terminate": {
+			if (message.success === true) {
 				dispatch({
 					type: 'UPDATE_ROOM_INFO',
 					payload: {
@@ -315,21 +318,23 @@ export const updateRoomStatus = (message) => (dispatch) => {
 						status: 'terminated',
 					},
 				});
-				break;
 			}
-			case "connection_count": {
-				dispatch({
-					type: 'UPDATE_ROOM_INFO',
-					payload: {
-						serverId: message.serverId,
-						userCount: parseInt(message.count),
-					},
-				});
-				break;
-			}
-			case "param_change":
-			case "restart_jacktrip":
-			{
+			break;
+		}
+		case "connection_count": {
+			dispatch({
+				type: 'UPDATE_ROOM_INFO',
+				payload: {
+					serverId: message.serverId,
+					userCount: parseInt(message.count),
+				},
+			});
+			break;
+		}
+		case "param_change":
+		case "restart_jacktrip":
+		{
+			if (message.success === true) {
 				dispatch({
 					type: 'UPDATE_ROOM_INFO',
 					payload: {
@@ -337,11 +342,11 @@ export const updateRoomStatus = (message) => (dispatch) => {
 						status: 'running'
 					},
 				});
-				break;
 			}
-			default: {
-				break
-			}
+			break;
+		}
+		default: {
+			break
 		}
 	}
 	
