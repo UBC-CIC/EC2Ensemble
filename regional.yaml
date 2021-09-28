@@ -36,12 +36,11 @@ Resources:
                 - ec2:RunInstances
                 - ec2:CreateTags
                 - ssm:GetParameter
-                - iam:PassRole
               Resource: '*'
-            # - Effect: Allow
-            #   Action:
-            #     - iam:PassRole
-            #   Resource: !Sub 'arn:*:ec2:*:${AWS::AccountId}:instance/*'
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource: !Sub 'arn:*:iam:*:${AWS::AccountId}:role/'
       Environment:
         Variables:
           ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
