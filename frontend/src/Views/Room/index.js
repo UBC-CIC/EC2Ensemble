@@ -277,7 +277,7 @@ function Room(props) {
 					{
 						(status === 'running' && 
 						<span>
-							{userCount ? userCount : 0} user{!!userCount && userCount > 1 && "s"} active
+							{userCount ? userCount : 0} user{!!userCount && userCount > 1 && "s"} connected
 						</span>) ||
 						((type === "AWS") && (status === 'creating' || status === undefined) && (
 							<span>In Creation
