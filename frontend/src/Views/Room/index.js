@@ -23,6 +23,7 @@ import { changeRoomParams, deleteRoom, restartJackTrip, restartRoom, terminateRo
 // components
 import CreateEditRoomForm from '../CreateEditRoomForm';
 import ShareRoomModal from '../ShareRooms'
+import { DisabledButton } from '../../Components/Buttons';
 
 const useStyles = makeStyles((theme) => ({
 	root: {
@@ -107,9 +108,9 @@ const useStyles = makeStyles((theme) => ({
 const SmallOutlinedButton = (props) => {
 	const { children, ...others } = props;
 	return (
-		<Button size="small" variant="contained" color="secondary" {...others}>
+		<DisabledButton size="small" variant="contained" color="secondary" {...others}>
 			{children}
-		</Button>
+		</DisabledButton>
 	);
 };
 const DefaultButton = withStyles((theme) => ({
@@ -128,7 +129,6 @@ function Room(props) {
 		roomName,
 		description,
 		region,
-		size,
 		frequency,
 		buffer,
 		status,
@@ -145,7 +145,6 @@ function Room(props) {
 	 * terminated === no connection to room, most likely been terminated
 	 * */
 	const [connectionStyle, setConnectionStyle] = useState(classes.terminated);
-	// const [latency, setLatency] = useState('');
 	const [regionChangeInfo, setRegionChangeInfo] = useState('');
 	const [deletionStatus, setDeletionStatus] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -235,7 +234,7 @@ function Room(props) {
 					) ||
 					((roomFormInfo.type ===  "External Setup") && (roomFormInfo.ipAddress !== ipAddress)))
 		{
-			dispatch(changeRoomParams(currUser, serverId, roomFormInfo))
+			await dispatch(changeRoomParams(currUser, serverId, roomFormInfo))
 		}
 		// let the buttons stop loading
 		setModalLoading(false);
@@ -278,7 +277,7 @@ function Room(props) {
 					{
 						(status === 'running' && 
 						<span>
-							{userCount ? userCount : 0} active
+							{userCount ? userCount : 0} user{!!userCount && userCount > 1 && "s"} connected
 						</span>) ||
 						((type === "AWS") && (status === 'creating' || status === undefined) && (
 							<span>In Creation
@@ -422,7 +421,7 @@ function Room(props) {
 							}
 							onClick={handleRoomTermination}
 							startIcon={
-								(status !== 'terminating' || connectionStyle === classes.running)
+								(connectionStyle === classes.running)
 									? 
 									<StopIcon/>
 									:
