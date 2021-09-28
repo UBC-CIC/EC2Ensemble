@@ -163,7 +163,9 @@ const updateSearchInput = (roomList, input, category) => {
   if (category === "All") {
     const categories = Object.values(RoomInfoCategory);
     return Object.values(roomList).filter(room => {
-      return !!categories.filter((c) => room[c].toString().toLowerCase().includes(input.toLowerCase())).length
+      return !!categories.filter((c) => {
+        return !room[c] ? false : room[c].toString().toLowerCase().includes(input.toLowerCase())
+      }).length
      })
   } else {
     const mappedCategory = RoomInfoCategory[category];

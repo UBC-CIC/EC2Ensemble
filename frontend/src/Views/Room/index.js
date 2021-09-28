@@ -151,7 +151,7 @@ function Room(props) {
 	const [alert, handleAlert] = useState(false)
 
 	useEffect(() => {
-		if (status === 'running' || type === 'External Setup') {
+		if (status === 'running' || type === 'External Setup' || type === 'param_change') {
 			setConnectionStyle(classes.running);
 		} else if (status === 'terminated') {
 			setConnectionStyle(classes.terminated);
@@ -280,15 +280,14 @@ function Room(props) {
 							{userCount ? userCount : 0} user{!!userCount && userCount > 1 && "s"} connected
 						</span>) ||
 						((type === "AWS") && (status === 'creating' || status === undefined) && (
-							<span>In Creation
-							</span>
+							<span>In Creation</span>
 						)) ||
 						((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
 						((status === 'updating') && <span>Updating Settings...</span>) ||
 						((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>)
 					}
 					{
-						(type === "AWS") && (status === 'creating' || status === undefined) ? 
+						(type === "AWS") && (status === 'creating' || status === undefined || status === 'updating' || status === 'restart_jacktrip') ? 
 						<div className={classes.progress}>
 							<CircularProgress className={connectionStyle} size={15}/>
 						</div>
