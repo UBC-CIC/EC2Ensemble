@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { connect, useDispatch } from "react-redux";
 
-import WebSocket from 'isomorphic-ws';
+// import WebSocket from 'isomorphic-ws';
 
 // aws
 import { Auth } from "aws-amplify";

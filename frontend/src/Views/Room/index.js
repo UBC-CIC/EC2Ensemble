@@ -8,7 +8,6 @@ import { useDispatch } from 'react-redux';
 
 // icons
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
-import IconButton from '@material-ui/core/IconButton';
 import ShareIcon from '@material-ui/icons/Share';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
@@ -31,8 +30,9 @@ const useStyles = makeStyles((theme) => ({
 		borderStyle: 'solid',
 		borderRadius: '10px',
 		borderWidth: '2px',
+		borderColor: theme.palette.primary.main,
 		padding: theme.spacing(3, 4),
-		color: theme.palette.getContrastText(theme.palette.quaternary.main)
+		// color: theme.palette.getContrastText(theme.palette.primary.main)
 	},
 	flexEnd: {
 		marginLeft: 'auto',
@@ -71,9 +71,6 @@ const useStyles = makeStyles((theme) => ({
 			},
 		},
 	},
-	divider: {
-		background: '#a88843',
-	},
 	info: {
 		marginBottom: '10px',
 	},
@@ -102,13 +99,19 @@ const useStyles = makeStyles((theme) => ({
 	progress: {
 		display: "flex",
 		padding: theme.spacing(0, 1)
+	},
+	block: {
+		display: 'block'
+	},
+	italic: {
+		fontStyle: 'italic'
 	}
 }));
 
 const SmallOutlinedButton = (props) => {
 	const { children, ...others } = props;
 	return (
-		<DisabledButton size="small" variant="contained" color="secondary" {...others}>
+		<DisabledButton size="small" variant="contained" color="primary" {...others}>
 			{children}
 		</DisabledButton>
 	);
@@ -256,43 +259,38 @@ function Room(props) {
 			<Grid container item alignItems="center">
 				<div className={classes.alignCenter}>
 					<div>{roomName}</div>
-					{(status === 'running') &&
-						<IconButton 
-							fontSize="small" 
-							variant="contained"
-							color="secondary"
-							className={classes.margin_horizontal}
-							onClick={handleShareModalOpen}
-						>
-							<ShareIcon fontSize="small"/>
-						</IconButton>
-					}
-					<ShareRoomModal 
-						open={shareModalOpen}
-						handleClose={handleShareModalClose}
-						id={serverId}
-					/>
 				</div>
-				<div className={`${classes.flexEnd}`}>
-					{
-						(status === 'running' && 
-						<span>
-							{userCount ? userCount : 0} user{!!userCount && userCount > 1 && "s"} connected
-						</span>) ||
-						((type === "AWS") && (status === 'creating' || status === undefined) && (
-							<span>In Creation</span>
-						)) ||
-						((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
-						((status === 'updating') && <span>Updating Settings...</span>) ||
-						((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>)
-					}
-					{
-						(type === "AWS") && (status === 'creating' || status === undefined || status === 'updating' || status === 'restart_jacktrip') ? 
-						<div className={classes.progress}>
-							<CircularProgress className={connectionStyle} size={15}/>
+				<div className={`${classes.flexEnd} ${classes.block}`}>
+					<div className={classes.alignCenter}>
+						<span>STATUS:&nbsp;</span>
+						{
+							(status === 'running' && 
+							<span>
+								{status}
+							</span>) ||
+							((type === "AWS") && (status === 'creating' || status === undefined) && (
+								<span>In Creation</span>
+							)) ||
+							((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
+							((status === 'updating') && <span>Updating Settings...</span>) ||
+							((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>) ||
+							((status === 'terminated') && <span>Terminated</span>)
+						}
+						{
+							(type === "AWS") && (status !== 'running' && status !== 'terminated' && status !== 'param_change') ? 
+							<div className={classes.progress}>
+								<CircularProgress className={connectionStyle} size={15}/>
+							</div>
+							:
+							<FiberManualRecordIcon className={connectionStyle} />
+						}
+					</div>
+					{status === 'running' && 
+						<div>
+							<span className={classes.italic}>
+								{userCount ? userCount : 0} user{!!userCount && userCount > 1 && "s"} connected
+							</span>
 						</div>
-						:
-						<FiberManualRecordIcon className={connectionStyle} />
 					}
 				</div>
 			</Grid>
@@ -317,6 +315,7 @@ function Room(props) {
 									<DefaultButton 
 										onClick={handleAlertOpen}
 										startIcon={<FileCopyIcon/>}
+										variant="outlined"
 									>
 										Copy
 									</DefaultButton>
@@ -352,6 +351,19 @@ function Room(props) {
 				</Grid>
 			</Grid>
 			<Grid container item alignItems="center">
+				{(status === 'running') &&
+					<DefaultButton
+						onClick={handleShareModalOpen}
+						startIcon={<ShareIcon fontSize="small"/>}
+					>
+						Share
+					</DefaultButton>
+				}
+				<ShareRoomModal 
+					open={shareModalOpen}
+					handleClose={handleShareModalClose}
+					id={serverId}
+				/>
 				<div
 					className={`${classes.flexEnd} ${classes.margin_innerLeft}`}
 				>

@@ -94,11 +94,7 @@ const DefaultButton = withStyles((theme) => ({
 
 const SubmitButton = withStyles((theme) => ({
     root: {
-        color: theme.palette.getContrastText("#012144"),
         backgroundColor: "#012144",
-        '&:hover': {
-            backgroundColor: "#012144",
-        },
     },
 }))(DefaultButton);
 

@@ -294,7 +294,6 @@ export const restartJackTrip = (user, region, serverId) => async (dispatch) => {
 
 /* get messages from websocket and update the room status */
 export const updateRoomStatus = (message) => (dispatch) => {
-	console.log(message)
 	switch(message.action) {
 		case "create": {
 			if (message.success === true) {

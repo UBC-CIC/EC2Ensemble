@@ -47,7 +47,7 @@ const DefaultButton = withStyles((theme) => ({
 const SubmitButton = withStyles((theme) => ({
   root: {
       '&:hover': {
-        background: '#ffba24'
+        background: theme.palette.secondaryHover.main
       }
   },
 }))(DefaultButton);

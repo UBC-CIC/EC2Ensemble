@@ -34,6 +34,12 @@ export const FormInput = (props) => {
         root: {
             margin: theme.spacing(2,0),
             width: '100%'
+        },
+        disabled: {
+            '&.Mui-disabled': {
+                background: '#e3e3e3',
+                cursor: 'not-allowed',
+            }
         }
     }));
   
@@ -51,6 +57,9 @@ export const FormInput = (props) => {
                     type="text" 
                     variant="outlined"
                     size="small"
+                    InputProps={{
+                        className: classes.disabled,
+                    }}
                     {...others}
                 />
             </CustomFormControl>
@@ -64,6 +73,11 @@ export const FormSelect = (props) => {
     const useStyles = makeStyles((theme) => ({
         root: {
             margin: theme.spacing(2,0)
+        },
+        select: {
+            '&$select': {
+                backgroundColor: "white"
+            }
         }
     }));
   
@@ -76,6 +90,7 @@ export const FormSelect = (props) => {
                 </InputLabel>
                 <Select
                     native
+                    classes={{root: classes.select}}
                     required={required}
                     name={id}
                     id={id}

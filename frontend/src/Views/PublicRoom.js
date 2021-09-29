@@ -75,9 +75,9 @@ const DefaultButton = withStyles((theme) => ({
 		borderRadius: 5,
 		padding: theme.spacing(0.5, 1),
     margin: theme.spacing(0, 2),
-    '&:hover': {
-			background: theme.palette.tertiary.main
-		}
+    // '&:hover': {
+		// 	background: theme.palette.tertiary.main
+		// }
 	},
 }))(SmallOutlinedButton);
 
@@ -163,7 +163,7 @@ function PublicRoom(props) {
 									  <DefaultButton 
                       onClick={handleAlertOpen}
                       startIcon={<FileCopyIcon/>}
-                      color="secondary"
+                      color="primary"
                       variant="contained"
                     >
                       Copy
