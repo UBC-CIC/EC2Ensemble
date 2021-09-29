@@ -165,9 +165,8 @@ function Navbar(props) {
     }, [loginState])
 
     async function onSignOut() {
-        updateLoginState("signIn");
-        history.push("/");
         await Auth.signOut();
+        history.push("/");
     }
 
     return(
