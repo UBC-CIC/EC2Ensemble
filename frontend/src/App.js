@@ -1,6 +1,8 @@
-import {Grid, Typography} from '@material-ui/core';
+import {Grid} from '@material-ui/core';
 import {ThemeProvider} from '@material-ui/core/styles';
-import CssBaseline from '@material-ui/core/CssBaseline'
+import CssBaseline from '@material-ui/core/CssBaseline';
+import {makeStyles} from '@material-ui/core/styles';
+
 
 import './App.css';
 import theme from "./themes";
@@ -16,9 +18,15 @@ import {updateLoginState} from "./Actions/loginActions";
 import WebSocketClient from './WebSocket';
 import PublicRoom from './Views/PublicRoom';
 
+const useStyles = makeStyles({
+    root: {
+        height: "100%"
+    }
+});
 
 function App(props) {
     const {loginState, updateLoginState} = props;
+    const classes = useStyles();
 
     useEffect(() => {
         setAuthListener();
@@ -39,7 +47,7 @@ function App(props) {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <Grid container>
+            <Grid container className={classes.root}>
                 <Grid item xs={12}>
                 {
                     <BrowserRouter>
