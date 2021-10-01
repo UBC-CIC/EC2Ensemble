@@ -237,7 +237,9 @@ function Room(props) {
 					) ||
 					((roomFormInfo.type ===  "External Setup") && (roomFormInfo.ipAddress !== ipAddress)))
 		{
-			await dispatch(changeRoomParams(currUser, serverId, roomFormInfo))
+			// check if buffer or frequency is changed
+			const bufFreqChange = roomFormInfo.buffer !== buffer || roomFormInfo.frequency !== frequency;
+			await dispatch(changeRoomParams(currUser, serverId, roomFormInfo, bufFreqChange))
 		}
 		// let the buttons stop loading
 		setModalLoading(false);

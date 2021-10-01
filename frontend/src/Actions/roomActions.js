@@ -192,7 +192,7 @@ export const restartRoom = (user, region, serverId) => async (dispatch) => {
 };
 
 /* change room info */
-export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="param") => async (dispatch) => {
+export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="param", bufFreqChange=false) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_API_BASE;
 	const dbURL=process.env.REACT_APP_AWS_USERDB_BASE;
 
@@ -240,14 +240,28 @@ export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="
 		.then((response) => response.json())
 		.then((data) => {
 			// if successful, update the params in the room
-			dispatch({
-				type: 'UPDATE_ROOM_INFO',
-				payload: {
-					...updatedRoomParams,
-					serverId: serverId,
-					status: updatedRoomParams.type === 'AWS' ? 'updating' : undefined
-				},
-			});
+			if (bufFreqChange) {
+				/* if bufFreqChange === true, change redux status, 
+				* because we would be receiving a status update from ws
+				*/
+				dispatch({
+					type: 'UPDATE_ROOM_INFO',
+					payload: {
+						...updatedRoomParams,
+						serverId: serverId,
+						status: updatedRoomParams.type === 'AWS' ? 'updating' : undefined
+					},
+				});
+			} else {
+				// if bufFreqChange === false, status remains the same
+				dispatch({
+					type: 'UPDATE_ROOM_INFO',
+					payload: {
+						...updatedRoomParams,
+						serverId: serverId
+					},
+				});
+			}
 		})
 		.catch((error) => {
 			console.log('Error in changing room params', error);
