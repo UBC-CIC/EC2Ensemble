@@ -1,13 +1,12 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { useDispatch } from "react-redux";
-
-// import WebSocket from 'isomorphic-ws';
 
 // aws
 import { Auth } from "aws-amplify";
 
 // internal imports
 import { updateRoomStatus } from './Actions/roomActions';
+
 
 function WebSocketProvider (props) {
   const {currentState, children} = props;
@@ -23,8 +22,10 @@ function WebSocketProvider (props) {
     })();
 
     return () => {
-      clientWebSocket.current.close();
-      clientWebSocket.current = null;
+      if (clientWebSocket.current) {
+        clientWebSocket.current.close();
+        clientWebSocket.current = null;
+      }
     };
   }, [currentState]);
 
@@ -86,7 +87,7 @@ function WebSocketProvider (props) {
 
     // listening for error
     clientWebSocket.current.onerror = (error) => {
-        console.log("error", error)
+        console.log("Error")
     }
   };
 
