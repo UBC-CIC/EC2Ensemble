@@ -23,7 +23,8 @@
           "partitionKeyName": "user",
           "partitionKeyType": "S",
           "sortKeyName": "serverId",
-          "sortKeyType": "S"
+          "sortKeyType": "S",
+          "streamArn": "arn:aws:dynamodb:ca-central-1:173513177120:table/jacktrip-global-UserServerTable-1CV4VPDXSCTB2/stream/2021-09-24T04:37:04.800"
         }
       },
       "function": {

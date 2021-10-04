@@ -21,7 +21,7 @@ exports.handler = async (event) => {
 		console.log(res);
 		return {
 			headers: {
-				'Access-Control-Allow-Origin': 'http://localhost:3000',
+				'Access-Control-Allow-Origin': process.env.corsOriginUrl,
 				'Access-Control-Allow-Credentials': true,
 				'Access-Control-Allow-Methods': 'OPTIONS,DELETE',
 				'Access-Control-Allow-Headers':
@@ -35,7 +35,7 @@ exports.handler = async (event) => {
 		return {
 			statusCode: 400,
 			headers: {
-				'Access-Control-Allow-Origin': 'http://localhost:3000',
+				'Access-Control-Allow-Origin': process.env.corsOriginUrl,
 				'Access-Control-Allow-Credentials': true,
 				'Access-Control-Allow-Methods': 'OPTIONS,DELETE',
 				'Access-Control-Allow-Headers':
