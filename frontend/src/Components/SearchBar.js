@@ -18,6 +18,14 @@ export default function SearchBar(props) {
     const {input, handleSearch, options} = props;
     const [selectCategory, setSelectCategory] = useState("All");
 
+    const useStyles = makeStyles((theme) => ({
+        root: {
+          background: 'white',
+        }
+    }));
+
+    const classes = useStyles();
+
     return (
       <React.Fragment>
         <Grid container item alignItems={"center"} xs={12}>
@@ -33,6 +41,9 @@ export default function SearchBar(props) {
           </Grid>
           <GrowGrid item>
             <TextField
+                InputProps={{
+                  className: classes.root,
+                }}
                 fullWidth={true}
                 placeholder="Search"
                 variant="outlined"

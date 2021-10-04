@@ -56,7 +56,7 @@ const DefaultButton = withStyles((theme) => ({
 const SubmitButton = withStyles((theme) => ({
   root: {
     '&:hover': {
-      background: '#ffba24'
+      background: theme.palette.secondaryHover.main
     }
   },
 }))(DefaultButton);
@@ -97,7 +97,8 @@ export default function ShareRoomModal(props) {
                   />
                   <DefaultButton 
                     onClick={handleAlertOpen} 
-                    variant="outlined" color="secondary"
+                    variant="contained" 
+                    color="secondary"
                     startIcon={<FileCopyIcon/>}
                   >
                     Copy

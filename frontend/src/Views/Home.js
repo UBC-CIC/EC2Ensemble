@@ -7,7 +7,7 @@ import { Auth } from 'aws-amplify';
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Grid } from '@material-ui/core/';
+import { Button, Container, Grid } from '@material-ui/core/';
 
 // internal imports
 import Room from './Room';
@@ -41,6 +41,9 @@ const useStyles = makeStyles((theme) => ({
   },
   alignCenter: {
     alignItems: 'center'
+  },
+  max: {
+    maxWidth: "1280px"
   }
 }))
 
@@ -48,8 +51,10 @@ const DefaultButton = withStyles((theme) => ({
   root: {
       borderRadius: 5, 
       padding: theme.spacing(1, 3),
-      background: '#E69F00',
-      borderColor: 'black',
+      fontColor: theme.palette.getContrastText(theme.palette.secondary.main),
+      '&:hover': {
+        background: theme.palette.secondaryHover.main
+      }
   },
 }))(Button);
 
@@ -106,6 +111,7 @@ function Home(props) {
   return (
     <Grid container justifyContent="center">
       <Navbar/>
+      <Grid container className={classes.max} justifyContent="center">
       <Grid item xs={11} sm={10}>
         <Grid container item direction="row" alignItems="center" className={classes.margin_vertical2}>
           <div className={`${classes.flex} ${classes.alignCenter}`}>
@@ -113,9 +119,9 @@ function Home(props) {
           </div>
           <div className={classes.flexEnd}>
             <DefaultButton 
-              variant="outlined"
+              variant="contained"
               onClick={handleFormOpen}
-              // color="secondary"
+              color="secondary"
               startIcon={<AddCircleIcon/>}
             >
               Create Room
@@ -151,6 +157,7 @@ function Home(props) {
         </Grid>
       </Grid>
 
+      </Grid>
     </Grid>
   );
 }
@@ -163,7 +170,9 @@ const updateSearchInput = (roomList, input, category) => {
   if (category === "All") {
     const categories = Object.values(RoomInfoCategory);
     return Object.values(roomList).filter(room => {
-      return !!categories.filter((c) => room[c].toString().toLowerCase().includes(input.toLowerCase())).length
+      return !!categories.filter((c) => {
+        return !room[c] ? false : room[c].toString().toLowerCase().includes(input.toLowerCase())
+      }).length
      })
   } else {
     const mappedCategory = RoomInfoCategory[category];

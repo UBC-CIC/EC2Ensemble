@@ -42,6 +42,9 @@ const useStyles = makeStyles((theme) => ({
     marginHorizontal: {
         margin: theme.spacing(4, 'auto')
     },
+    marginVertical: {
+        margin: theme.spacing(2.5, 0)
+    },
     padding: {
         padding: theme.spacing(1.5)
     },
@@ -94,11 +97,8 @@ const DefaultButton = withStyles((theme) => ({
 
 const SubmitButton = withStyles((theme) => ({
     root: {
-        color: theme.palette.getContrastText("#012144"),
-        backgroundColor: "#012144",
-        '&:hover': {
-            backgroundColor: "#012144",
-        },
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.getContrastText(theme.palette.primary.main)
     },
 }))(DefaultButton);
 
@@ -439,9 +439,9 @@ function Login(props) {
         <>
             {/*  An example image is provided. Please use a royalty-free photo, a photo owned by you, or a photo owned by the CIC */}
             <Grid container className={classes.centerBox} style={
-                (type === "image") ? (themeColor === "standard") ? { backgroundColor: "#012144", backgroundImage: "url(./Assets/Images/background.jpg)", backgroundSize: "cover", backgroundRepeat: "no", width: "100%", height: "100vh"} :
-                    { backgroundColor: themeColor, backgroundImage: "url(./Assets/Images/background.jpg)", backgroundSize: "cover", backgroundRepeat: "no", width: "100%", height: "100vh"} :
-                (themeColor === "standard")? { backgroundColor: "#012144", width: "100%", height: "100vh"} : { backgroundColor: themeColor, width: "100%", height: "100vh"}
+                (type === "image") ? (themeColor === "standard") ? { backgroundColor: "#012144", backgroundImage: "url(./Assets/Images/background.jpg)", backgroundSize: "cover", backgroundRepeat: "no", width: "100%", height: "100%"} :
+                    { backgroundColor: themeColor, backgroundImage: "url(./Assets/Images/background.jpg)", backgroundSize: "cover", backgroundRepeat: "no", width: "100%", height: "100%"} :
+                (themeColor === "standard")? { backgroundColor: "#012144", width: "100%", height: "100vh"} : { backgroundColor: themeColor, width: "100%", height: "100%"}
             }>
                 {/* Please use a royalty free video or a video that you or the CIC owns */}
                 {(type === "video")?
@@ -468,7 +468,7 @@ function Login(props) {
                         </Grid>
                     </Grid>
                 </Grid>
-                <GridBody container item xs={12} sm={7} md={5} className={`login-container ${classes.centerBox}`}>
+                <GridBody container item xs={12} sm={7} md={5} className={`login-container ${classes.centerBox} ${classes.marginVertical}`}>
                     <Grid container item direction={"column"} xs={12} sm={11} md={9} className={"login-box"}>
                         <Grid className={"login-wrapper-top"}>
                             <span className={"login-wrapper-top-header"}>

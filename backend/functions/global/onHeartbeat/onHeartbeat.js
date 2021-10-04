@@ -2,19 +2,12 @@ const AWS = require('aws-sdk');
 
 const ddb = new AWS.DynamoDB.DocumentClient();
 
-const apigwManagementApi = new AWS.ApiGatewayManagementApi({
-	apiVersion: '2018-11-29',
-	endpoint: '30yypq5gz0.execute-api.ca-central-1.amazonaws.com/dev',
-});
-
 exports.handler = async (event) => {
-	console.log(event);
-	console.log(event.requestContext);
-	const { connectionId } = event.requestContext;
+	const { connectionId, domainName, stage } = event.requestContext;
 
 	try {
 		await checkConnection(connectionId);
-		await replyToPing(connectionId);
+		await replyToPing(connectionId, domainName, stage);
 
 		return {
 			statusCode: 200,
@@ -36,7 +29,12 @@ async function checkConnection(connectionId) {
 	return ddb.get(ddbParams).promise();
 }
 
-async function replyToPing(connectionId) {
+async function replyToPing(connectionId, domainName, stage) {
+	const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+		apiVersion: '2018-11-29',
+		endpoint: `${domainName}/${stage}`,
+	});
+
 	const data = { message: '__thump__' };
 	const params = {
 		Data: Buffer.from(JSON.stringify(data)),

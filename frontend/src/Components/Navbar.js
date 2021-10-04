@@ -117,7 +117,7 @@ function Navbar(props) {
             {!user ? 
                 <MenuItem onClick={()=>history.push('/')}><span>Sign in/Sign Up</span></MenuItem>
                 :
-                <MenuItem onClick={handleLogout}><span>Logout</span><ExitToAppIcon style={{ color: theme.palette.orange.main }}/></MenuItem>
+                <MenuItem onClick={handleLogout}><span>Logout</span><ExitToAppIcon style={{ color: theme.palette.secondary.main }}/></MenuItem>
             }
         </Menu>
     );
@@ -165,9 +165,8 @@ function Navbar(props) {
     }, [loginState])
 
     async function onSignOut() {
-        updateLoginState("signIn");
-        history.push("/");
         await Auth.signOut();
+        history.push("/");
     }
 
     return(
@@ -175,7 +174,7 @@ function Navbar(props) {
             <AppBar position="static" className={classes.navbarBg}>
                 <Toolbar>
                     <Typography className={classes.title} variant="h6" component={"h1"} noWrap>
-                        <span><span>PCMA</span><span style={{color: `${theme.palette.orange.main}`}}>/</span><span>CIC</span></span>
+                        <span><span>PCMA</span><span style={{color: `${theme.palette.secondary.main}`}}>/</span><span>CIC</span></span>
                     </Typography>
                     <img className={classes.logo} style={{width: "270px", height: "30px"}} src={process.env.PUBLIC_URL + './Assets/Images/logo_inverse.png'} alt="..."/>
                     <div className={classes.grow} />

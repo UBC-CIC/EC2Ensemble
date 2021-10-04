@@ -25,14 +25,18 @@ const roomReducer = (currentState = {}, action) => {
         }
         case "UPDATE_ROOM_INFO": {
             const { serverId, ...others } = action.payload;
-            const currRoomInfo = currentState[serverId];
-            return {
-                ...currentState,
-                [serverId]: {
-                    ...currRoomInfo,
-                    ...others
+            // check if the current room still exists, in case it gets deleted
+            if (currentState[serverId]) {
+                const currRoomInfo = currentState[serverId];
+                return {
+                    ...currentState,
+                    [serverId]: {
+                        ...currRoomInfo,
+                        ...others
+                    }
                 }
             }
+            break;
         }
         default:
             return currentState
