@@ -153,6 +153,8 @@ function Room(props) {
 	const [alert, handleAlert] = useState(false);
 	const [disableButtons, handleDisableButtons] = useState(false);
 
+	const dispatch = useDispatch();
+
 	useEffect(() => {
 		(async () => {
 			if (status === 'running' || type === 'External Setup') {
@@ -178,21 +180,25 @@ function Room(props) {
 		})();
 	}, [status, regionChangeInfo, deletionStatus]);
 
-	const dispatch = useDispatch();
-
-	const handleRoomTermination = () => {
-		dispatch(terminateRoom(currUser, region, serverId));
+	const handleRoomTermination = async () => {
+		handleDisableButtons(true);
+		await dispatch(terminateRoom(currUser, region, serverId));
+		handleDisableButtons(false);
 	};
 
-	const handleRoomRestart = () => {
-		dispatch(restartRoom(currUser, region, serverId));
+	const handleRoomRestart = async () => {
+		handleDisableButtons(true);
+		await dispatch(restartRoom(currUser, region, serverId));
+		handleDisableButtons(false);
 	};
 
-	const handleJacktripRestart = () => {
-		dispatch(restartJackTrip(currUser, region, serverId));
+	const handleJacktripRestart = async () => {
+		handleDisableButtons(true);
+		await dispatch(restartJackTrip(currUser, region, serverId));
+		handleDisableButtons(false);
 	};
 	
-	const handleRoomDeletion = () => {
+	const handleRoomDeletion = async () => {
 		handleDisableButtons(true);
 
 		if ((status !== 'terminated') && 
@@ -203,7 +209,8 @@ function Room(props) {
 			handleRoomTermination();
 			setDeletionStatus(true);
 		} else {
-			dispatch(deleteRoom(currUser, serverId))
+			await dispatch(deleteRoom(currUser, serverId));
+			handleDisableButtons(false);
 		}
 	};
 
@@ -226,10 +233,10 @@ function Room(props) {
 	const handleFormSubmit = async (event, roomFormInfo) => {
 		event.preventDefault();
 
+		handleDisableButtons(true);
 		setModalLoading(true);
 		// change room params
 		if (roomFormInfo.region !== region) {
-			handleDisableButtons(true);
 			// if room is not terminated, terminate the room first
 			if (status !== 'terminated') {
 				handleRoomTermination();
@@ -246,6 +253,7 @@ function Room(props) {
 			// check if buffer or frequency is changed
 			const bufFreqChange = roomFormInfo.buffer !== buffer || roomFormInfo.frequency !== frequency;
 			await dispatch(changeRoomParams(currUser, serverId, roomFormInfo, bufFreqChange))
+			handleDisableButtons(false);
 		}
 		// let the buttons stop loading
 		setModalLoading(false);
