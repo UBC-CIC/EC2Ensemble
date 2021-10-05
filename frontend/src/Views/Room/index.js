@@ -1,5 +1,5 @@
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, CircularProgress, Divider, Grid, Snackbar } from '@material-ui/core/';
+import { CircularProgress, Divider, Grid, Snackbar } from '@material-ui/core/';
 import Alert from '@material-ui/lab/Alert';
 
 // react
@@ -158,6 +158,7 @@ function Room(props) {
 	useEffect(() => {
 		(async () => {
 			if (status === 'running' || type === 'External Setup') {
+				handleDisableButtons(false);
 				setConnectionStyle(classes.running);
 			} else if (status === 'terminated') {
 				setConnectionStyle(classes.terminated);
@@ -169,46 +170,42 @@ function Room(props) {
 				}
 				if (deletionStatus) {
 					await dispatch(deleteRoom(currUser, serverId))
-					setDeletionStatus(false)
+					handleDisableButtons(false);
 				}
+				handleDisableButtons(false);
 			} else if (!!status && status.includes('fail')) {
 				setConnectionStyle(classes.error);
 			} else {
 				setConnectionStyle(classes.creating);
 			}
-			handleDisableButtons(false);
 		})();
-	}, [status, regionChangeInfo, deletionStatus]);
+	}, [status]);
 
 	const handleRoomTermination = async () => {
 		handleDisableButtons(true);
 		await dispatch(terminateRoom(currUser, region, serverId));
-		handleDisableButtons(false);
 	};
 
 	const handleRoomRestart = async () => {
 		handleDisableButtons(true);
 		await dispatch(restartRoom(currUser, region, serverId));
-		handleDisableButtons(false);
 	};
 
 	const handleJacktripRestart = async () => {
 		handleDisableButtons(true);
 		await dispatch(restartJackTrip(currUser, region, serverId));
-		handleDisableButtons(false);
 	};
 	
 	const handleRoomDeletion = async () => {
-		handleDisableButtons(true);
-
 		if ((status !== 'terminated') && 
 			(status !== 'fail_create') &&
 			(type !== 'External Setup')
 		) {
 			// need to terminate the room first if it is running
-			handleRoomTermination();
 			setDeletionStatus(true);
+			await handleRoomTermination();
 		} else {
+			handleDisableButtons(true);
 			await dispatch(deleteRoom(currUser, serverId));
 			handleDisableButtons(false);
 		}
@@ -233,13 +230,12 @@ function Room(props) {
 	const handleFormSubmit = async (event, roomFormInfo) => {
 		event.preventDefault();
 
-		handleDisableButtons(true);
 		setModalLoading(true);
 		// change room params
 		if (roomFormInfo.region !== region) {
 			// if room is not terminated, terminate the room first
 			if (status !== 'terminated') {
-				handleRoomTermination();
+				await handleRoomTermination();
 			}
 			setRegionChangeInfo(roomFormInfo)
 		} else if (	((roomFormInfo.type ===  "AWS") && 
@@ -251,6 +247,7 @@ function Room(props) {
 					((roomFormInfo.type ===  "External Setup") && (roomFormInfo.ipAddress !== ipAddress)))
 		{
 			// check if buffer or frequency is changed
+			handleDisableButtons(true);
 			const bufFreqChange = roomFormInfo.buffer !== buffer || roomFormInfo.frequency !== frequency;
 			await dispatch(changeRoomParams(currUser, serverId, roomFormInfo, bufFreqChange))
 			handleDisableButtons(false);
@@ -260,6 +257,7 @@ function Room(props) {
 		// close the modal
 		handleModalClose();
 	};
+
 
 	const handleAlertOpen = () => {
 		navigator.clipboard.writeText(ipAddress)
@@ -371,6 +369,7 @@ function Room(props) {
 					<DefaultButton
 						onClick={handleShareModalOpen}
 						startIcon={<ShareIcon fontSize="small"/>}
+						disabled={ disableButtons }
 					>
 						Share
 					</DefaultButton>
@@ -407,6 +406,7 @@ function Room(props) {
 						<DefaultButton 
 							onClick={handleJacktripRestart}
 							startIcon={<RefreshIcon/>}
+							disabled={ disableButtons }
 						>
 							Restart Jacktrip
 						</DefaultButton>
@@ -435,6 +435,7 @@ function Room(props) {
 						<DefaultButton
 							onClick={handleRoomRestart}
 							startIcon={<PlayArrowIcon/>}
+							disabled={ disableButtons }
 						>
 							{status === 'terminated' ? 'Start' : 'Retry'}
 						</DefaultButton>
