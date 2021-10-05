@@ -16,7 +16,6 @@ import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Auth } from "aws-amplify";
 import { connect } from "react-redux";
-import {updateLoginState} from "../Actions/loginActions";
 
 const useStyles = makeStyles((theme) => ({
     grow: {
@@ -169,7 +168,6 @@ function Navbar(props) {
         history.push("/");
     }
 
-    console.log(window.location.host)
     return(
         <Grid item xs={12} className={classes.appBar}>
             <AppBar position="static" className={classes.navbarBg}>
@@ -220,8 +218,5 @@ const mapStateToProps = (state) => {
     };
 };
 
-const mapDispatchToProps = {
-    updateLoginState,
-};
 
-export default connect(mapStateToProps, mapDispatchToProps)(Navbar);
+export default connect(mapStateToProps, null)(Navbar);
