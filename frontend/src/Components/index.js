@@ -36,6 +36,7 @@ export const FormInput = (props) => {
             width: '100%'
         },
         disabled: {
+            background: 'white',
             '&.Mui-disabled': {
                 background: '#e3e3e3',
                 cursor: 'not-allowed',
