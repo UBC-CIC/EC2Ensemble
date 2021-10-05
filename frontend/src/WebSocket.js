@@ -93,6 +93,7 @@ function WebSocketProvider (props) {
 
   const onWebSocketMessage = useCallback((data) => {
     const message = JSON.parse(data);
+    console.log(message)
     dispatch(updateRoomStatus(message));
   }, []);
 
