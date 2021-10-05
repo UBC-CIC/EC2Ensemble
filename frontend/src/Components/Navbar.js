@@ -62,7 +62,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Navbar(props) {
-    const {updateLoginState, loginState} = props;
+    const {loginState} = props;
     const classes = useStyles();
     const theme = useTheme();
     const history = useHistory();
@@ -176,7 +176,7 @@ function Navbar(props) {
                     <Typography className={classes.title} variant="h6" component={"h1"} noWrap>
                         <span><span>PCMA</span><span style={{color: `${theme.palette.secondary.main}`}}>/</span><span>CIC</span></span>
                     </Typography>
-                    <img className={classes.logo} style={{width: "270px", height: "30px"}} src={process.env.PUBLIC_URL + './Assets/Images/logo_inverse.png'} alt="..."/>
+                    <img className={classes.logo} style={{width: "270px", height: "30px"}} src={props.origin + './Assets/Images/logo_inverse.png'} alt="Logo"/>
                     <div className={classes.grow} />
                     <div className={classes.sectionDesktop}>
                         <IconButton
