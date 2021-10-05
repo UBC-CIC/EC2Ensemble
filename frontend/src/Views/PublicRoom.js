@@ -75,9 +75,6 @@ const DefaultButton = withStyles((theme) => ({
 		borderRadius: 5,
 		padding: theme.spacing(0.5, 1),
     margin: theme.spacing(0, 2),
-    // '&:hover': {
-		// 	background: theme.palette.tertiary.main
-		// }
 	},
 }))(SmallOutlinedButton);
 
@@ -93,6 +90,7 @@ function PublicRoom(props) {
     (async () => {
       // remove the "/" in the pathname to get the userLinkID
       const roomId = new URLSearchParams(props.location.search).get("room");
+      console.log(window.location.href, new URLSearchParams(props.location.search), new URLSearchParams(props.location.search).get("room"))
       
       if (roomId) {
         await API.get('getOneRoom', `/room/${roomId}`)
