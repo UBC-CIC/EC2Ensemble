@@ -89,8 +89,8 @@ function PublicRoom(props) {
   useEffect(() => {
     (async () => {
       // remove the "/" in the pathname to get the userLinkID
-      const roomId = new URLSearchParams(props.location.search).get("room");
-      console.log(window.location.href, new URLSearchParams(props.location.search), new URLSearchParams(props.location.search).get("room"))
+      const roomId = props.match.params.roomId;
+      console.log(props.match.params.roomId)
       
       if (roomId) {
         await API.get('getOneRoom', `/room/${roomId}`)

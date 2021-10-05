@@ -83,7 +83,7 @@ function App(props) {
                             />
                             <Route 
                                 exact
-                                path={"/share"} 
+                                path={"/share/:roomId"} 
                                 render={props => 
                                     <PublicRoom {...props}/>
                                 }
