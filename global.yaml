@@ -8,7 +8,7 @@ Globals:
   Api:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
-      AllowOrigin: "'http://localhost:3000'"
+      AllowOrigin: !Sub "'${WebAppUrl}'"
       AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
       AllowCredentials: true
     Auth:
@@ -18,6 +18,10 @@ Globals:
         JacktripGlobalCognitoAuthorizer:
           UserPoolArn:
             - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
+
+Parameters:
+  WebAppUrl:
+    Type: String
 
 Resources:
   ApiGatewayAccountSettings:
@@ -48,6 +52,7 @@ Resources:
         Variables:
           snsTopicArn: !Ref JacktripSnsTopic
           userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
 
   GetUserServer:
     Type: AWS::Serverless::Function
@@ -71,6 +76,7 @@ Resources:
       Environment:
         Variables:
           userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
 
   DeleteRoom:
     Type: AWS::Serverless::Function
@@ -94,6 +100,7 @@ Resources:
       Environment:
         Variables:
           userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
 
   CreateExternalRoom:
     Type: AWS::Serverless::Function
@@ -112,6 +119,7 @@ Resources:
       Environment:
         Variables:
           userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
 
   UpdateExternalRoom:
     Type: AWS::Serverless::Function
@@ -135,6 +143,7 @@ Resources:
       Environment:
         Variables:
           userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
 
   # DynamoDB
   UserServerTable:

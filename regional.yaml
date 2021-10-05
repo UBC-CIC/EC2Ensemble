@@ -36,12 +36,11 @@ Resources:
                 - ec2:RunInstances
                 - ec2:CreateTags
                 - ssm:GetParameter
-                - iam:PassRole
               Resource: '*'
-            # - Effect: Allow
-            #   Action:
-            #     - iam:PassRole
-            #   Resource: !Sub 'arn:*:ec2:*:${AWS::AccountId}:instance/*'
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource: !Sub 'arn:*:iam:*:${AWS::AccountId}:role/'
       Environment:
         Variables:
           ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
@@ -188,7 +187,7 @@ Resources:
   JacktripSqsSnsSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: !Sub arn:aws:sns:${CentralRegion}:173513177120:JacktripSnsTopic.fifo
+      TopicArn: !Sub arn:aws:sns:${CentralRegion}:${AWS::AccountId}:JacktripSnsTopic.fifo
       Protocol: sqs
       Endpoint: !GetAtt JacktripSqsQueue.Arn
       Region: !Ref CentralRegion
@@ -235,11 +234,12 @@ Resources:
         Destinations:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
-      Role: arn:aws:iam::173513177120:role/JacktripStateMachineRole
+      Role: !Sub arn:aws:iam:${AWS::AccountId}:role/JacktripStateMachineRole
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub 'Jacktrip-StateMachine-LogGroup-${AWS::Region}'
+      RetentionInDays: 30
 
   RunJacktripDocument:
     Type: AWS::SSM::Document

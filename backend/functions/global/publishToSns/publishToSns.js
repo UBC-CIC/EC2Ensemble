@@ -91,7 +91,7 @@ exports.handler = async (event) => {
 		return {
 			statusCode: 200,
 			headers: {
-				'Access-Control-Allow-Origin': 'http://localhost:3000',
+				'Access-Control-Allow-Origin': process.env.corsOriginUrl,
 				'Access-Control-Allow-Credentials': true,
 				'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
 				'Access-Control-Allow-Headers':
@@ -209,9 +209,6 @@ const changeServerParams = async (body) => {
 	const jacktripChange = body.buffer || body.frequency;
 	const newEntry = {
 		...body,
-		...(jacktripChange && {
-			status: 'param_change',
-		}),
 	};
 	delete newEntry.action;
 
@@ -224,7 +221,7 @@ const changeServerParams = async (body) => {
 		'ALL_OLD'
 	);
 	console.log(res);
-	if (res.status === 'terminated') {
+	if (res.status === 'terminated' || !jacktripChange) {
 		return null;
 	} else {
 		return {
@@ -312,7 +309,7 @@ const createResponse = (success, message) => {
 		statusCode: success ? 200 : 400,
 		body: JSON.stringify(message),
 		headers: {
-			'Access-Control-Allow-Origin': 'http://localhost:3000',
+			'Access-Control-Allow-Origin': process.env.corsOriginUrl,
 			'Access-Control-Allow-Credentials': true,
 			'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
 			'Access-Control-Allow-Headers':
@@ -333,9 +330,7 @@ const updateEntry = async (
 		TableName: tableName,
 		Key: {},
 		ExpressionAttributeValues: {},
-		ExpressionAttributeNames: {
-			'#status': 'status',
-		},
+		ExpressionAttributeNames: {},
 		UpdateExpression: '',
 		ReturnValues: returnValues,
 	};
@@ -359,6 +354,7 @@ const updateEntry = async (
 		}
 	}
 	if (condition) {
+		params['ExpressionAttributeNames']['#status'] = 'status';
 		params['ExpressionAttributeValues'][':' + condition] = condition;
 		params['ConditionExpression'] = '#status = :' + condition;
 	}

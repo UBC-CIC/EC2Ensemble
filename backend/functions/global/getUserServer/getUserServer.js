@@ -20,7 +20,7 @@ exports.handler = async (event) => {
 		console.log(res);
 		return {
 			headers: {
-				'Access-Control-Allow-Origin': 'http://localhost:3000',
+				'Access-Control-Allow-Origin': process.env.corsOriginUrl,
 				'Access-Control-Allow-Credentials': true,
 				'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
 				'Access-Control-Allow-Headers':
@@ -33,6 +33,13 @@ exports.handler = async (event) => {
 		return {
 			statusCode: 400,
 			body: { message: error },
+			headers: {
+				'Access-Control-Allow-Origin': process.env.corsOriginUrl,
+				'Access-Control-Allow-Credentials': true,
+				'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+				'Access-Control-Allow-Headers':
+					'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
+			},
 		};
 	}
 };
