@@ -169,6 +169,7 @@ function Navbar(props) {
         history.push("/");
     }
 
+    console.log(window.location.host)
     return(
         <Grid item xs={12} className={classes.appBar}>
             <AppBar position="static" className={classes.navbarBg}>
@@ -176,7 +177,7 @@ function Navbar(props) {
                     <Typography className={classes.title} variant="h6" component={"h1"} noWrap>
                         <span><span>PCMA</span><span style={{color: `${theme.palette.secondary.main}`}}>/</span><span>CIC</span></span>
                     </Typography>
-                    <img className={classes.logo} style={{width: "270px", height: "30px"}} src={props.origin + './Assets/Images/logo_inverse.png'} alt="Logo"/>
+                    <img className={classes.logo} style={{width: "270px", height: "30px"}} src={'https://'+ window.location.host + '/Assets/Images/logo_inverse.png'} alt="Logo"/>
                     <div className={classes.grow} />
                     <div className={classes.sectionDesktop}>
                         <IconButton
