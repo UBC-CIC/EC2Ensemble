@@ -60,12 +60,13 @@ const useStyles = makeStyles((theme) => ({
 				marginLeft: '16px',
 			},
 		},
+	},
+	smallScreen: {
 		[theme.breakpoints.down('xs')]: {
 			flexDirection: 'column',
 			width: '100%',
 			'& > button': {
 				width: '100%',
-				margin: theme.spacing(1, 0),
 				padding: theme.spacing(1, 0)
 			},
 		},
@@ -121,7 +122,9 @@ const DefaultButton = withStyles((theme) => ({
 		padding: theme.spacing(0.5, 1),
 		'&:hover': {
 			background: theme.palette.tertiary.main
-		}
+		},
+		minWidth: '94px',
+		margin: theme.spacing(1, 0)
 	},
 }))(SmallOutlinedButton);
 
@@ -244,7 +247,9 @@ function Room(props) {
 						(roomFormInfo.buffer !== buffer) ||
 						(roomFormInfo.frequency !== frequency))
 					) ||
-					((roomFormInfo.type ===  "External Setup") && (roomFormInfo.ipAddress !== ipAddress)))
+					((roomFormInfo.type ===  "External Setup") && 
+					((roomFormInfo.roomName !== roomName) || 
+					(roomFormInfo.ipAddress !== ipAddress))) )
 		{
 			// check if buffer or frequency is changed
 			handleDisableButtons(true);
@@ -280,7 +285,7 @@ function Room(props) {
 						{
 							(status === 'running' && 
 							<span>
-								{status}
+								Running
 							</span>) ||
 							((type === "AWS") && (status === 'creating' || status === undefined) && (
 								<span>In Creation</span>
@@ -288,7 +293,8 @@ function Room(props) {
 							((type === "AWS") && (status === 'terminating') && <span>Stopping...</span>) ||
 							((status === 'updating') && <span>Updating Settings...</span>) ||
 							((status === 'restart_jacktrip') && <span>Restarting Jacktrip</span>) ||
-							((status === 'terminated') && <span>Terminated</span>)
+							((status === 'terminated') && <span>Terminated</span>) ||
+							((type === 'External Setup' ) && <span>External Room Server</span>)
 						}
 						{
 							(type === "AWS") && (status !== 'running' && status !== 'terminated') ? 
@@ -366,13 +372,15 @@ function Room(props) {
 			</Grid>
 			<Grid container item alignItems="center">
 				{(status === 'running') &&
-					<DefaultButton
-						onClick={handleShareModalOpen}
-						startIcon={<ShareIcon fontSize="small"/>}
-						disabled={ disableButtons }
-					>
-						Share
-					</DefaultButton>
+					<div className={classes.smallScreen}>
+						<DefaultButton
+							onClick={handleShareModalOpen}
+							startIcon={<ShareIcon fontSize="small"/>}
+							disabled={ disableButtons }
+						>
+							Share
+						</DefaultButton>
+					</div>
 				}
 				<ShareRoomModal 
 					open={shareModalOpen}
@@ -380,7 +388,7 @@ function Room(props) {
 					id={serverId}
 				/>
 				<div
-					className={`${classes.flexEnd} ${classes.margin_innerLeft}`}
+					className={`${classes.flexEnd} ${classes.margin_innerLeft} ${classes.smallScreen}`}
 				>
 					<DefaultButton
 						disabled={

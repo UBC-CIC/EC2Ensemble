@@ -251,7 +251,7 @@ export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="
 				payload: {
 					...updatedRoomParams,
 					serverId: serverId,
-					status: (bufFreqChange || updateType !== 'param') ? 'updating' : undefined
+					status: (updatedRoomParams.type === 'AWS') && (bufFreqChange || updateType !== 'param') ? 'updating' : undefined
 				},
 			});
 		})
