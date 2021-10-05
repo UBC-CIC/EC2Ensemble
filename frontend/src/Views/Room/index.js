@@ -32,7 +32,6 @@ const useStyles = makeStyles((theme) => ({
 		borderWidth: '2px',
 		borderColor: theme.palette.primary.main,
 		padding: theme.spacing(3, 4),
-		// color: theme.palette.getContrastText(theme.palette.primary.main)
 	},
 	flexEnd: {
 		marginLeft: 'auto',
@@ -151,28 +150,32 @@ function Room(props) {
 	const [regionChangeInfo, setRegionChangeInfo] = useState('');
 	const [deletionStatus, setDeletionStatus] = useState(false);
 	const [shareModalOpen, setShareModalOpen] = useState(false);
-	const [alert, handleAlert] = useState(false)
+	const [alert, handleAlert] = useState(false);
+	const [disableButtons, handleDisableButtons] = useState(false);
 
 	useEffect(() => {
-		if (status === 'running' || type === 'External Setup') {
-			setConnectionStyle(classes.running);
-		} else if (status === 'terminated') {
-			setConnectionStyle(classes.terminated);
-			if (regionChangeInfo) {
-				// if regionChangeInfo is not empty, which means the region param is changed
-				dispatch(changeRoomParams(currUser, serverId, regionChangeInfo, "region"));
-				// reset regionChangeInfo
-				setRegionChangeInfo('');
+		(async () => {
+			if (status === 'running' || type === 'External Setup') {
+				setConnectionStyle(classes.running);
+			} else if (status === 'terminated') {
+				setConnectionStyle(classes.terminated);
+				if (regionChangeInfo) {
+					// if regionChangeInfo is not empty, which means the region param is changed
+					await dispatch(changeRoomParams(currUser, serverId, regionChangeInfo, "region"));
+					// reset regionChangeInfo
+					setRegionChangeInfo('');
+				}
+				if (deletionStatus) {
+					await dispatch(deleteRoom(currUser, serverId))
+					setDeletionStatus(false)
+				}
+			} else if (!!status && status.includes('fail')) {
+				setConnectionStyle(classes.error);
+			} else {
+				setConnectionStyle(classes.creating);
 			}
-			if (deletionStatus) {
-				dispatch(deleteRoom(currUser, serverId))
-				setDeletionStatus(false)
-			}
-		} else if (!!status && status.includes('fail')) {
-			setConnectionStyle(classes.error);
-		} else {
-			setConnectionStyle(classes.creating);
-		}
+			handleDisableButtons(false);
+		})();
 	}, [status, regionChangeInfo, deletionStatus]);
 
 	const dispatch = useDispatch();
@@ -190,13 +193,15 @@ function Room(props) {
 	};
 	
 	const handleRoomDeletion = () => {
+		handleDisableButtons(true);
+
 		if ((status !== 'terminated') && 
 			(status !== 'fail_create') &&
 			(type !== 'External Setup')
 		) {
 			// need to terminate the room first if it is running
 			handleRoomTermination();
-			setDeletionStatus(true)
+			setDeletionStatus(true);
 		} else {
 			dispatch(deleteRoom(currUser, serverId))
 		}
@@ -224,6 +229,7 @@ function Room(props) {
 		setModalLoading(true);
 		// change room params
 		if (roomFormInfo.region !== region) {
+			handleDisableButtons(true);
 			// if room is not terminated, terminate the room first
 			if (status !== 'terminated') {
 				handleRoomTermination();
@@ -372,7 +378,8 @@ function Room(props) {
 					<DefaultButton
 						disabled={
 							(connectionStyle === classes.creating) ||
-							(!!status && status.includes('fail'))
+							(!!status && status.includes('fail')) ||
+							disableButtons
 						}
 						onClick={handleRoomDeletion}
 						startIcon={<DeleteIcon />}
@@ -398,8 +405,9 @@ function Room(props) {
 					}
 					<DefaultButton
 						disabled={
-							connectionStyle !== classes.terminated &&
-							connectionStyle !== classes.running
+							(connectionStyle !== classes.terminated &&
+							connectionStyle !== classes.running) ||
+							disableButtons
 						}
 						onClick={() => {
 							setModalOpen(true)
@@ -429,8 +437,9 @@ function Room(props) {
 					(
 						<DefaultButton
 							disabled={
-								connectionStyle !== classes.terminated &&
-								connectionStyle !== classes.running
+								(connectionStyle !== classes.terminated &&
+								connectionStyle !== classes.running) ||
+								disableButtons
 							}
 							onClick={handleRoomTermination}
 							startIcon={
