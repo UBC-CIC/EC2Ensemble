@@ -90,7 +90,6 @@ function PublicRoom(props) {
     (async () => {
       // remove the "/" in the pathname to get the userLinkID
       const roomId = props.match.params.roomId;
-      console.log(props.match.params.roomId)
       
       if (roomId) {
         await API.get('getOneRoom', `/room/${roomId}`)

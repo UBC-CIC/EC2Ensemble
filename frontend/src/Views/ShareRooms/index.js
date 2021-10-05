@@ -68,7 +68,7 @@ export default function ShareRoomModal(props) {
     const classes = useStyles();
 
     const handleAlertOpen = () => {
-      navigator.clipboard.writeText(`${window.location.href}share?room=${id}`)
+      navigator.clipboard.writeText(`${window.location.href}share/${id}`)
       handleAlert(true)
     }
     
@@ -92,7 +92,7 @@ export default function ShareRoomModal(props) {
                 <div className={classes.shareColumn}>
                   <FormInput
                       id={"share-link"} 
-                      value={`${window.location.href}share?room=${id}`}
+                      value={`${window.location.href}share/${id}`}
                       disabled
                   />
                   <DefaultButton 
