@@ -393,7 +393,7 @@ Resources:
     Properties:
       ServiceToken: !GetAtt 'CopyZipsFunction.Arn'
       DestBucket: !Ref 'LambdaZipsBucket'
-      SourceBucket: !Ref 'SourceCodeBucketName'
+      SourceBucket: !Ref SourceCodeBucket
       Prefix: !Ref 'CodeObjectKeyPrefix'
       Objects:
         - functions/packages/MyFunction/lambda.zip
