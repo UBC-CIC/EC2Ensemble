@@ -60,7 +60,7 @@ export default function CreateEditRoomForm(props) {
     roomName: '',
     description: '',
     type: FormOptions.type[0],
-    region: FormOptions.region[0],
+    region: '',
     // size: FormOptions.size[0],
     frequency: FormOptions.frequency[0],
     buffer: FormOptions.buffer[0],
@@ -90,7 +90,9 @@ export default function CreateEditRoomForm(props) {
     // when the form is opened time, calculate recommended region to set the server
     else {
       (async () => {
-        setRecommendRegion(await recommendRegionList);
+        const list = await recommendRegionList;
+        setRecommendRegion(list);
+        setRoomFormInfo({...roomFormInfo, region: list[0]})
       })();
     }
   }, [, open])
@@ -147,7 +149,7 @@ export default function CreateEditRoomForm(props) {
 
   // reset the roomFormInfo state
   const resetFormInfo = () => {
-    setRoomFormInfo(initFormValues)
+    setRoomFormInfo({...initFormValues, region: recommendRegion[0]})
   }
 
   const submitForm = (event) => {
@@ -177,7 +179,7 @@ export default function CreateEditRoomForm(props) {
         serverId: serverId
       }
     }
-    
+
     props.handleSubmit(event, roomForm)
   }
 
@@ -290,8 +292,8 @@ export default function CreateEditRoomForm(props) {
 // the first one in the list is the default value that the user will see
 const FormOptions = {
   type: ["AWS", "External Setup"],
-  region: ["us-west-2", "ca-central-1", "us-west-1"],
+  region: ["ca-central-1", "us-west-1", "us-west-2"],
   size: [2,3,4,5],
-  frequency: [44100, 48000, 256000],
-  buffer: [32, 64, 128, 256]
+  frequency: [32000,44100,48000,88200,96000],
+  buffer: [32,64,128,256,512,1024,2048,4096]
 }
