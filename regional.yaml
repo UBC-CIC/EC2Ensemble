@@ -12,19 +12,26 @@ Parameters:
     Default: ca-central-1
   UserServerTableName:
     Type: String
+    Default: testglobalv2-1-UserServerTable-W8LUXBBSZNBG
   WebSocketTableName:
     Type: String
+    Default: testglobalv2-1-WebSocketConnectionsTable-FF0VA5XREUO4
   WebSocketApiId:
     Type: String
+    Default: 2u4pkofu87
   SourceCodeBucket:
     Type: String
+    Default: jacktriptestsourcebucket
   CopyZipsRoleArn:
     Type: String
+    Default: arn:aws:iam::173513177120:role/testglobalv2-1-CopyZipsRole-HA7QOOLOSPA4
   JacktripStateMachineRoleArn:
     Type: String
+    Default: arn:aws:iam::173513177120:role/testglobalv2-1-JacktripStateMachineRole-3ALNXIEAT5GS
   CodeObjectKeyPrefix:
     Type: String
     AllowedPattern: ^[0-9a-zA-Z-/]*$
+    Default: jacktrip
 
 Resources:
   # Lambdas
@@ -194,7 +201,6 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security Group for all EC2 instances running Jacktrip
-      GroupName: JacktripEC2SecurityGroup
       SecurityGroupIngress:
         - IpProtocol: icmp
           FromPort: 8
@@ -229,7 +235,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       FifoQueue: true
-      QueueName: JacktripQueue.fifo
+      QueueName: !Sub ${AWS::StackName}-JacktripQueue.fifo
 
   JacktripSqsQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -349,7 +355,7 @@ Resources:
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub 'Jacktrip-StateMachine-LogGroup-${AWS::Region}'
+      LogGroupName: !Sub '${AWS::StackName}-StateMachine-LogGroup-${AWS::Region}'
       RetentionInDays: 30
 
   RunJacktripDocument:
