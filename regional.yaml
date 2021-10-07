@@ -40,7 +40,7 @@ Resources:
             - Effect: Allow
               Action:
                 - iam:PassRole
-              Resource: !Sub 'arn:*:iam:*:${AWS::AccountId}:role/'
+              Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/'
       Environment:
         Variables:
           ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
@@ -234,7 +234,7 @@ Resources:
         Destinations:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt StateMachineLogGroup.Arn
-      Role: !Sub arn:aws:iam:${AWS::AccountId}:role/JacktripStateMachineRole
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/JacktripStateMachineRole
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
