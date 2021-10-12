@@ -40,10 +40,10 @@ Resources:
             - Effect: Allow
               Action:
                 - iam:PassRole
-              Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/'
+              Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/*'
       Environment:
         Variables:
-          ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
+          ec2SecurityGroup: !GetAtt JacktripEC2SecurityGroup.GroupId
           subnetId: !Ref PublicSubnet
 
   JacktripTerminateServer:
