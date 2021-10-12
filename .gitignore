@@ -6,4 +6,4 @@ AWSCloudFormationStackSet*.yml
 packaged.yaml
 bucket.yaml
 node_modules
-globalv2.yaml
+/backend/functions/zipped
