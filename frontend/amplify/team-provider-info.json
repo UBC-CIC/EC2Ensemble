@@ -14,25 +14,6 @@
     "categories": {
       "auth": {
         "pcmacicauth": {}
-      },
-      "storage": {
-        "jacktripglobalUserServerTable1CV4VPDXSCTB2": {
-          "tableName": "jacktrip-global-UserServerTable-1CV4VPDXSCTB2",
-          "region": "ca-central-1",
-          "arn": "arn:aws:dynamodb:ca-central-1:173513177120:table/jacktrip-global-UserServerTable-1CV4VPDXSCTB2",
-          "partitionKeyName": "user",
-          "partitionKeyType": "S",
-          "sortKeyName": "serverId",
-          "sortKeyType": "S",
-          "streamArn": "arn:aws:dynamodb:ca-central-1:173513177120:table/jacktrip-global-UserServerTable-1CV4VPDXSCTB2/stream/2021-09-24T04:37:04.800"
-        }
-      },
-      "function": {
-        "getOneRoomLambda": {
-          "tableName": "jacktrip-global-UserServerTable-1CV4VPDXSCTB2",
-          "deploymentBucketName": "amplify-pcmacic-dev-162425-deployment",
-          "s3Key": "amplify-builds/getOneRoomLambda-52463574324149724a62-build.zip"
-        }
       }
     }
   }

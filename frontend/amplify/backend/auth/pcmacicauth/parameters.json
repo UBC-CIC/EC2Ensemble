@@ -2,6 +2,7 @@
     "identityPoolName": "pcmacicauth_identitypool_e495af3e",
     "allowUnauthenticatedIdentities": true,
     "resourceNameTruncated": "pcmacib1bb4fad",
+    "otherStackName": "other_stack_name",
     "userPoolName": "pcmacicb1bb4fad_userpool_b1bb4fad",
     "autoVerifiedAttributes": [
         "email"
@@ -55,6 +56,9 @@
             "UnauthRole",
             "Arn"
         ]
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRole"
     },
     "useDefault": "manual",
     "usernameAttributes": [

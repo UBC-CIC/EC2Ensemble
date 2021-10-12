@@ -7,6 +7,11 @@ Parameters:
     Type: String
   unauthRoleArn:
     Type: String
+  unauthRoleName:
+    Type: String
+  otherStackName:
+    Type: String
+  
 
   
 
@@ -429,6 +434,31 @@ Resources:
     DependsOn: IdentityPool
   
 
+  UnauthPolicy:
+  # Created to allow scan access to DynamoDB
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: root
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'dynamodb:Scan'
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - 'aws:'
+                - 'dynamodb:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':table/'
+                - Fn::ImportValue:
+                    Fn::Sub: ${otherStackName}-UserServerTable
+      Roles: 
+        - !Ref unauthRoleName
+  
 Outputs :
   
   IdentityPoolId:
@@ -446,6 +476,8 @@ Outputs :
   UserPoolArn:
     Value: !GetAtt UserPool.Arn
     Description:  Arn for the user pool
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", UserPoolArn ] ]
   UserPoolName:
     Value: !Ref userPoolName
   AppClientIDWeb:
