@@ -30,6 +30,7 @@ exports.handler = async (event) => {
 				],
 			},
 		],
+		SecurityGroupIds: [process.env.ec2SecurityGroup],
 		SubnetId: process.env.subnetId,
 		IamInstanceProfile: {
 			Name: 'JacktripEC2InstanceProfile',
