@@ -35,8 +35,7 @@ const roomReducer = (currentState = {}, action) => {
                         ...others
                     }
                 }
-            }
-            break;
+            } else return {...currentState}
         }
         default:
             return currentState

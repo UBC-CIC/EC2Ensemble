@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { API } from 'aws-amplify';
+import AWS from 'aws-sdk';
+import awsExports from '../aws-exports';
 
 
 // materialUI
@@ -59,6 +60,9 @@ const useStyles = makeStyles((theme) => ({
   },
   textCenter: {
     textAlign: 'center'
+  },
+  marginLeft: {
+    marginLeft: '16px'
   }
 }))
 
@@ -75,6 +79,9 @@ const DefaultButton = withStyles((theme) => ({
 		borderRadius: 5,
 		padding: theme.spacing(0.5, 1),
     margin: theme.spacing(0, 2),
+    [theme.breakpoints.down('sm')]: {
+      margin: theme.spacing(0, 1)
+    },
 	},
 }))(SmallOutlinedButton);
 
@@ -88,14 +95,26 @@ function PublicRoom(props) {
 
   useEffect(() => {
     (async () => {
-      // remove the "/" in the pathname to get the userLinkID
       const roomId = props.match.params.roomId;
       
       if (roomId) {
-        await API.get('getOneRoom', `/room/${roomId}`)
-          .then((response) => {
-            const data = JSON.parse(response.body);
-            updateRoom(data);
+        await getRoom(roomId)
+          .then((data) => {
+            if (data.Items.length === 1) {
+              const info = data.Items[0];
+              updateRoom(
+                {
+                  buffer: info.buffer,
+                  ipAddress: info.ipAddress,
+                  frequency: info.frequency,
+                  status: info.status,
+                  roomName: info.roomName,
+                  region: info.region,
+                  description: info.description,
+                  type: info.type
+                }
+              );
+            } else throw new Error();
           })
           .catch((error) => {
             handleEmptyRoom(true);
@@ -147,16 +166,15 @@ function PublicRoom(props) {
         <Grid>
           <div key={`room-${room.roomName}`} className={classes.margin_vertical2}>
             <Grid container item direction="row" alignItems="flex-start">
-              <Grid item xs={2}><p>DESCRIPTION:</p></Grid>
-              <Grid item xs={10}><p>{room.description}</p></Grid>
+              <Grid item xs={4} sm={3} md={2}><p>DESCRIPTION:</p></Grid>
+              <Grid item className={classes.marginLeft}><p>{room.description}</p></Grid>
             </Grid>
             <Divider />
             <Grid container item direction="row" alignItems="center">
-              <Grid item xs={2}><p>IP ADDRESS:</p></Grid>
-              <Grid container item xs={10} direction="row" alignItems="center">
+              <Grid item xs={4} sm={3} md={2}><p>IP ADDRESS:</p></Grid>
+              <Grid container item xs={8} sm={9} md={10} direction="row" alignItems="center">
                 <p>{room.ipAddress}</p>
                 {!!room.ipAddress && (
-                  <Grid container item xs direction="row" alignItems="center">
 									  <DefaultButton 
                       onClick={handleAlertOpen}
                       startIcon={<FileCopyIcon/>}
@@ -165,38 +183,37 @@ function PublicRoom(props) {
                     >
                       Copy
                     </DefaultButton>
-                    { alert && setTimeout(() => {
+							  )}
+                { alert && setTimeout(() => {
                       handleAlertClose()
                     }, 2500) && 
-                      (
-                        <Alert severity="success" sx={{ width: '100%' }}>
-                          Successfully copied ip address!
-                        </Alert>
-                      )
-                    }
-                  </Grid>
-							  )}
+                  (
+                    <Alert severity="success" sx={{ width: '100%' }}>
+                      Successfully copied ip address!
+                    </Alert>
+                  )
+                }
               </Grid>
             </Grid>
             <Divider />
             <Grid container item direction="row" alignItems="center">
-              <Grid item xs={2}><p>REGION:</p></Grid>
-              <Grid item xs={10}><p>{room.region}</p></Grid>
+              <Grid item xs={4} sm={3} md={2}><p>REGION:</p></Grid>
+              <Grid item><p>{room.region}</p></Grid>
             </Grid>
             <Divider />
             <Grid container item direction="row" alignItems="center">
-              <Grid item xs={2}><p>BUFFER:</p></Grid>
-              <Grid item xs={10}><p>{room.buffer}</p></Grid>
+              <Grid item xs={4} sm={3} md={2}><p>BUFFER:</p></Grid>
+              <Grid item><p>{room.buffer}</p></Grid>
             </Grid>
             <Divider />
             <Grid container item direction="row" alignItems="center">
-              <Grid item xs={2}><p>FREQUENCY:</p></Grid>
-              <Grid item xs={10}><p>{room.frequency}</p></Grid>
+              <Grid item xs={4} sm={3} md={2}><p>FREQUENCY:</p></Grid>
+              <Grid item><p>{room.frequency}</p></Grid>
             </Grid>
             <Divider />
             <Grid container item direction="row" alignItems="center">
-              <Grid item xs={2}><p>STATUS:</p></Grid>
-              <Grid item xs={10}><p>{room.status}</p></Grid>
+              <Grid item xs={4} sm={3} md={2}><p>STATUS:</p></Grid>
+              <Grid item><p>{room.status}</p></Grid>
             </Grid>
           </div>
         </Grid>
@@ -207,3 +224,29 @@ function PublicRoom(props) {
 }
 
 export default PublicRoom;
+
+
+// function to query room
+const getRoom = async (roomId) => {
+  AWS.config.update({
+    region: awsExports.aws_cognito_region,
+    credentials: new AWS.CognitoIdentityCredentials({
+      IdentityPoolId: awsExports.aws_cognito_identity_pool_id,
+    }),
+  });
+
+  const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+  let queryParams = {
+    TableName: 'jacktrip-global-UserServerTable-1CV4VPDXSCTB2',
+    FilterExpression: `#serverId = :serverId`,
+    ExpressionAttributeNames: {
+      "#serverId": "serverId",
+    },
+    ExpressionAttributeValues: {
+      ":serverId": roomId
+    }
+  }
+
+  return await dynamodb.scan(queryParams).promise();
+}
