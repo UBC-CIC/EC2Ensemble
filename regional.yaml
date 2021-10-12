@@ -12,22 +12,17 @@ Parameters:
     Default: ca-central-1
   UserServerTableName:
     Type: String
-    Default: testglobalv2-1-UserServerTable-W8LUXBBSZNBG
   WebSocketTableName:
     Type: String
-    Default: testglobalv2-1-WebSocketConnectionsTable-FF0VA5XREUO4
   WebSocketApiId:
     Type: String
-    Default: 2u4pkofu87
   SourceCodeBucket:
     Type: String
     Default: jacktriptestsourcebucket
   CopyZipsRoleArn:
     Type: String
-    Default: arn:aws:iam::173513177120:role/testglobalv2-1-CopyZipsRole-HA7QOOLOSPA4
   JacktripStateMachineRoleArn:
     Type: String
-    Default: arn:aws:iam::173513177120:role/testglobalv2-1-JacktripStateMachineRole-3ALNXIEAT5GS
   CodeObjectKeyPrefix:
     Type: String
     AllowedPattern: ^[0-9a-zA-Z-/]*$
@@ -62,6 +57,7 @@ Resources:
       Environment:
         Variables:
           ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
+          subnetId: !Ref PublicSubnet
 
   TerminateServerLambda:
     Type: AWS::Serverless::Function
@@ -216,11 +212,60 @@ Resources:
           FromPort: 0
           ToPort: 65535
           CidrIp: 0.0.0.0/0
-      # SecurityGroupEgress:
-      #   - Description: Allow all outbound traffic
-      #     IpProtocol: '-1'
-      #     CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - Description: Allow all outbound traffic
+          IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
 
+  RegionalVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.18.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Join ['', [!Ref 'AWS::StackName', '-VPC']]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DependsOn: RegionalVpc
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref RegionalVpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !GetAtt RegionalVpc.CidrBlock
+      VpcId: !Ref RegionalVpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PublicSubnet
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref RegionalVpc
+
+  PublicRoute: # Public route table has direct routing to IGW:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
   # SNS Subscription and SQS
   SqsSnsSubscription:
     Type: AWS::SNS::Subscription
