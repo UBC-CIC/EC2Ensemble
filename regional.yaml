@@ -32,15 +32,17 @@ Parameters:
     Type: String
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     Default: jacktrip
+  SnsTopicArn:
+    Type: String
 
 Resources:
   # Lambdas
-  JacktripCreateServer:
+  CreateServerLambda:
     Type: AWS::Serverless::Function
     DependsOn: CopyZips
     Properties:
       CodeUri:
-        Bucket: !Ref SourceCodeBucket
+        Bucket: !Ref LambdaZipsBucket
         Key: !Sub '${CodeObjectKeyPrefix}functions/createServer.zip'
       Handler: createServer.handler
       Timeout: 10
@@ -61,12 +63,12 @@ Resources:
         Variables:
           ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
 
-  JacktripTerminateServer:
+  TerminateServerLambda:
     Type: AWS::Serverless::Function
     DependsOn: CopyZips
     Properties:
       CodeUri:
-        Bucket: !Ref SourceCodeBucket
+        Bucket: !Ref LambdaZipsBucket
         Key: !Sub '${CodeObjectKeyPrefix}functions/terminateServer.zip'
       Handler: terminateServer.handler
       Policies:
@@ -77,12 +79,12 @@ Resources:
                 - ec2:TerminateInstances
               Resource: '*'
 
-  GetServerStatus:
+  GetServerStatusLambda:
     Type: AWS::Serverless::Function
     DependsOn: CopyZips
     Properties:
       CodeUri:
-        Bucket: !Ref SourceCodeBucket
+        Bucket: !Ref LambdaZipsBucket
         Key: !Sub '${CodeObjectKeyPrefix}functions/getServerStatus.zip'
       Handler: getServerStatus.handler
       Policies:
@@ -94,12 +96,12 @@ Resources:
               Resource: '*'
         - arn:aws:iam::aws:policy/AmazonSSMFullAccess
 
-  HandleFail:
+  HandleFailLambda:
     Type: AWS::Serverless::Function
     DependsOn: CopyZips
     Properties:
       CodeUri:
-        Bucket: !Ref SourceCodeBucket
+        Bucket: !Ref LambdaZipsBucket
         Key: !Sub '${CodeObjectKeyPrefix}functions/handleFail.zip'
       Handler: handleFail.handler
       Environment:
@@ -114,12 +116,12 @@ Resources:
                 - dynamodb:UpdateItem
               Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${UserServerTableName}'
 
-  HandleSuccess:
+  HandleSuccessLambda:
     Type: AWS::Serverless::Function
     DependsOn: CopyZips
     Properties:
       CodeUri:
-        Bucket: !Ref SourceCodeBucket
+        Bucket: !Ref LambdaZipsBucket
         Key: !Sub '${CodeObjectKeyPrefix}functions/handleSuccess.zip'
       Handler: handleSuccess.handler
       Environment:
@@ -134,12 +136,12 @@ Resources:
                 - dynamodb:UpdateItem
               Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${UserServerTableName}'
 
-  RunJacktripFunction:
+  RunJacktripLambda:
     Type: AWS::Serverless::Function
     DependsOn: CopyZips
     Properties:
       CodeUri:
-        Bucket: !Ref SourceCodeBucket
+        Bucket: !Ref LambdaZipsBucket
         Key: !Sub '${CodeObjectKeyPrefix}functions/runJacktrip.zip'
       Timeout: 120
       Handler: runJacktrip.handler
@@ -149,12 +151,12 @@ Resources:
       Policies:
         - arn:aws:iam::aws:policy/AmazonSSMFullAccess
 
-  ContactWebSocket:
+  ContactWebSocketLambda:
     Type: AWS::Serverless::Function
     DependsOn: CopyZips
     Properties:
       CodeUri:
-        Bucket: !Ref SourceCodeBucket
+        Bucket: !Ref LambdaZipsBucket
         Key: !Sub '${CodeObjectKeyPrefix}functions/contactWebSocket.zip'
       Handler: contactWebSocket.handler
       Environment:
@@ -175,12 +177,12 @@ Resources:
                 - dynamodb:Query
               Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${WebSocketTableName}/*'
 
-  SqsConsumerFunction:
+  SqsConsumerLambda:
     Type: AWS::Serverless::Function
     DependsOn: CopyZips
     Properties:
       CodeUri:
-        Bucket: !Ref SourceCodeBucket
+        Bucket: !Ref LambdaZipsBucket
         Key: !Sub '${CodeObjectKeyPrefix}functions/sqsConsumer.zip'
       Handler: sqsConsumer.handler
       Events:
@@ -188,14 +190,14 @@ Resources:
           Type: SQS
           Properties:
             Enabled: true
-            Queue: !GetAtt JacktripSqsQueue.Arn
+            Queue: !GetAtt MessageQueue.Arn
           BatchSize: 5
       Environment:
         Variables:
-          stateMachineArn: !Ref JacktripStateMachine
+          stateMachineArn: !Ref RegionalStateMachine
       Policies:
         - StepFunctionsExecutionPolicy:
-            StateMachineName: !GetAtt JacktripStateMachine.Name
+            StateMachineName: !GetAtt RegionalStateMachine.Name
 
   JacktripEC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -220,28 +222,28 @@ Resources:
       #     CidrIp: 0.0.0.0/0
 
   # SNS Subscription and SQS
-  JacktripSqsSnsSubscription:
+  SqsSnsSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      TopicArn: !Sub arn:aws:sns:${CentralRegion}:${AWS::AccountId}:JacktripSnsTopic.fifo
+      TopicArn: !Ref SnsTopicArn
       Protocol: sqs
-      Endpoint: !GetAtt JacktripSqsQueue.Arn
+      Endpoint: !GetAtt MessageQueue.Arn
       Region: !Ref CentralRegion
       FilterPolicy:
         region:
           - !Ref AWS::Region
 
-  JacktripSqsQueue:
+  MessageQueue:
     Type: AWS::SQS::Queue
     Properties:
       FifoQueue: true
-      QueueName: !Sub ${AWS::StackName}-JacktripQueue.fifo
+      QueueName: MessageQueue.fifo
 
-  JacktripSqsQueuePolicy:
+  MessageQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-        - !Ref JacktripSqsQueue
+        - !Ref MessageQueue
       PolicyDocument: # include in JSON format
         Statement:
           - Effect: Allow
@@ -249,10 +251,10 @@ Resources:
               - sqs:SendMessage
             Principal:
               Service: sns.amazonaws.com
-            Resource: !GetAtt JacktripSqsQueue.Arn
+            Resource: !GetAtt MessageQueue.Arn
 
   # Step Functions
-  JacktripStateMachine:
+  RegionalStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
       Definition:
@@ -338,13 +340,13 @@ Resources:
             Resource: ${ContactWebSocketFunctionArn}
             End: true
       DefinitionSubstitutions:
-        CreateServerFunctionArn: !GetAtt JacktripCreateServer.Arn
-        TerminateServerFunctionArn: !GetAtt JacktripTerminateServer.Arn
-        GetServerStatusFunctionArn: !GetAtt GetServerStatus.Arn
-        HandleFailFunctionArn: !GetAtt HandleFail.Arn
-        HandleSuccessFunctionArn: !GetAtt HandleSuccess.Arn
-        ContactWebSocketFunctionArn: !GetAtt ContactWebSocket.Arn
-        RunJacktripFunctionArn: !GetAtt RunJacktripFunction.Arn
+        CreateServerFunctionArn: !GetAtt CreateServerLambda.Arn
+        TerminateServerFunctionArn: !GetAtt TerminateServerLambda.Arn
+        GetServerStatusFunctionArn: !GetAtt GetServerStatusLambda.Arn
+        HandleFailFunctionArn: !GetAtt HandleFailLambda.Arn
+        HandleSuccessFunctionArn: !GetAtt HandleSuccessLambda.Arn
+        ContactWebSocketFunctionArn: !GetAtt ContactWebSocketLambda.Arn
+        RunJacktripFunctionArn: !GetAtt RunJacktripLambda.Arn
       Logging:
         Level: ALL
         IncludeExecutionData: true
@@ -387,9 +389,9 @@ Resources:
   ContactWebsocketLambdaSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: ContactWebSocketFunctionName
+      Name: !Sub ${AWS::StackName}-ContactWebSocketFunctionName
       Type: String
-      Value: !Ref ContactWebSocket
+      Value: !Ref ContactWebSocketLambda
 
   # Copy Zips - https://aws.amazon.com/blogs/infrastructure-and-automation/deploying-aws-lambda-functions-using-aws-cloudformation-the-portable-way/
   LambdaZipsBucket:
@@ -402,7 +404,14 @@ Resources:
       SourceBucket: !Ref SourceCodeBucket
       Prefix: !Ref 'CodeObjectKeyPrefix'
       Objects:
-        - functions/packages/MyFunction/lambda.zip
+        - functions/createServer.zip
+        - functions/terminateServer.zip
+        - functions/sqsConsumer.zip
+        - functions/contactWebSocket.zip
+        - functions/handleSuccess.zip
+        - functions/handleFail.zip
+        - functions/getServerStatus.zip
+        - functions/runJacktrip.zip
   CopyZipsFunction:
     Type: AWS::Lambda::Function
     Properties:
