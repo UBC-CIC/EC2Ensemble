@@ -8,7 +8,7 @@ Globals:
   Api:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
-      AllowOrigin: !Sub "'${WebAppUrl}'"
+      AllowOrigin: "'http://localhost:3000'"
       AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
       AllowCredentials: true
     Auth:
@@ -22,6 +22,20 @@ Globals:
 Parameters:
   WebAppUrl:
     Type: String
+  ExecutionRoleName:
+    Type: String
+    Default: stacksets-execSubAccount-173513177120
+  StackSetTemplateUrl:
+    Type: String
+  DeployedRegion:
+    Type: CommaDelimitedList
+    Default: ca-central-1, us-west-2
+  SourceCodeBucket:
+    Type: String
+  CodeObjectKeyPrefix:
+    Type: String
+    Default: jacktrip
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
 
 Resources:
   ApiGatewayAccountSettings:
@@ -29,7 +43,7 @@ Resources:
     Properties:
       CloudWatchRoleArn: !GetAtt ApiGatewayLogRole.Arn
   # Lambdas
-  PublishToSnsFunction:
+  PublishToSnsLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/publishToSns
@@ -45,16 +59,16 @@ Resources:
                   Required: true
       Policies:
         - SNSPublishMessagePolicy:
-            TopicName: !GetAtt JacktripSnsTopic.TopicName
+            TopicName: !GetAtt MessagePublisherTopic.TopicName
         - DynamoDBCrudPolicy:
             TableName: !Ref UserServerTable
       Environment:
         Variables:
-          snsTopicArn: !Ref JacktripSnsTopic
+          snsTopicArn: !Ref MessagePublisherTopic
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
 
-  GetUserServer:
+  GetUserServerLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/getUserServer
@@ -78,7 +92,7 @@ Resources:
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
 
-  DeleteRoom:
+  DeleteRoomLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/deleteRoom
@@ -102,7 +116,7 @@ Resources:
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
 
-  CreateExternalRoom:
+  CreateExternalRoomLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/createExternalRoom
@@ -121,7 +135,7 @@ Resources:
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
 
-  UpdateExternalRoom:
+  UpdateExternalRoomLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/updateExternalRoom
@@ -159,6 +173,7 @@ Resources:
           KeyType: HASH
         - AttributeName: serverId
           KeyType: RANGE
+      BillingMode: PROVISIONED
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
@@ -186,6 +201,7 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
+      BillingMode: PROVISIONED
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
@@ -240,6 +256,9 @@ Resources:
     DependsOn:
       - ApiGatewayAccountSettings
     Properties:
+      AccessLogSettings:
+        DestinationArn: !GetAtt WebSocketApiAccessLogGroup.Arn
+        Format: '"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency,"xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","authorizeStatus":"$context.authorize.status","authorizerStatus":"$context.authorizer.status","authorizerLatency":"$context.authorizer.latency","authorizerRequestId":"$context.authorizer.requestId","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","principalId":"$context.authorizer.principalId"'
       StageName: dev
       Description: Dev Stage
       DeploymentId: !Ref Deployment
@@ -375,19 +394,18 @@ Resources:
           - !Ref OnHeartbeatIntegration
 
   # SNS
-  JacktripSnsTopic:
+  MessagePublisherTopic:
     Type: AWS::SNS::Topic
     Properties:
       DisplayName: JacktripSnsTopic
       FifoTopic: true
       ContentBasedDeduplication: true
-      TopicName: JacktripSnsTopic.fifo
+      TopicName: !Sub ${AWS::StackName}-SnsTopic123.fifo
 
   # IAM Roles
-  JacktripStateMachineRole:
+  RegionalStateMachineRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: JacktripStateMachineRole
       Description: Role used by the Step Functions State Machine
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -397,7 +415,7 @@ Resources:
               Service: states.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: JacktripStateMachineInvokeLambda
+        - PolicyName: !Sub ${AWS::StackName}-JacktripStateMachineInvokeLambda
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -433,7 +451,7 @@ Resources:
               Service: ec2.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: ContactWebsocketLambdaInvoke
+        - PolicyName: !Sub ${AWS::StackName}-ContactWebsocketLambdaInvoke
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -443,7 +461,7 @@ Resources:
                   - lambda:ListFunctions
                 Resource:
                   - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:jacktrip-regional-resources*
-        - PolicyName: Ec2DescribeTags
+        - PolicyName: !Sub ${AWS::StackName}-Ec2DescribeTags
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -457,18 +475,91 @@ Resources:
   JacktripEC2InstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:
-      InstanceProfileName: JacktripEC2InstanceProfile
+      InstanceProfileName: !Sub ${AWS::StackName}-JacktripEC2InstanceProfile
       Path: /
       Roles:
         - !Ref JacktripEC2InstanceRole
 
+  WebSocketApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${AWS::StackName}-Jacktrip-WebSocketApi-LogGroup
+      RetentionInDays: 30
+
+  JacktripRegionalStackSet:
+    Type: 'AWS::CloudFormation::StackSet'
+    DeletionPolicy: Retain
+    Properties:
+      StackSetName: !Sub ${AWS::StackName}-RegionalStackSet
+      ExecutionRoleName: !Ref ExecutionRoleName
+      PermissionModel: SELF_MANAGED
+      TemplateURL: !Ref StackSetTemplateUrl
+      Capabilities:
+        - CAPABILITY_NAMED_IAM
+        - CAPABILITY_AUTO_EXPAND
+      Parameters:
+        - ParameterKey: CentralRegion
+          ParameterValue: !Ref AWS::Region
+        - ParameterKey: UserServerTableName
+          ParameterValue: !Ref UserServerTable
+        - ParameterKey: WebSocketTableName
+          ParameterValue: !Ref WebSocketConnectionsTable
+        - ParameterKey: WebSocketApiId
+          ParameterValue: !Ref WebSocketApi
+        - ParameterKey: SourceCodeBucket
+          ParameterValue: !Ref SourceCodeBucket
+        - ParameterKey: CopyZipsRoleArn
+          ParameterValue: !GetAtt CopyZipsRole.Arn
+        - ParameterKey: JacktripStateMachineRoleArn
+          ParameterValue: !GetAtt RegionalStateMachineRole.Arn
+        - ParameterKey: CodeObjectKeyPrefix
+          ParameterValue: !Ref CodeObjectKeyPrefix
+        - ParameterKey: SnsTopicArn
+          ParameterValue: !Ref MessagePublisherTopic
+      StackInstancesGroup:
+        - Regions: !Ref DeployedRegion
+          DeploymentTargets:
+            Accounts:
+              - !Ref AWS::AccountId
+
+  # Copy Zips - https://aws.amazon.com/blogs/infrastructure-and-automation/deploying-aws-lambda-functions-using-aws-cloudformation-the-portable-way/
+  CopyZipsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      Policies:
+        - PolicyName: lambda-copier
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${SourceCodeBucket}/${CodeObjectKeyPrefix}*'
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource: '*'
 Outputs:
   StateMachineRoleArn:
-    Description: Arn for the Jacktrip State Machine
-    Value: !GetAtt JacktripStateMachineRole.Arn
+    Description: Arn for the State Machine
+    Value: !GetAtt RegionalStateMachineRole.Arn
   SnsTopicArn:
-    Description: Arn for the Jacktrip State Machine
-    Value: !Ref JacktripSnsTopic
+    Description: Arn for the SNS Topic
+    Value: !Ref MessagePublisherTopic
   WebSocketURL:
     Description: 'The WSS Protocol URL to connect to'
     Value:
@@ -483,8 +574,3 @@ Outputs:
           !Ref 'Stage',
         ],
       ]
-  UserServerTableName:
-    Description: 'The name of the UserServerTable'
-    Value: !Ref UserServerTable
-    Export:
-      Name: !Join ['-', [!Ref 'AWS::StackName', UserServerTable]]
