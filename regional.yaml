@@ -56,7 +56,7 @@ Resources:
               Resource: !Sub 'arn:*:iam::${AWS::AccountId}:role/'
       Environment:
         Variables:
-          ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
+          ec2SecurityGroup: !GetAtt JacktripEC2SecurityGroup.GroupId
           subnetId: !Ref PublicSubnet
 
   TerminateServerLambda:
@@ -266,6 +266,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet
+
   # SNS Subscription and SQS
   SqsSnsSubscription:
     Type: AWS::SNS::Subscription
