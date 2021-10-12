@@ -44,6 +44,7 @@ Resources:
       Environment:
         Variables:
           ec2SecurityGroup: !Ref JacktripEC2SecurityGroup
+          subnetId: !Ref PublicSubnet
 
   JacktripTerminateServer:
     Type: AWS::Serverless::Function
@@ -164,7 +165,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security Group for all EC2 instances running Jacktrip
-      GroupName: JacktripEC2SecurityGroup
+      VpcId: !Ref RegionalVpc
       SecurityGroupIngress:
         - IpProtocol: icmp
           FromPort: 8
@@ -178,10 +179,60 @@ Resources:
           FromPort: 0
           ToPort: 65535
           CidrIp: 0.0.0.0/0
-      # SecurityGroupEgress:
-      #   - Description: Allow all outbound traffic
-      #     IpProtocol: '-1'
-      #     CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - Description: Allow all outbound traffic
+          IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+
+  RegionalVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.18.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Join ['', [!Ref 'AWS::StackName', '-VPC']]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DependsOn: RegionalVpc
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref RegionalVpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !GetAtt RegionalVpc.CidrBlock
+      VpcId: !Ref RegionalVpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PublicSubnet
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref RegionalVpc
+
+  PublicRoute: # Public route table has direct routing to IGW:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
 
   # SNS Subscription and SQS
   JacktripSqsSnsSubscription:
@@ -273,3 +324,10 @@ Resources:
       Name: ContactWebSocketFunctionName
       Type: String
       Value: !Ref ContactWebSocket
+
+  VpcIdSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripVpcId
+      Type: String
+      Value: !Ref RegionalVpc
