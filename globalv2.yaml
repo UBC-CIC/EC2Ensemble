@@ -8,7 +8,7 @@ Globals:
   Api:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
-      AllowOrigin: !Sub "'${WebAppUrl}'"
+      AllowOrigin: "'http://localhost:3000'"
       AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
       AllowCredentials: true
     Auth:
@@ -400,7 +400,7 @@ Resources:
       DisplayName: JacktripSnsTopic
       FifoTopic: true
       ContentBasedDeduplication: true
-      TopicName: !Sub ${AWS::StackName}-JacktripSnsTopic.fifo
+      TopicName: !Sub ${AWS::StackName}-SnsTopic123.fifo
 
   # IAM Roles
   RegionalStateMachineRole:
@@ -488,6 +488,7 @@ Resources:
 
   JacktripRegionalStackSet:
     Type: 'AWS::CloudFormation::StackSet'
+    DeletionPolicy: Retain
     Properties:
       StackSetName: !Sub ${AWS::StackName}-RegionalStackSet
       ExecutionRoleName: !Ref ExecutionRoleName

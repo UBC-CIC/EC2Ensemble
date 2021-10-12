@@ -221,7 +221,7 @@ Resources:
   RegionalVpc:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 172.18.0.0/16
+      CidrBlock: 10.1.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
@@ -284,7 +284,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       FifoQueue: true
-      QueueName: MessageQueue.fifo
+      QueueName: MessageQueue123.fifo
 
   MessageQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -439,13 +439,6 @@ Resources:
       Name: !Sub ${AWS::StackName}-ContactWebSocketFunctionName
       Type: String
       Value: !Ref ContactWebSocketLambda
-
-  VpcIdSSM:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: JacktripVpcId
-      Type: String
-      Value: !Ref RegionalVpc
 
   # Copy Zips - https://aws.amazon.com/blogs/infrastructure-and-automation/deploying-aws-lambda-functions-using-aws-cloudformation-the-portable-way/
   LambdaZipsBucket:

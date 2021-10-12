@@ -487,4 +487,4 @@ Outputs:
     Description: 'The name of the UserServerTable'
     Value: !Ref UserServerTable
     Export:
-      Name: !Join [ "-", [ !Ref "AWS::StackName", UserServerTable ] ]
+      Name: !Join ['-', [!Ref 'AWS::StackName', UserServerTable]]
