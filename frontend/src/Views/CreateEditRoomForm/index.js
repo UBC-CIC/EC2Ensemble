@@ -92,7 +92,6 @@ export default function CreateEditRoomForm(props) {
       (async () => {
         const list = await recommendRegionList;
         setRecommendRegion(list);
-        setRoomFormInfo({...roomFormInfo, region: list[0]})
       })();
     }
   }, [, open])
