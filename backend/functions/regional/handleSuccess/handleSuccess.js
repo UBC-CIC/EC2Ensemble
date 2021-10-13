@@ -1,10 +1,11 @@
 const AWS = require('aws-sdk');
 
-const ddb = new AWS.DynamoDB.DocumentClient({
-	region: process.env.centralRegion,
-});
 exports.handler = async (event) => {
 	console.log(event);
+	const ddb = new AWS.DynamoDB.DocumentClient({
+		region: event.region,
+	});
+
 	if (event.action === 'create') {
 		const params = {
 			TableName: process.env.userServerTableName,

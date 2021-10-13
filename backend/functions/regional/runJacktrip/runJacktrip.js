@@ -1,12 +1,16 @@
 const AWS = require('aws-sdk');
-const ssm = new AWS.SSM();
 
 exports.handler = async (event) => {
 	console.log(event);
+	const ssm = new AWS.SSM({ region: event.region });
+
+	const documentName = await ssm
+		.getParameter({ Name: 'JacktripDocumentName' })
+		.promise().Parameter.Value;
 	try {
 		const res = await ssm
 			.sendCommand({
-				DocumentName: process.env.commandName,
+				DocumentName: documentName,
 				InstanceIds: [event.instanceId],
 				Parameters: {
 					samplingRate: [

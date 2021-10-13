@@ -1,0 +1,640 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Template for Global resources
+
+Globals:
+  Function:
+    Runtime: nodejs14.x
+  Api:
+    Cors:
+      AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
+      AllowOrigin: !Sub '${WebAppUrl}'
+      AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
+      AllowCredentials: true
+    Auth:
+      AddDefaultAuthorizerToCorsPreflight: False
+      DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
+      Authorizers:
+        JacktripGlobalCognitoAuthorizer:
+          UserPoolArn:
+            - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
+
+Parameters:
+  WebAppUrl:
+    Type: String
+  ExecutionRoleName:
+    Type: String
+    Default: stacksets-execSubAccount-173513177120
+  StackSetTemplateUrl:
+    Type: String
+  DeployedRegion:
+    Type: CommaDelimitedList
+    Default: ca-central-1, us-west-2
+
+Resources:
+  ApiGatewayAccountSettings:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayLogRole.Arn
+  # Lambdas
+  ActionHandlerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/global/actionHandler
+      Handler: actionHandler.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: post
+            Path: /actions
+            RequestParameters:
+              - method.request.header.Authorization:
+                  Required: true
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt StateMachine.Name
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
+          stateMachineArn: !Ref StateMachine
+
+  GetUserServerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/global/getUserServer
+      Handler: getUserServer.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: get
+            Path: /user
+            RequestParameters:
+              - method.request.querystring.user:
+                  Required: true
+              - method.request.header.Authorization:
+                  Required: true
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
+
+  DeleteRoomLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/global/deleteRoom
+      Handler: deleteRoom.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: delete
+            Path: /user/{user}/room/{serverId}
+            RequestParameters:
+              - method.request.path.user:
+                  Required: true
+              - method.request.path.serverId:
+                  Required: true
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
+
+  CreateExternalRoomLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/global/createExternalRoom
+      Handler: createExternalRoom.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: post
+            Path: /external
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
+
+  UpdateExternalRoomLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/global/updateExternalRoom
+      Handler: updateExternalRoom.handler
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: put
+            Path: /user/{user}/external/{serverId}
+            RequestParameters:
+              - method.request.path.user:
+                  Required: true
+              - method.request.path.serverId:
+                  Required: true
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserServerTable
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+          corsOriginUrl: !Ref WebAppUrl
+
+  # Lambdas (Step Functions)
+  CreateServerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/createServer
+      Handler: createServer.handler
+      Timeout: 10
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:RunInstances
+                - ec2:CreateTags
+                - ssm:GetParameter
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/*'
+      Environment:
+        Variables:
+          instanceProfileName: !Ref EC2InstanceProfile
+
+  TerminateServerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/terminateServer
+      Handler: terminateServer.handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:TerminateInstances
+              Resource: '*'
+
+  GetServerStatusLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/getServerStatus
+      Handler: getServerStatus.handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:DescribeInstances
+              Resource: '*'
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+
+  HandleFailLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/handleFail
+      Handler: handleFail.handler
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:UpdateItem
+              Resource: !GetAtt UserServerTable.Arn
+
+  HandleSuccessLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/handleSuccess
+      Handler: handleSuccess.handler
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:UpdateItem
+              Resource: !GetAtt UserServerTable.Arn
+
+  RunJacktripLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 120
+      CodeUri: ./backend/functions/regional/runJacktrip
+      Handler: runJacktrip.handler
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+
+  ContactWebSocketLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/contactWebSocket
+      Handler: contactWebSocket.handler
+      Environment:
+        Variables:
+          connectionTableName: !Ref WebSocketConnectionsTable
+          apiEndpoint: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:Query
+              Resource: !GetAtt WebSocketConnectionsTable.Arn
+
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: ./backend/state_machine/state_machine.asl.json
+      DefinitionSubstitutions:
+        CreateServerFunctionArn: !GetAtt CreateServerLambda.Arn
+        TerminateServerFunctionArn: !GetAtt TerminateServerLambda.Arn
+        GetServerStatusFunctionArn: !GetAtt GetServerStatusLambda.Arn
+        HandleFailFunctionArn: !GetAtt HandleFailLambda.Arn
+        HandleSuccessFunctionArn: !GetAtt HandleSuccessLambda.Arn
+        ContactWebSocketFunctionArn: !GetAtt ContactWebSocketLambda.Arn
+        RunJacktripFunctionArn: !GetAtt RunJacktripLambda.Arn
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Role: !GetAtt StateMachineRole.Arn
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${AWS::StackName}-StateMachineLogGroup'
+      RetentionInDays: 30
+
+  # DynamoDB
+  UserServerTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: user
+          AttributeType: S
+        - AttributeName: serverId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user
+          KeyType: HASH
+        - AttributeName: serverId
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  WebSocketConnectionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: user
+          AttributeType: S
+        - AttributeName: connectionId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: connectionId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: UserIndex
+          KeySchema:
+            - AttributeName: user
+              KeyType: HASH
+            - AttributeName: connectionId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      TimeToLiveSpecification:
+        AttributeName: expiration
+        Enabled: true
+
+  # Websocket authorizer with Lambda function
+  # https://github.com/aws-samples/simple-websockets-chat-app/issues/22
+  WebSocketAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref WebSocketApi
+      AuthorizerType: REQUEST
+      Name: WebSocketAuthorizer
+      # https://medium.com/swlh/implementing-secure-web-sockets-with-aws-api-gateway-cognito-dynamodb-and-lambda-b38e02314b42
+      # Web Browser’s WebSocket object does not allow you to send any custom header
+      IdentitySource:
+        - 'route.request.querystring.Authorization'
+      AuthorizerUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketAuthorizerFunction.Arn}/invocations'
+  WebSocketAuthorizerFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-websocketAuthorizer-function'
+      CodeUri: ./backend/functions/global/websocketAuthorizer
+      Handler: websocketAuthorizer.handler
+  WebSocketAuthorizerFunctionPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref WebSocketAuthorizerFunction
+      Principal: apigateway.amazonaws.com
+
+  # Websocket API - heavily inspired from https://serverlessland.com/patterns/apigw-websocket-api-lambda
+  WebSocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${AWS::StackName}-websocket-api'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: '$request.body.route'
+  # https://currentlyunnamed-theclassic.blogspot.com/2018/12/mastering-cloudformation-for-api.html
+  Deployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - OnConnectRoute
+      - OnDisconnectRoute
+      - OnHeartbeatRoute
+    Properties:
+      ApiId: !Ref WebSocketApi
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    DependsOn:
+      - ApiGatewayAccountSettings
+    Properties:
+      StageName: dev
+      Description: Dev Stage
+      DeploymentId: !Ref Deployment
+      ApiId: !Ref WebSocketApi
+      DefaultRouteSettings:
+        LoggingLevel: INFO
+
+  # WebSocket Connect
+  WebSocketOnConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-onConnect-function'
+      CodeUri: ./backend/functions/global/onConnect
+      Handler: onConnect.handler
+      Environment:
+        Variables:
+          connectionTableName: !Ref WebSocketConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WebSocketConnectionsTable
+  OnConnectFunctionResourcePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref WebSocketOnConnectFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  OnConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      Description: OnConnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketOnConnectFunction.Arn}/invocations
+  OnConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $connect
+      AuthorizationType: CUSTOM
+      AuthorizerId: !Ref WebSocketAuthorizer
+      OperationName: OnConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OnConnectIntegration
+
+  # WebSocket Disconnect
+  WebSocketOnDisconnectFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-onDisconnect-function'
+      CodeUri: ./backend/functions/global/onDisconnect
+      Handler: onDisconnect.handler
+      Environment:
+        Variables:
+          connectionTableName: !Ref WebSocketConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WebSocketConnectionsTable
+  OnDisconnectFunctionResourcePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref WebSocketOnDisconnectFunction
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  OnDisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      Description: OnDisconnect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketOnDisconnectFunction.Arn}/invocations
+  OnDisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: $disconnect
+      # AuthorizationType: NONE
+      OperationName: OnDisconnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OnDisconnectIntegration
+
+  # WebSocket Heartbeat
+  WebSocketOnHeartbeatFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-onHeartbeat-function'
+      CodeUri: ./backend/functions/global/onHeartbeat
+      Handler: onHeartbeat.handler
+      Environment:
+        Variables:
+          connectionTableName: !Ref WebSocketConnectionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WebSocketConnectionsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  OnHeartbeatFunctionResourcePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref WebSocketOnHeartbeatFunction
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+  OnHeartbeatIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      Description: OnHeartbeat Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketOnHeartbeatFunction.Arn}/invocations
+  OnHeartbeatRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: heartbeat
+      # AuthorizationType: NONE
+      OperationName: OnHeartbeatRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OnHeartbeatIntegration
+
+  # IAM Roles
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-StateMachineRole
+      Description: Role used by the Step Functions State Machine
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: JacktripStateMachineInvokeLambda
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:*
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+  ApiGatewayLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ContactWebsocketLambdaInvoke
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                  - lambda:ListFunctions
+                Resource:
+                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:*
+        - PolicyName: Ec2DescribeTags
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeTags
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  EC2InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      InstanceProfileName: !Sub ${AWS::StackName}-EC2InstanceProfile
+      Path: /
+      Roles:
+        - !Ref EC2InstanceRole
+
+  JacktripRegionalStackSet:
+    Type: 'AWS::CloudFormation::StackSet'
+    Properties:
+      StackSetName: !Sub ${AWS::StackName}-RegionalStackSet
+      ExecutionRoleName: !Ref ExecutionRoleName
+      PermissionModel: SELF_MANAGED
+      TemplateURL: !Ref StackSetTemplateUrl
+      Capabilities:
+        - CAPABILITY_NAMED_IAM
+        - CAPABILITY_AUTO_EXPAND
+      Parameters:
+        - ParameterKey: ContactWebSocketFunctionName
+          ParameterValue: !Ref ContactWebSocketLambda
+      StackInstancesGroup:
+        - Regions: !Ref DeployedRegion
+          DeploymentTargets:
+            Accounts:
+              - !Ref AWS::AccountId
+
+Outputs:
+  StateMachineRoleArn:
+    Description: Arn for the Jacktrip State Machine
+    Value: !GetAtt StateMachineRole.Arn
+  WebSocketURL:
+    Description: 'The WSS Protocol URL to connect to'
+    Value:
+      !Join [
+        '',
+        [
+          'wss://',
+          !Ref WebSocketApi,
+          '.execute-api.',
+          !Ref 'AWS::Region',
+          '.amazonaws.com/',
+          !Ref 'Stage',
+        ],
+      ]

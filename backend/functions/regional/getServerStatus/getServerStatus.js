@@ -1,10 +1,9 @@
 const AWS = require('aws-sdk');
 
-const ec2 = new AWS.EC2();
-const ssm = new AWS.SSM();
-
 exports.handler = async (event) => {
 	console.log(event);
+	const ec2 = new AWS.EC2({ region: event.region });
+	const ssm = new AWS.SSM({ region: event.region });
 
 	const running = await checkInstanceSSM(event.instanceId);
 	if (running) {

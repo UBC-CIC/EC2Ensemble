@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'CloudFormation Template for instantiating Jacktrip servers in AWS'
+
+Globals:
+  Function:
+    Runtime: nodejs14.x
+
+Parameters:
+  ContactWebSocketFunctionName:
+    Type: String
+
+Resources:
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group for all EC2 instances running Jacktrip
+      VpcId: !Ref RegionalVpc
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - Description: Allow all outbound traffic
+          IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+
+  RegionalVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.18.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Join ['', [!Ref 'AWS::StackName', '-VPC']]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    DependsOn: RegionalVpc
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref RegionalVpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !GetAtt RegionalVpc.CidrBlock
+      VpcId: !Ref RegionalVpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PublicSubnet
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref RegionalVpc
+
+  PublicRoute: # Public route table has direct routing to IGW:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  RunJacktripDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Content:
+        schemaVersion: '2.2'
+        description: 'Run Jacktrip on EC2 instance'
+        parameters:
+          samplingRate:
+            type: String
+            description: 'Sampling rate parameter for Jacktrip (Required)'
+          bufferSize:
+            type: String
+            description: 'Buffer size parameter for Jacktrip (Required)'
+        mainSteps:
+          - action: aws:runShellScript
+            name: runCommands
+            inputs:
+              runCommand:
+                - 'killall jackd && killall jacktrip'
+                - 'jackd -R -t500 -ddummy -r{{samplingRate}} -p{{bufferSize}} &'
+                - 'cd /home/ubuntu'
+                - './jacktrip -S &'
+                - 'echo "Run Jacktrip Successful"'
+      DocumentType: Command
+
+  # SSM Parameter
+  SubnetIdSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripSubnetId
+      Type: String
+      Value: !Ref PublicSubnet
+
+  SecurityGroupIdSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripSecurityGroupId
+      Type: String
+      Value: !Ref EC2SecurityGroup
+
+  DocumentNameSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripDocumentName
+      Type: String
+      Value: !Ref RunJacktripDocument
+
+  ContactWebsocketLambdaSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: ContactWebSocketFunctionName1
+      Type: String
+      Value: !Ref ContactWebSocketFunctionName

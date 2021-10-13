@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 
-const sns = new AWS.SNS();
+const stepFunctions = new AWS.StepFunctions();
 const ddb = new AWS.DynamoDB.DocumentClient();
 const requiredBody = ['action', 'region', 'user', 'serverId'];
 const requiredBodyCreate = [
@@ -73,21 +73,15 @@ exports.handler = async (event) => {
 			return createResponse(false, 'Invalid action');
 	}
 
-	const snsParams = {
-		Message: JSON.stringify(message),
-		TopicArn: process.env.snsTopicArn,
-		MessageGroupId: body.serverId,
-		MessageAttributes: {
-			region: {
-				DataType: 'String',
-				StringValue: body.region,
-			},
-		},
+	const input = { message, waitTime: 10 };
+	const params = {
+		stateMachineArn: process.env.stateMachineArn,
+		name: body.MessageId,
+		input: JSON.stringify(input),
 	};
-	console.log('SNS: ', snsParams);
-
 	try {
-		const res = await sns.publish(snsParams).promise();
+		const res = await stepFunctions.startExecution(params).promise();
+		console.log(res);
 		return {
 			statusCode: 200,
 			headers: {
