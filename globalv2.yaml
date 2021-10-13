@@ -228,13 +228,17 @@ Resources:
       FunctionName: !Sub '${AWS::StackName}-websocketAuthorizer-function'
       CodeUri: ./backend/functions/global/websocketAuthorizer
       Handler: websocketAuthorizer.handler
+      Environment:
+        Variables:
+          aud: 3pumfb70upfu1l8k4bvtujgcll
+          userPoolId: ca-central-1_20ArNefjM
+          centralRegion: !Ref AWS::Region
   WebSocketAuthorizerFunctionPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
       FunctionName: !Ref WebSocketAuthorizerFunction
       Principal: apigateway.amazonaws.com
-
   # Websocket API - heavily inspired from https://serverlessland.com/patterns/apigw-websocket-api-lambda
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
@@ -516,6 +520,8 @@ Resources:
           ParameterValue: !Ref CodeObjectKeyPrefix
         - ParameterKey: SnsTopicArn
           ParameterValue: !Ref MessagePublisherTopic
+        - ParameterKey: Nonce
+          ParameterValue: 'Test'
       StackInstancesGroup:
         - Regions: !Ref DeployedRegion
           DeploymentTargets:

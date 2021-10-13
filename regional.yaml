@@ -29,6 +29,10 @@ Parameters:
     Default: jacktrip
   SnsTopicArn:
     Type: String
+  Nonce:
+    Description: Change this string when code is updated.
+    Type: String
+    Default: 'Test'
 
 Resources:
   # Lambdas
@@ -446,6 +450,7 @@ Resources:
   CopyZips:
     Type: Custom::CopyZips
     Properties:
+      Nonce: !Ref Nonce
       ServiceToken: !GetAtt 'CopyZipsFunction.Arn'
       DestBucket: !Ref 'LambdaZipsBucket'
       SourceBucket: !Ref SourceCodeBucket
