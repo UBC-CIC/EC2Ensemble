@@ -240,7 +240,7 @@ const getRoom = async (roomId) => {
   const dynamodb = new AWS.DynamoDB.DocumentClient();
 
   let queryParams = {
-    TableName: 'jacktrip-global-UserServerTable-1CV4VPDXSCTB2',
+    TableName: process.env.REACT_APP_USERSERVERTABLENAME,
     FilterExpression: `#serverId = :serverId`,
     ExpressionAttributeNames: {
       "#serverId": "serverId",
