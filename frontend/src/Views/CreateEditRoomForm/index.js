@@ -154,7 +154,6 @@ export default function CreateEditRoomForm(props) {
   }
 
   const submitForm = (event) => {
-    event.preventDefault();
     let roomForm;
     const serverId = uuidv4();
 

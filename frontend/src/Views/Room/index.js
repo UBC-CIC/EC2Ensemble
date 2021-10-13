@@ -254,7 +254,7 @@ function Room(props) {
 			// check if buffer or frequency is changed
 			handleDisableButtons(true);
 			const bufFreqChange = roomFormInfo.buffer !== buffer || roomFormInfo.frequency !== frequency;
-			await dispatch(changeRoomParams(currUser, serverId, roomFormInfo, bufFreqChange))
+			await dispatch(changeRoomParams(currUser, serverId, roomFormInfo, "param", bufFreqChange && status !== 'terminated', status))
 			handleDisableButtons(false);
 		}
 		// let the buttons stop loading
