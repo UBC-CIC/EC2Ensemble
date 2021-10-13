@@ -9,15 +9,18 @@ exports.handler = async (event) => {
 		.getParameter({
 			Name: 'JacktripAMIId',
 		})
-		.promise().Parameter.Value;
+		.promise();
+	console.log(ami);
 	const subnetId = await ssm
 		.getParameter({ Name: 'JacktripSubnetId' })
-		.promise().Parameter.Value;
+		.promise();
+	console.log(subnetId);
 	const securityGroupId = await ssm
 		.getParameter({
 			Name: 'JacktripSecurityGroupId',
 		})
-		.promise().Parameter.Value;
+		.promise();
+	console.log(securityGroupId);
 	const runParams = {
 		ImageId: ami.Parameter.Value,
 		InstanceType: 't2.micro',
@@ -38,8 +41,8 @@ exports.handler = async (event) => {
 				],
 			},
 		],
-		SecurityGroupIds: [securityGroupId],
-		SubnetId: subnetId,
+		SecurityGroupIds: [securityGroupId.Parameter.Value],
+		SubnetId: subnetId.Parameter.Value,
 		IamInstanceProfile: {
 			Name: process.env.instanceProfileName,
 		},

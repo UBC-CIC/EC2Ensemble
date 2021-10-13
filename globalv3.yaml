@@ -8,7 +8,7 @@ Globals:
   Api:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
-      AllowOrigin: !Sub '${WebAppUrl}'
+      AllowOrigin: !Join ['', ["'", !Ref WebAppUrl, "'"]]
       AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
       AllowCredentials: true
     Auth:
@@ -17,7 +17,7 @@ Globals:
       Authorizers:
         JacktripGlobalCognitoAuthorizer:
           UserPoolArn:
-            - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
+            - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_LbasPMLhF'
 
 Parameters:
   WebAppUrl:
@@ -253,7 +253,7 @@ Resources:
       Environment:
         Variables:
           connectionTableName: !Ref WebSocketConnectionsTable
-          apiEndpoint: !Sub 'wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
+          apiEndpoint: !Sub '${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
       Policies:
         - Statement:
             - Effect: Allow
@@ -266,7 +266,7 @@ Resources:
             - Effect: Allow
               Action:
                 - dynamodb:Query
-              Resource: !GetAtt WebSocketConnectionsTable.Arn
+              Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${WebSocketConnectionsTable}/*'
 
   StateMachine:
     Type: AWS::Serverless::StateMachine
@@ -360,6 +360,11 @@ Resources:
       FunctionName: !Sub '${AWS::StackName}-websocketAuthorizer-function'
       CodeUri: ./backend/functions/global/websocketAuthorizer
       Handler: websocketAuthorizer.handler
+      Environment:
+        Variables:
+          aud: 1nfbc9e4rdhmbv6ddocjrj6beu
+          userPoolId: ca-central-1_LbasPMLhF
+          region: ca-central-1
   WebSocketAuthorizerFunctionPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -526,7 +531,6 @@ Resources:
   StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AWS::StackName}-StateMachineRole
       Description: Role used by the Step Functions State Machine
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -536,7 +540,7 @@ Resources:
               Service: states.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: JacktripStateMachineInvokeLambda
+        - PolicyName: !Sub ${AWS::StackName}-StateMachineInvokeLambda
           PolicyDocument:
             Version: '2012-10-17'
             Statement:

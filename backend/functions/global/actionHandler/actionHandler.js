@@ -73,10 +73,10 @@ exports.handler = async (event) => {
 			return createResponse(false, 'Invalid action');
 	}
 
-	const input = { message, waitTime: 10 };
+	const input = { ...message, waitTime: 10 };
 	const params = {
 		stateMachineArn: process.env.stateMachineArn,
-		name: body.MessageId,
+		name: body.serverId + Date.now().toString(),
 		input: JSON.stringify(input),
 	};
 	try {
@@ -94,7 +94,7 @@ exports.handler = async (event) => {
 			body: JSON.stringify(res),
 		};
 	} catch (error) {
-		// TODO: Delete ddb entry to cleanup
+		// TODO: Delete ddb entry to cleanup?
 		return createResponse(false, error);
 	}
 };

@@ -5,7 +5,7 @@ exports.handler = async (event) => {
 	const ec2 = new AWS.EC2({ region: event.region });
 	const ssm = new AWS.SSM({ region: event.region });
 
-	const running = await checkInstanceSSM(event.instanceId);
+	const running = await checkInstanceSSM(event.instanceId, ssm);
 	if (running) {
 		const res = await ec2
 			.describeInstances({
@@ -22,7 +22,7 @@ exports.handler = async (event) => {
 	}
 };
 
-const checkInstanceSSM = async (instanceId) => {
+const checkInstanceSSM = async (instanceId, ssm) => {
 	try {
 		const res = await ssm
 			.describeInstanceInformation({

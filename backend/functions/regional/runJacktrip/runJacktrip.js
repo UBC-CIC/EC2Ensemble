@@ -6,11 +6,12 @@ exports.handler = async (event) => {
 
 	const documentName = await ssm
 		.getParameter({ Name: 'JacktripDocumentName' })
-		.promise().Parameter.Value;
+		.promise();
+
 	try {
 		const res = await ssm
 			.sendCommand({
-				DocumentName: documentName,
+				DocumentName: documentName.Parameter.Value,
 				InstanceIds: [event.instanceId],
 				Parameters: {
 					samplingRate: [
