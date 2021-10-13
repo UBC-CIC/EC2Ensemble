@@ -62,7 +62,9 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'center'
   },
   marginLeft: {
-    marginLeft: '16px'
+    [theme.breakpoints.down('xs')]: {
+      marginLeft: '16px'
+    }
   }
 }))
 
