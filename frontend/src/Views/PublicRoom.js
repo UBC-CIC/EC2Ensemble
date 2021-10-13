@@ -231,9 +231,9 @@ export default PublicRoom;
 // function to query room
 const getRoom = async (roomId) => {
   AWS.config.update({
-    region: awsExports.aws_cognito_region,
+    region: awsExports.aws_project_region,
     credentials: new AWS.CognitoIdentityCredentials({
-      IdentityPoolId: awsExports.aws_cognito_identity_pool_id,
+      IdentityPoolId: process.env.REACT_APP_IDENTITYPOOLID
     }),
   });
 
