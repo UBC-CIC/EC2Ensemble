@@ -51,10 +51,15 @@ sources, and persist them into:
 
 <h6 align="center">Status update when the room is successfully created</h6>
 Once a room is successfully created, you can either (from right to left)
+
 1. Stop: terminates the room server from running, the IP address would be removed and deleted from the database since the room is not running anymore.
+
 2. Edit settings: edits the current information of the room, including room name, description, frequency, buffer and the region of where the room server is located.
+
 3. Restart jacktrip: restarts the jackstrip server
+
 4. Delete: stops the room server and delete the room information from the database.
+
 5. Share: a link which other guest users can access to see the information and status of the room.
 
 ![home page](./docs/images/create_external_room.png)
