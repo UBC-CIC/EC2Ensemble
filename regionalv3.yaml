@@ -134,6 +134,6 @@ Resources:
   ContactWebsocketLambdaSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: ContactWebSocketFunctionName1
+      Name: ContactWebSocketFunctionName
       Type: String
       Value: !Ref ContactWebSocketFunctionName

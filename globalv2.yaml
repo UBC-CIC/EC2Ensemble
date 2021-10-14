@@ -16,8 +16,7 @@ Globals:
       DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
       Authorizers:
         JacktripGlobalCognitoAuthorizer:
-          UserPoolArn:
-            - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
+          UserPoolArn: !GetAtt UserPool.Arn
 
 Parameters:
   WebAppUrl:
@@ -38,10 +37,121 @@ Parameters:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
 
 Resources:
+  UserPool:
+    # Created upon user selection
+    Type: AWS::Cognito::UserPool
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: !Join ['', [!Ref 'AWS::StackName', '-', 'cognito-userpool']]
+      UsernameConfiguration:
+        CaseSensitive: false
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+        - Name: family_name
+          Required: true
+          Mutable: true
+        - Name: given_name
+          Required: true
+          Mutable: true
+
+      AutoVerifiedAttributes:
+        - email
+      EmailVerificationMessage: 'Your verification code is {####}'
+      EmailVerificationSubject: 'Your verification code for PCMA-CIC'
+
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
+
+      UsernameAttributes:
+        - email
+      MfaConfiguration: 'OFF'
+
+  UserPoolClientWeb:
+    # Created provide application access to user pool
+    # Depends on UserPool for ID reference
+    Type: 'AWS::Cognito::UserPoolClient'
+    Properties:
+      ClientName: cognito_app_clientWeb
+
+      ReadAttributes: ['email', 'family_name', 'given_name']
+      WriteAttributes: ['email', 'family_name', 'given_name']
+
+      RefreshTokenValidity: 30
+      UserPoolId: !Ref UserPool
+    DependsOn: UserPool
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName:
+        !Join ['', [!Ref 'AWS::StackName', '-', 'cognito-identitypool']]
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClientWeb
+          ProviderName: !GetAtt UserPool.ProviderName
+      AllowUnauthenticatedIdentities: true
+  # Create a role for unauthorized access to ddb scan.
+  CognitoUnAuthorizedRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': unauthenticated
+      Policies:
+        - PolicyName: 'CognitoUnauthorizedPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:Scan'
+                Resource: !GetAtt UserServerTable.Arn
+  # Create a role for authorized access to AWS resources.
+  CognitoAuthorizedRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': authenticated
+  IdentityPoolRoleMap:
+    # Created to map Auth and Unauth roles to the identity pool
+    # Depends on Identity Pool for ID ref
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
+        authenticated: !GetAtt CognitoAuthorizedRole.Arn
   ApiGatewayAccountSettings:
     Type: AWS::ApiGateway::Account
     Properties:
       CloudWatchRoleArn: !GetAtt ApiGatewayLogRole.Arn
+
   # Lambdas
   PublishToSnsLambda:
     Type: AWS::Serverless::Function
