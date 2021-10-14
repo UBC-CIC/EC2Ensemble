@@ -12,7 +12,7 @@ frontend:
         - yarn install
     build:
       commands:
-        - export REACT_APP_USERSERVERTABLENAME=$(aws ssm get-parameter --name UserServerTableName --query Parameter.Value --output text)
+        - export REACT_APP_USERSERVERTABLENAME=$(aws ssm get-parameter --name /amplify/UserServerTableName --query Parameter.Value --output text)
         - export REACT_APP_USERPOOLID=$(aws ssm get-parameter --name Cognito-UserPoolId --query Parameter.Value --output text)
         - export REACT_APP_USERPOOLCLIENTWEBID=$(aws ssm get-parameter --name Cognito-UserPoolClientWebId --query Parameter.Value --output text)
         - export REACT_APP_IDENTITYPOOLID=$(aws ssm get-parameter --name Cognito-IdentityPoolId --query Parameter.Value --output text)
