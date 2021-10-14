@@ -5,201 +5,13 @@ Description: 'CloudFormation Template for instantiating Jacktrip servers in AWS'
 Globals:
   Function:
     Runtime: nodejs14.x
+
 Parameters:
-  # Need websocket endpoint parameter too and state machine role
-  CentralRegion:
+  ContactWebSocketFunctionName:
     Type: String
-    Default: ca-central-1
-  UserServerTableName:
-    Type: String
-  WebSocketTableName:
-    Type: String
-  WebSocketApiId:
-    Type: String
-  SourceCodeBucket:
-    Type: String
-    Default: jacktriptestsourcebucket
-  CopyZipsRoleArn:
-    Type: String
-  JacktripStateMachineRoleArn:
-    Type: String
-  CodeObjectKeyPrefix:
-    Type: String
-    AllowedPattern: ^[0-9a-zA-Z-/]*$
-    Default: jacktrip
-  SnsTopicArn:
-    Type: String
-  Nonce:
-    Description: Change this string when code is updated.
-    Type: String
-    Default: 'Test'
 
 Resources:
-  # Lambdas
-  CreateServerLambda:
-    Type: AWS::Serverless::Function
-    DependsOn: CopyZips
-    Properties:
-      CodeUri:
-        Bucket: !Ref LambdaZipsBucket
-        Key: !Sub '${CodeObjectKeyPrefix}functions/createServer.zip'
-      Handler: createServer.handler
-      Timeout: 10
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - ec2:RunInstances
-                - ec2:CreateTags
-                - ssm:GetParameter
-              Resource: '*'
-            - Effect: Allow
-              Action:
-                - iam:PassRole
-              Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/*'
-      Environment:
-        Variables:
-          ec2SecurityGroup: !GetAtt JacktripEC2SecurityGroup.GroupId
-          subnetId: !Ref PublicSubnet
-
-  TerminateServerLambda:
-    Type: AWS::Serverless::Function
-    DependsOn: CopyZips
-    Properties:
-      CodeUri:
-        Bucket: !Ref LambdaZipsBucket
-        Key: !Sub '${CodeObjectKeyPrefix}functions/terminateServer.zip'
-      Handler: terminateServer.handler
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - ec2:TerminateInstances
-              Resource: '*'
-
-  GetServerStatusLambda:
-    Type: AWS::Serverless::Function
-    DependsOn: CopyZips
-    Properties:
-      CodeUri:
-        Bucket: !Ref LambdaZipsBucket
-        Key: !Sub '${CodeObjectKeyPrefix}functions/getServerStatus.zip'
-      Handler: getServerStatus.handler
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - ec2:DescribeInstances
-              Resource: '*'
-        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
-
-  HandleFailLambda:
-    Type: AWS::Serverless::Function
-    DependsOn: CopyZips
-    Properties:
-      CodeUri:
-        Bucket: !Ref LambdaZipsBucket
-        Key: !Sub '${CodeObjectKeyPrefix}functions/handleFail.zip'
-      Handler: handleFail.handler
-      Environment:
-        Variables:
-          centralRegion: !Ref CentralRegion
-          userServerTableName: !Ref UserServerTableName
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:UpdateItem
-              Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${UserServerTableName}'
-
-  HandleSuccessLambda:
-    Type: AWS::Serverless::Function
-    DependsOn: CopyZips
-    Properties:
-      CodeUri:
-        Bucket: !Ref LambdaZipsBucket
-        Key: !Sub '${CodeObjectKeyPrefix}functions/handleSuccess.zip'
-      Handler: handleSuccess.handler
-      Environment:
-        Variables:
-          centralRegion: !Ref CentralRegion
-          userServerTableName: !Ref UserServerTableName
-      Policies:
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:UpdateItem
-              Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${UserServerTableName}'
-
-  RunJacktripLambda:
-    Type: AWS::Serverless::Function
-    DependsOn: CopyZips
-    Properties:
-      CodeUri:
-        Bucket: !Ref LambdaZipsBucket
-        Key: !Sub '${CodeObjectKeyPrefix}functions/runJacktrip.zip'
-      Timeout: 120
-      Handler: runJacktrip.handler
-      Environment:
-        Variables:
-          commandName: !Ref RunJacktripDocument
-      Policies:
-        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
-
-  ContactWebSocketLambda:
-    Type: AWS::Serverless::Function
-    DependsOn: CopyZips
-    Properties:
-      CodeUri:
-        Bucket: !Ref LambdaZipsBucket
-        Key: !Sub '${CodeObjectKeyPrefix}functions/contactWebSocket.zip'
-      Handler: contactWebSocket.handler
-      Environment:
-        Variables:
-          connectionTableName: !Ref WebSocketTableName
-          centralRegion: !Ref CentralRegion
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - 'execute-api:ManageConnections'
-              Resource:
-                - !Sub 'arn:aws:execute-api:${CentralRegion}:${AWS::AccountId}:${WebSocketApiId}/*'
-        - Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:Query
-              Resource: !Sub 'arn:${AWS::Partition}:dynamodb:${CentralRegion}:${AWS::AccountId}:table/${WebSocketTableName}/*'
-
-  SqsConsumerLambda:
-    Type: AWS::Serverless::Function
-    DependsOn: CopyZips
-    Properties:
-      CodeUri:
-        Bucket: !Ref LambdaZipsBucket
-        Key: !Sub '${CodeObjectKeyPrefix}functions/sqsConsumer.zip'
-      Handler: sqsConsumer.handler
-      Events:
-        SqsEvent:
-          Type: SQS
-          Properties:
-            Enabled: true
-            Queue: !GetAtt MessageQueue.Arn
-          BatchSize: 5
-      Environment:
-        Variables:
-          stateMachineArn: !Ref RegionalStateMachine
-      Policies:
-        - StepFunctionsExecutionPolicy:
-            StateMachineName: !GetAtt RegionalStateMachine.Name
-
-  JacktripEC2SecurityGroup:
+  EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security Group for all EC2 instances running Jacktrip
@@ -225,7 +37,7 @@ Resources:
   RegionalVpc:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 10.1.0.0/16
+      CidrBlock: 172.18.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
@@ -272,145 +84,6 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet
 
-  # SNS Subscription and SQS
-  SqsSnsSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      TopicArn: !Ref SnsTopicArn
-      Protocol: sqs
-      Endpoint: !GetAtt MessageQueue.Arn
-      Region: !Ref CentralRegion
-      FilterPolicy:
-        region:
-          - !Ref AWS::Region
-
-  MessageQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      FifoQueue: true
-      QueueName: MessageQueue123.fifo
-
-  MessageQueuePolicy:
-    Type: AWS::SQS::QueuePolicy
-    Properties:
-      Queues:
-        - !Ref MessageQueue
-      PolicyDocument: # include in JSON format
-        Statement:
-          - Effect: Allow
-            Action:
-              - sqs:SendMessage
-            Principal:
-              Service: sns.amazonaws.com
-            Resource: !GetAtt MessageQueue.Arn
-
-  # Step Functions
-  RegionalStateMachine:
-    Type: AWS::Serverless::StateMachine
-    Properties:
-      Definition:
-        StartAt: EvaluateEventType
-        States:
-          EvaluateEventType:
-            Type: Choice
-            Comment: Evaluate and route the event types
-            Choices:
-              - Variable: $.action
-                StringEquals: create
-                Next: CreateServer
-              - Variable: $.action
-                StringEquals: terminate
-                Next: TerminateServer
-              - Or:
-                  - Variable: $.action
-                    StringEquals: param_change
-                  - Variable: $.action
-                    StringEquals: restart_jacktrip
-                Next: RunJacktrip
-          CreateServer:
-            Type: Task
-            Comment: Create Jacktrip Server
-            Resource: ${CreateServerFunctionArn}
-            ResultPath: $.instanceId
-            Next: WaitCreate
-            Catch:
-              - ErrorEquals:
-                  - States.ALL
-                ResultPath: $.errorInfo
-                Next: HandleFail
-          RunJacktrip:
-            Type: Task
-            Comment: Run SSM document to run Jacktrip on the instance
-            Resource: ${RunJacktripFunctionArn}
-            Next: HandleSuccess
-            ResultPath: null
-          TerminateServer:
-            Type: Task
-            Comment: Terminate Jacktrip Server
-            Resource: ${TerminateServerFunctionArn}
-            ResultPath: $.taskResult
-            Catch:
-              - ErrorEquals:
-                  - States.ALL
-                ResultPath: $.errorInfo
-                Next: HandleFail
-            Next: HandleSuccess
-          WaitCreate:
-            Type: Wait
-            SecondsPath: $.waitTime
-            Next: GetServerStatus
-          GetServerStatus:
-            Type: Task
-            Comment: Check if instance is running
-            Resource: ${GetServerStatusFunctionArn}
-            ResultPath: $.getStatusResult
-            Next: InstanceRunning?
-          InstanceRunning?:
-            Type: Choice
-            Choices:
-              - Variable: $.getStatusResult.status
-                StringEquals: pending
-                Next: WaitCreate
-              - Variable: $.getStatusResult.status
-                StringEquals: running
-                Next: RunJacktrip
-          HandleFail:
-            Type: Task
-            Comment: Cleanup routine after failure
-            Resource: ${HandleFailFunctionArn}
-            ResultPath: $.webSocketMessage
-            Next: ContactWebSocket
-          HandleSuccess:
-            Type: Task
-            Comment: Routine after successful flow
-            Resource: ${HandleSuccessFunctionArn}
-            ResultPath: $.webSocketMessage
-            Next: ContactWebSocket
-          ContactWebSocket:
-            Type: Task
-            Resource: ${ContactWebSocketFunctionArn}
-            End: true
-      DefinitionSubstitutions:
-        CreateServerFunctionArn: !GetAtt CreateServerLambda.Arn
-        TerminateServerFunctionArn: !GetAtt TerminateServerLambda.Arn
-        GetServerStatusFunctionArn: !GetAtt GetServerStatusLambda.Arn
-        HandleFailFunctionArn: !GetAtt HandleFailLambda.Arn
-        HandleSuccessFunctionArn: !GetAtt HandleSuccessLambda.Arn
-        ContactWebSocketFunctionArn: !GetAtt ContactWebSocketLambda.Arn
-        RunJacktripFunctionArn: !GetAtt RunJacktripLambda.Arn
-      Logging:
-        Level: ALL
-        IncludeExecutionData: true
-        Destinations:
-          - CloudWatchLogsLogGroup:
-              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
-      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/JacktripStateMachineRole
-  StateMachineLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub '${AWS::StackName}-StateMachine-LogGroup-${AWS::Region}'
-      RetentionInDays: 30
-
   RunJacktripDocument:
     Type: AWS::SSM::Document
     Properties:
@@ -437,88 +110,30 @@ Resources:
       DocumentType: Command
 
   # SSM Parameter
+  SubnetIdSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripSubnetId
+      Type: String
+      Value: !Ref PublicSubnet
+
+  SecurityGroupIdSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripSecurityGroupId
+      Type: String
+      Value: !Ref EC2SecurityGroup
+
+  DocumentNameSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: JacktripDocumentName
+      Type: String
+      Value: !Ref RunJacktripDocument
+
   ContactWebsocketLambdaSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: !Sub ${AWS::StackName}-ContactWebSocketFunctionName
+      Name: ContactWebSocketFunctionName
       Type: String
-      Value: !Ref ContactWebSocketLambda
-
-  # Copy Zips - https://aws.amazon.com/blogs/infrastructure-and-automation/deploying-aws-lambda-functions-using-aws-cloudformation-the-portable-way/
-  LambdaZipsBucket:
-    Type: AWS::S3::Bucket
-  CopyZips:
-    Type: Custom::CopyZips
-    Properties:
-      Nonce: !Ref Nonce
-      ServiceToken: !GetAtt 'CopyZipsFunction.Arn'
-      DestBucket: !Ref 'LambdaZipsBucket'
-      SourceBucket: !Ref SourceCodeBucket
-      Prefix: !Ref 'CodeObjectKeyPrefix'
-      Objects:
-        - functions/createServer.zip
-        - functions/terminateServer.zip
-        - functions/sqsConsumer.zip
-        - functions/contactWebSocket.zip
-        - functions/handleSuccess.zip
-        - functions/handleFail.zip
-        - functions/getServerStatus.zip
-        - functions/runJacktrip.zip
-  CopyZipsFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Description: Copies objects from a source S3 bucket to a destination
-      Handler: index.handler
-      Runtime: python3.7
-      Role: !Ref 'CopyZipsRoleArn'
-      Timeout: 240
-      Code:
-        ZipFile: |
-          import json
-          import logging
-          import threading
-          import boto3
-          import cfnresponse
-          def copy_objects(source_bucket, dest_bucket, prefix, objects):
-              s3 = boto3.client('s3')
-              for o in objects:
-                  key = prefix + o
-                  copy_source = {
-                      'Bucket': source_bucket,
-                      'Key': key
-                  }
-                  print(('copy_source: %s' % copy_source))
-                  print(('dest_bucket = %s'%dest_bucket))
-                  print(('key = %s' %key))
-                  s3.copy_object(CopySource=copy_source, Bucket=dest_bucket,
-                        Key=key)
-          def delete_objects(bucket, prefix, objects):
-              s3 = boto3.client('s3')
-              objects = {'Objects': [{'Key': prefix + o} for o in objects]}
-              s3.delete_objects(Bucket=bucket, Delete=objects)
-          def timeout(event, context):
-              logging.error('Execution is about to time out, sending failure response to CloudFormation')
-              cfnresponse.send(event, context, cfnresponse.FAILED, {}, None)
-          def handler(event, context):
-              # make sure we send a failure to CloudFormation if the function
-              # is going to timeout
-              timer = threading.Timer((context.get_remaining_time_in_millis()
-                        / 1000.00) - 0.5, timeout, args=[event, context])
-              timer.start()
-              print(('Received event: %s' % json.dumps(event)))
-              status = cfnresponse.SUCCESS
-              try:
-                  source_bucket = event['ResourceProperties']['SourceBucket']
-                  dest_bucket = event['ResourceProperties']['DestBucket']
-                  prefix = event['ResourceProperties']['Prefix']
-                  objects = event['ResourceProperties']['Objects']
-                  if event['RequestType'] == 'Delete':
-                      delete_objects(dest_bucket, prefix, objects)
-                  else:
-                      copy_objects(source_bucket, dest_bucket, prefix, objects)
-              except Exception as e:
-                  logging.error('Exception: %s' % e, exc_info=True)
-                  status = cfnresponse.FAILED
-              finally:
-                  timer.cancel()
-                  cfnresponse.send(event, context, status, {}, None)
+      Value: !Ref ContactWebSocketFunctionName

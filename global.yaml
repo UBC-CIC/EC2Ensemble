@@ -8,7 +8,7 @@ Globals:
   Api:
     Cors:
       AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
-      AllowOrigin: !Sub "'${WebAppUrl}'"
+      AllowOrigin: !Join ['', ["'", !Ref WebAppUrl, "'"]]
       AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
       AllowCredentials: true
     Auth:
@@ -17,171 +17,165 @@ Globals:
       Authorizers:
         JacktripGlobalCognitoAuthorizer:
           UserPoolArn:
-            # - !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/ca-central-1_20ArNefjM'
             - !GetAtt UserPool.Arn
 
 Parameters:
   WebAppUrl:
     Type: String
+  ExecutionRoleName:
+    Type: String
+    Default: stacksets-execSubAccount-173513177120
+  StackSetTemplateUrl:
+    Type: String
+  DeployedRegion:
+    Type: CommaDelimitedList
+    Default: ca-central-1, us-west-2
 
 Resources:
   ApiGatewayAccountSettings:
     Type: AWS::ApiGateway::Account
     Properties:
       CloudWatchRoleArn: !GetAtt ApiGatewayLogRole.Arn
-  
+
   # Cognito Roles
   # BEGIN USER POOL RESOURCES
   UserPool:
-  # Created upon user selection
+    # Created upon user selection
     Type: AWS::Cognito::UserPool
     UpdateReplacePolicy: Retain
     Properties:
-      UserPoolName: !Join ['',[ !Ref 'AWS::StackName', '-', 'cognito-userpool']]
+      UserPoolName: !Join ['', [!Ref 'AWS::StackName', '-', 'cognito-userpool']]
       UsernameConfiguration:
         CaseSensitive: false
       Schema:
-        -
-          Name: email
+        - Name: email
           Required: true
           Mutable: true
-        -
-          Name: family_name
+        - Name: family_name
           Required: true
           Mutable: true
-        -
-          Name: given_name
+        - Name: given_name
           Required: true
           Mutable: true
-      
-      AutoVerifiedAttributes: 
+
+      AutoVerifiedAttributes:
         - email
-      EmailVerificationMessage: "Your verification code is {####}"
-      EmailVerificationSubject: "Your verification code for PCMA-CIC"
-      
+      EmailVerificationMessage: 'Your verification code is {####}'
+      EmailVerificationSubject: 'Your verification code for PCMA-CIC'
+
       Policies:
         PasswordPolicy:
-          MinimumLength: "8"
+          MinimumLength: 8
           RequireLowercase: true
           RequireNumbers: true
           RequireSymbols: true
           RequireUppercase: true
-      
-      UsernameAttributes: 
+
+      UsernameAttributes:
         - email
-      
-      MfaConfiguration: "OFF"
+
+      MfaConfiguration: 'OFF'
   UserPoolClientWeb:
-  # Created provide application access to user pool
-  # Depends on UserPool for ID reference
-    Type: "AWS::Cognito::UserPoolClient"
+    # Created provide application access to user pool
+    # Depends on UserPool for ID reference
+    Type: 'AWS::Cognito::UserPoolClient'
     Properties:
       ClientName: cognito_app_clientWeb
-      
-      ReadAttributes: [
-        "email",
-        "family_name",
-        "given_name"
-      ]
-      WriteAttributes: [
-        "email",
-        "family_name",
-        "given_name"
-      ]
-      
+
+      ReadAttributes: ['email', 'family_name', 'given_name']
+      WriteAttributes: ['email', 'family_name', 'given_name']
+
       RefreshTokenValidity: 30
       UserPoolId: !Ref UserPool
-    DependsOn: UserPool
   IdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
-      IdentityPoolName: !Join ['',[ !Ref 'AWS::StackName', '-', 'cognito-identitypool']]
+      IdentityPoolName:
+        !Join ['', [!Ref 'AWS::StackName', '-', 'cognito-identitypool']]
       CognitoIdentityProviders:
-        - ClientId:  !Ref UserPoolClientWeb
+        - ClientId: !Ref UserPoolClientWeb
           ProviderName: !GetAtt UserPool.ProviderName
       AllowUnauthenticatedIdentities: true
   # Create a role for unauthorized access to ddb scan.
   CognitoUnAuthorizedRole:
-    Type: "AWS::IAM::Role"
+    Type: 'AWS::IAM::Role'
     Properties:
-      AssumeRolePolicyDocument: 
-        Version: "2012-10-17"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
-            Principal: 
-              Federated: "cognito-identity.amazonaws.com"
-            Action: 
-              - "sts:AssumeRoleWithWebIdentity"
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
             Condition:
-              StringEquals: 
-                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
-              "ForAnyValue:StringLike":
-                  "cognito-identity.amazonaws.com:amr": unauthenticated
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': unauthenticated
       Policies:
-        - PolicyName: "CognitoUnauthorizedPolicy"
-          PolicyDocument: 
-            Version: "2012-10-17"
+        - PolicyName: 'CognitoUnauthorizedPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
                   - 'dynamodb:Scan'
-                Resource: !GetAtt UserServerTable.Arn  
+                Resource: !GetAtt UserServerTable.Arn
   # Create a role for authorized access to AWS resources.
   CognitoAuthorizedRole:
-    Type: "AWS::IAM::Role"
+    Type: 'AWS::IAM::Role'
     Properties:
-      AssumeRolePolicyDocument: 
-        Version: "2012-10-17"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
         Statement:
-          - Effect: "Allow"
-            Principal: 
-              Federated: "cognito-identity.amazonaws.com"
-            Action: 
-              - "sts:AssumeRoleWithWebIdentity"
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
             Condition:
-              StringEquals: 
-                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
-              "ForAnyValue:StringLike":
-                "cognito-identity.amazonaws.com:amr": authenticated
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': authenticated
   IdentityPoolRoleMap:
-  # Created to map Auth and Unauth roles to the identity pool
-  # Depends on Identity Pool for ID ref
+    # Created to map Auth and Unauth roles to the identity pool
+    # Depends on Identity Pool for ID ref
     Type: AWS::Cognito::IdentityPoolRoleAttachment
     Properties:
       IdentityPoolId: !Ref IdentityPool
       Roles:
-          unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
-          authenticated: !GetAtt CognitoAuthorizedRole.Arn
-    DependsOn: IdentityPool
-
+        unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
+        authenticated: !GetAtt CognitoAuthorizedRole.Arn
 
   # Lambdas
-  PublishToSnsFunction:
+  ActionHandlerLambda:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./backend/functions/global/publishToSns
-      Handler: publishToSns.handler
+      CodeUri: ./backend/functions/global/actionHandler
+      Handler: actionHandler.handler
       Events:
         ApiEvent:
           Type: Api
           Properties:
             Method: post
-            Path: /publishsns
+            Path: /actions
             RequestParameters:
               - method.request.header.Authorization:
                   Required: true
       Policies:
-        - SNSPublishMessagePolicy:
-            TopicName: !GetAtt JacktripSnsTopic.TopicName
         - DynamoDBCrudPolicy:
             TableName: !Ref UserServerTable
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt StateMachine.Name
       Environment:
         Variables:
-          snsTopicArn: !Ref JacktripSnsTopic
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
+          stateMachineArn: !Ref StateMachine
 
-  GetUserServer:
+  GetUserServerLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/getUserServer
@@ -205,7 +199,7 @@ Resources:
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
 
-  DeleteRoom:
+  DeleteRoomLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/deleteRoom
@@ -229,7 +223,7 @@ Resources:
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
 
-  CreateExternalRoom:
+  CreateExternalRoomLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/createExternalRoom
@@ -248,7 +242,7 @@ Resources:
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
 
-  UpdateExternalRoom:
+  UpdateExternalRoomLambda:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./backend/functions/global/updateExternalRoom
@@ -271,6 +265,146 @@ Resources:
         Variables:
           userServerTableName: !Ref UserServerTable
           corsOriginUrl: !Ref WebAppUrl
+
+  # Lambdas (Step Functions)
+  CreateServerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/createServer
+      Handler: createServer.handler
+      Timeout: 10
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:RunInstances
+                - ec2:CreateTags
+                - ssm:GetParameter
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/*'
+      Environment:
+        Variables:
+          instanceProfileName: !Ref EC2InstanceProfile
+
+  TerminateServerLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/terminateServer
+      Handler: terminateServer.handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:TerminateInstances
+              Resource: '*'
+
+  GetServerStatusLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/getServerStatus
+      Handler: getServerStatus.handler
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:DescribeInstances
+              Resource: '*'
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+
+  HandleFailLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/handleFail
+      Handler: handleFail.handler
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:UpdateItem
+              Resource: !GetAtt UserServerTable.Arn
+
+  HandleSuccessLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/handleSuccess
+      Handler: handleSuccess.handler
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:UpdateItem
+              Resource: !GetAtt UserServerTable.Arn
+
+  RunJacktripLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 120
+      CodeUri: ./backend/functions/regional/runJacktrip
+      Handler: runJacktrip.handler
+      Policies:
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+
+  ContactWebSocketLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./backend/functions/regional/contactWebSocket
+      Handler: contactWebSocket.handler
+      Environment:
+        Variables:
+          connectionTableName: !Ref WebSocketConnectionsTable
+          apiEndpoint: !Sub '${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*'
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:Query
+              Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${WebSocketConnectionsTable}/*'
+
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: ./backend/state_machine/state_machine.asl.json
+      DefinitionSubstitutions:
+        CreateServerFunctionArn: !GetAtt CreateServerLambda.Arn
+        TerminateServerFunctionArn: !GetAtt TerminateServerLambda.Arn
+        GetServerStatusFunctionArn: !GetAtt GetServerStatusLambda.Arn
+        HandleFailFunctionArn: !GetAtt HandleFailLambda.Arn
+        HandleSuccessFunctionArn: !GetAtt HandleSuccessLambda.Arn
+        ContactWebSocketFunctionArn: !GetAtt ContactWebSocketLambda.Arn
+        RunJacktripFunctionArn: !GetAtt RunJacktripLambda.Arn
+      Logging:
+        Level: ALL
+        IncludeExecutionData: true
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+      Role: !GetAtt StateMachineRole.Arn
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${AWS::StackName}-StateMachineLogGroup'
+      RetentionInDays: 30
 
   # DynamoDB
   UserServerTable:
@@ -342,8 +476,8 @@ Resources:
       Environment:
         Variables:
           aud: !Ref UserPoolClientWeb
-          region: !Ref AWS::Region
           userPoolId: !Ref UserPool
+          region: !Ref AWS::Region
   WebSocketAuthorizerFunctionPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -506,20 +640,10 @@ Resources:
         - - 'integrations'
           - !Ref OnHeartbeatIntegration
 
-  # SNS
-  JacktripSnsTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      DisplayName: JacktripSnsTopic
-      FifoTopic: true
-      ContentBasedDeduplication: true
-      TopicName: JacktripSnsTopic.fifo
-
   # IAM Roles
-  JacktripStateMachineRole:
+  StateMachineRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: JacktripStateMachineRole
       Description: Role used by the Step Functions State Machine
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -529,7 +653,7 @@ Resources:
               Service: states.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: JacktripStateMachineInvokeLambda
+        - PolicyName: !Sub ${AWS::StackName}-StateMachineInvokeLambda
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -537,7 +661,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:jacktrip*
+                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:*
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
 
@@ -554,7 +678,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
 
-  JacktripEC2InstanceRole:
+  EC2InstanceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -574,7 +698,7 @@ Resources:
                   - lambda:InvokeFunction
                   - lambda:ListFunctions
                 Resource:
-                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:jacktrip-regional-resources*
+                  - Fn::Sub: arn:*:lambda:*:${AWS::AccountId}:function:*
         - PolicyName: Ec2DescribeTags
           PolicyDocument:
             Version: '2012-10-17'
@@ -586,13 +710,32 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
-  JacktripEC2InstanceProfile:
+  EC2InstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:
-      InstanceProfileName: JacktripEC2InstanceProfile
+      InstanceProfileName: !Sub ${AWS::StackName}-EC2InstanceProfile
       Path: /
       Roles:
-        - !Ref JacktripEC2InstanceRole
+        - !Ref EC2InstanceRole
+
+  JacktripRegionalStackSet:
+    Type: 'AWS::CloudFormation::StackSet'
+    Properties:
+      StackSetName: !Sub ${AWS::StackName}-RegionalStackSet
+      ExecutionRoleName: !Ref ExecutionRoleName
+      PermissionModel: SELF_MANAGED
+      TemplateURL: !Ref StackSetTemplateUrl
+      Capabilities:
+        - CAPABILITY_NAMED_IAM
+        - CAPABILITY_AUTO_EXPAND
+      Parameters:
+        - ParameterKey: ContactWebSocketFunctionName
+          ParameterValue: !Ref ContactWebSocketLambda
+      StackInstancesGroup:
+        - Regions: !Ref DeployedRegion
+          DeploymentTargets:
+            Accounts:
+              - !Ref AWS::AccountId
 
   # SSM Parameter
   SSMParamUserServerTableName:
@@ -641,26 +784,23 @@ Resources:
     Properties:
       Name: ActionHandlerURL
       Type: String
-      Value: 
+      Value:
         !Join [
           '',
           [
             'https://',
-            !Ref PublishToSnsFunction,
+            !Ref ServerlessRestApi,
             '.execute-api.',
             !Ref 'AWS::Region',
             '.amazonaws.com/',
-            !Ref 'Stage',
+            Prod,
           ],
         ]
 
 Outputs:
   StateMachineRoleArn:
     Description: Arn for the Jacktrip State Machine
-    Value: !GetAtt JacktripStateMachineRole.Arn
-  SnsTopicArn:
-    Description: Arn for the Jacktrip State Machine
-    Value: !Ref JacktripSnsTopic
+    Value: !GetAtt StateMachineRole.Arn
   WebSocketURL:
     Description: 'The WSS Protocol URL to connect to'
     Value:
@@ -675,12 +815,3 @@ Outputs:
           !Ref 'Stage',
         ],
       ]
-  UserPoolId:
-    Description:  Id for the user pool
-    Value: !Ref UserPool
-  AppClientIDWeb:
-    Description: The user pool app client id for web
-    Value: !Ref UserPoolClientWeb
-  IdentityPoolId:
-    Description:  Id for the user pool
-    Value: !Ref IdentityPool
