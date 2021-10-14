@@ -22,6 +22,7 @@ Globals:
 Parameters:
   WebAppUrl:
     Type: String
+    Default: 'http://localhost:3000'
   ExecutionRoleName:
     Type: String
     Default: stacksets-execSubAccount-173513177120
@@ -741,7 +742,7 @@ Resources:
   SSMParamUserServerTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: UserServerTableName
+      Name: /amplify/UserServerTableName
       Type: String
       Value: !Ref UserServerTable
   SSMParamUserPoolId:
