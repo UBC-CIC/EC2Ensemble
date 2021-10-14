@@ -75,7 +75,7 @@ For the rest of the options above you can press ENTER and use the default value.
 
 ## Frontend Deployment
 
-## Requirements
+### Requirements
 
 Before you deploy, you must have the following in place:
 
@@ -84,7 +84,7 @@ Before you deploy, you must have the following in place:
 -   [Node 10 or greater](https://nodejs.org/en/download/)
 -   [Amplify CLI 4.13.1 or greater installed and configured](https://aws-amplify.github.io/docs/cli-toolchain/quickstart#quickstart)
 
-## Steps
+### Steps
 
 In this step we will use the Amplify console to deploy and build the front-end application automatically.
 
@@ -95,9 +95,10 @@ In this step we will use the Amplify console to deploy and build the front-end a
 3. Select your AWS service role in the dropdown. If you don't have one configured, Select 'Create new role' and quickly create one using the default settings.
 4. Click Save and Deploy, and wait for deployment to complete in the Amplify console. This may take some time to complete.
 
-## Logging in
+### Logging in
 
 Cognito is used for user authentication. Users will need to input their email address and a password to create an account.
 After account creation, users will need to verify their account by inputting the 6-digit verification code that was sent to their provided email address before being able to log in to the system.
 
+## Last Step
 Redeploy backend with WebAppUrl after frontend deployment
