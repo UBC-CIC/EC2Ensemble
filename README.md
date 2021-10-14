@@ -35,17 +35,25 @@ sources, and persist them into:
 
 <h6 align="center">Application Login Page</h6>
 
+---
+
 ![home page](./docs/images/main_page.png)
 
 <h6 align="center">Main Page after the user logged in</h6>
+
+---
 
 ![home page](./docs/images/create_aws_room.png)
 
 <h6 align="center">Entering details to create a room on the AWS server</h6>
 
+---
+
 ![home page](./docs/images/aws_room_in_creation.png)
 
 <h6 align="center">Room in creation status</h6>
+
+---
 
 ![home page](./docs/images/aws_room_success.png)
 
@@ -62,17 +70,25 @@ Once a room is successfully created, you can either (from right to left)
 
 5. Share: a link which other guest users can access to see the information and status of the room.
 
+---
+
 ![home page](./docs/images/create_external_room.png)
 
 <h6 align="center">Creating a room with a Jacktrip Server IP Address</h6>
+
+---
 
 ![home page](./docs/images/external_room_success.png)
 
 <h6 align="center">Successfully adding an external room into the database</h6>
 
+---
+
 ![home page](./docs/images/share_room_dialog.png)
 
 <h6 align="center">A link to share with other people to view the information of the specific room</h6>
+
+---
 
 ![home page](./docs/images/shared_room.png)
 
