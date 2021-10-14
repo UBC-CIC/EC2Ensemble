@@ -3,7 +3,7 @@ const jwkToPem = require('jwk-to-pem');
 const fetch = require('node-fetch');
 
 
-const region = process.env.centralRegion;
+const region = process.env.region;
 const userPoolId = process.env.userPoolId;
 const aud = process.env.aud;
 // https://aws.amazon.com/premiumsupport/knowledge-center/decode-verify-cognito-json-token/

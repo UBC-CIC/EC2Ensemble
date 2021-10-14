@@ -1,11 +1,10 @@
 const AWS = require('aws-sdk');
 
-const ddb = new AWS.DynamoDB.DocumentClient({
-	region: process.env.centralRegion,
-});
+const ddb = new AWS.DynamoDB.DocumentClient();
 exports.handler = async (event) => {
 	console.log(event);
 	console.log(event.errorInfo);
+
 	const params = {
 		TableName: process.env.userServerTableName,
 		Key: {
