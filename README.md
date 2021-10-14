@@ -12,6 +12,8 @@ sources, and persist them into:
 
 -   [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) - for viewing all content from a certain data source
 
+and passes updates of the room, including room status, ip address, and number of user connections to the room server, through the [WebSocket Api](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html/)'s messsaging protocol.
+
 ## Table of Contents
 
 | Index                                               | Description                                    |
@@ -31,31 +33,31 @@ sources, and persist them into:
 
 ## Application Screenshots
 
-![login page](./docs/images/login_page.png)
+![login page](./docs/images/readme/login_page.png)
 
 <h6 align="center">Application Login Page</h6>
 
 ---
 
-![home page](./docs/images/main_page.png)
+![home page](./docs/images/readme/main_page_with_rooms.png)
 
-<h6 align="center">Main Page after the user logged in</h6>
+<h6 align="center">Main Page after the user logged in with rooms already created</h6>
 
 ---
 
-![home page](./docs/images/create_aws_room.png)
+![home page](./docs/images/readme/create_aws_room.png)
 
 <h6 align="center">Entering details to create a room on the AWS server</h6>
 
 ---
 
-![home page](./docs/images/aws_room_in_creation.png)
+![home page](./docs/images/readme/aws_room_in_creation.png)
 
 <h6 align="center">Room in creation status</h6>
 
 ---
 
-![home page](./docs/images/aws_room_success.png)
+![home page](./docs/images/readme/aws_room_success.png)
 
 <h6 align="center">Status update when the room is successfully created</h6>
 Once a room is successfully created, you can either (from right to left)
@@ -72,25 +74,25 @@ Once a room is successfully created, you can either (from right to left)
 
 ---
 
-![home page](./docs/images/create_external_room.png)
+![home page](./docs/images/readme/create_external_room.png)
 
 <h6 align="center">Creating a room with a Jacktrip Server IP Address</h6>
 
 ---
 
-![home page](./docs/images/external_room_success.png)
+![home page](./docs/images/readme/external_room_success.png)
 
 <h6 align="center">Successfully adding an external room into the database</h6>
 
 ---
 
-![home page](./docs/images/share_room_dialog.png)
+![home page](./docs/images/readme/share_room_dialog.png)
 
 <h6 align="center">A link to share with other people to view the information of the specific room</h6>
 
 ---
 
-![home page](./docs/images/shared_room.png)
+![home page](./docs/images/readme/shared_room.png)
 
 <h6 align="center">A privately accessed page that shows the information of a specific room</h6>
 
