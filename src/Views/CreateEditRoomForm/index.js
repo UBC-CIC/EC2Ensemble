@@ -70,8 +70,19 @@ export default function CreateEditRoomForm(props) {
   const [recommendRegion, setRecommendRegion] = useState([]);
 
   useEffect(() => {
-    // if roomInfo is passed through
-    if (!!others.roomInfo) {
+    // when the form is opened time, calculate recommended region to set the server
+      (async () => {
+        const list = await recommendRegionList;
+        setRecommendRegion(list);
+        setRoomFormInfo({...roomFormInfo, region: list[0]})
+      })();
+  }, [])
+
+  useEffect(() => {
+    // when the form's is closed, reset the roomFormInfo state
+    if (!open) resetFormInfo()
+    else if (!!others.roomInfo) {
+      // if roomInfo is passed through
       setRoomFormInfo(
         {
           roomName: others.roomInfo.roomName,
@@ -85,16 +96,7 @@ export default function CreateEditRoomForm(props) {
         }
       )
     }
-    // when the form's is closed, reset the roomFormInfo state
-    if (!open) resetFormInfo()
-    // when the form is opened time, calculate recommended region to set the server
-    else {
-      (async () => {
-        const list = await recommendRegionList;
-        setRecommendRegion(list);
-      })();
-    }
-  }, [, open])
+  }, [open])
 
   const checkLatency = useCallback(async (regions)=> {
     return Promise.all(

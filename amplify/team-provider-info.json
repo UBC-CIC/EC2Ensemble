@@ -10,11 +10,6 @@
       "StackName": "amplify-pcmacic-dev-162425",
       "StackId": "arn:aws:cloudformation:ca-central-1:173513177120:stack/amplify-pcmacic-dev-162425/4d97f3c0-e368-11eb-9b62-06db240b6f9e",
       "AmplifyAppId": "d2kawdqa9vldkk"
-    },
-    "categories": {
-      "auth": {
-        "pcmacicauth": {}
-      }
     }
   }
 }

@@ -192,7 +192,7 @@ export const restartRoom = (user, region, serverId) => async (dispatch) => {
 };
 
 /* change room info */
-export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="param", bufFreqChange=false) => async (dispatch) => {
+export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="param", bufFreqChange=false, status=undefined) => async (dispatch) => {
 	const url = process.env.REACT_APP_AWS_API_BASE;
 	const dbURL=process.env.REACT_APP_AWS_USERDB_BASE;
 
@@ -251,7 +251,7 @@ export const changeRoomParams = (user, serverId, updatedRoomParams, updateType="
 				payload: {
 					...updatedRoomParams,
 					serverId: serverId,
-					status: (updatedRoomParams.type === 'AWS') && (bufFreqChange || updateType !== 'param') ? 'updating' : undefined
+					status: (updatedRoomParams.type === 'AWS') && (bufFreqChange || updateType !== 'param') ? 'updating' : status
 				},
 			});
 		})

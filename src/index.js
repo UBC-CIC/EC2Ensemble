@@ -10,7 +10,16 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import reducers from "./Reducers";
 
-Amplify.configure(awsExports);
+Amplify.configure({
+  ...awsExports,
+  Auth: {
+    mandatorySignIn: true,
+    region: awsExports.aws_project_region,
+    userPoolId: process.env.REACT_APP_USERPOOLID,
+    identityPoolId: process.env.REACT_APP_IDENTITYPOOLID,
+    userPoolWebClientId: process.env.REACT_APP_USERPOOLCLIENTWEBID
+  },
+});
 
 const store = createStore(
     reducers, applyMiddleware(thunk)

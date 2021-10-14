@@ -62,7 +62,9 @@ const useStyles = makeStyles((theme) => ({
     textAlign: 'center'
   },
   marginLeft: {
-    marginLeft: '16px'
+    [theme.breakpoints.down('xs')]: {
+      marginLeft: '16px'
+    }
   }
 }))
 
@@ -229,16 +231,16 @@ export default PublicRoom;
 // function to query room
 const getRoom = async (roomId) => {
   AWS.config.update({
-    region: awsExports.aws_cognito_region,
+    region: awsExports.aws_project_region,
     credentials: new AWS.CognitoIdentityCredentials({
-      IdentityPoolId: awsExports.aws_cognito_identity_pool_id,
+      IdentityPoolId: process.env.REACT_APP_IDENTITYPOOLID
     }),
   });
 
   const dynamodb = new AWS.DynamoDB.DocumentClient();
 
   let queryParams = {
-    TableName: 'jacktrip-global-UserServerTable-1CV4VPDXSCTB2',
+    TableName: process.env.REACT_APP_USERSERVERTABLENAME,
     FilterExpression: `#serverId = :serverId`,
     ExpressionAttributeNames: {
       "#serverId": "serverId",

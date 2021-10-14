@@ -78,7 +78,7 @@ export default function ShareRoomModal(props) {
     
     const body = (
         <div className={classes.paper}>
-            <h2 id="share-modal-title" className={classes.text}>Share Your Rooms</h2>
+            <h2 id="share-modal-title" className={classes.text}>Share Your Room</h2>
             <div id="share-modal-body">
                 { alert && setTimeout(() => {
                       handleAlertClose()

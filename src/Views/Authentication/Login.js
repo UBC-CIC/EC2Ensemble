@@ -122,6 +122,7 @@ function Login(props) {
     const [accountCreationEmailExistError, setAccountCreationEmailExistError] = useState(false);
     const [accountCreationPasswordError, setAccountCreationPasswordError] = useState(false);
     const [accountLoginError, setAccountLoginError] = useState(false);
+    const [accountLoginSuccess, setAccountLoginSuccess] = useState(false);
     const [verificationError, setVerificationError] = useState(false);
     const [newPasswordError, setNewPasswordError] = useState(false);
     const [newVerification, setNewVerification] = useState(false);
@@ -253,9 +254,12 @@ function Login(props) {
             setNewVerification(false);
             const {email, authCode} = formState;
             setLoading(true);
-            await Auth.confirmSignUp(email, authCode);
-            resetStates("signedIn");
-            setLoading(false);
+            await Auth.confirmSignUp(email, authCode)
+                .then((data) => {
+                    resetStates("signIn");
+                    setAccountLoginSuccess(true);
+                    setLoading(false);
+                })
         } catch (e) {
             setVerificationError(true);
             setLoading(false);
@@ -487,6 +491,7 @@ function Login(props) {
                             loginState === "signIn" && (
                                 <Grid>
                                     <BannerMessage type={"error"} typeCheck={accountLoginError}>Incorrect username or password.</BannerMessage>
+                                    <BannerMessage type={"success"} typeCheck={accountLoginSuccess}>Successfully create account. Please sign in.</BannerMessage>
                                     {/* username */}
                                     <TextFieldStartAdornment startIcon={<AlternateEmailIcon/>} placeholder={"Email"} name={"email"} type={"email"} onChange={onChange}/>
                                     {/* password */}
