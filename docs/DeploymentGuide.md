@@ -64,7 +64,7 @@ This is a screenshot of the parameters needed for the deployment.
 -   Stack Name: Put your desired stack name here
 -   AWS Region: Put the region where you want the solution to be deployed
 -   WebAppUrl: This should contain the URL to your web app (for CORS). Although since we are deploying the backend before the frontend, you can leave it empty for now.
--   StackSetTemplateUrl: Put the URL of the regional.yaml file you uploaded to S3 here.
+<!-- -   StackSetTemplateUrl: Put the URL of the regional.yaml file you uploaded to S3 here. -->
 -   DeployedRegion: Put the regions you want to deploy Jacktrip servers to. Write the regions separated by comma.
 -   ExecutionRoleName: If your StackSet execution role name is different from the default one, please insert it here, otherwise you can keep the default value.
 

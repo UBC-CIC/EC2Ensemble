@@ -2,28 +2,27 @@
 
 ## Project Overview
 
-This prototype aims to be a user-friendly web portal used to manage [Amazon EC2](https://aws.amazon.com/ec2) instances that is running [Jacktrip](https://ccrma.stanford.edu/software/jacktrip/) Hub Servers in multiple AWS regions.
+[Jacktrip](https://ccrma.stanford.edu/software/jacktrip/) is a command line program, used by musicians all over the world to collaborate with each other remotely through
+the internet. Other more commonly used Voice over Internet Protocol (VoIP) softwares, such as Zoom or WhatsApp, have a noticeable audio quality drop while using them. This is unwanted when trying to collaborate and perform music together. Jacktrip provides a solution by supporting bidirectional, high quality, uncompressed audio streaming with any number of channels, allowing musicians to perform together through the internet, while having superb audio quality and low latency.
 
-Users sign up using a secured login through [Amazon Cognito](https://aws.amazon.com/cognito/) into a [ReactJS](https://reactjs.org/)
-Progressive Web Application hosted via [AWS Amplify](https://aws.amazon.com/amplify/) (through desktop or mobile).
-
-The backend uses [AWS Lambda](https://aws.amazon.com/lambda/) functions to get data from various categorised data
-sources, and persist them into:
-
--   [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) - for viewing all content from a certain data source
-
-and passes updates of the room, including room status, ip address, and number of user connections to the room server, through the [WebSocket Api](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html/)'s messsaging protocol.
+However, creating Jacktrip servers is not an easy task, especially for musicians whom are usually less technologically literate. Thus, this prototype aims to be a
+user-friendly ReactJS web application, used to manage [Amazon EC2](https://aws.amazon.com/ec2) instances that is running
+Jacktrip Hub Servers in multiple AWS regions.
 
 ## Table of Contents
 
 | Index                                               | Description                                    |
 | :-------------------------------------------------- | :--------------------------------------------- |
-| [High Level Architecture](#high-level-architecture) | Examine the application architecture.          |
-| [Application Screenshots](#application-screenshots) | Check out the application's user interface.    |
-| [Stack Details](#stack-details)                     | Learn more about each stack of the application |
+| [Stack Overview](#stack-overview)                   | Examine the application architecture.          |
+| [High Level Architecture](#high-level-architecture) | Check out the application's user interface.    |
+| [Application Screenshots](#application-screenshots) | Learn more about each stack of the application |
 | [Deployment](#deployment)                           | Learn how to deploy this project yourself.     |
 | [Credits](#credits)                                 | Meet the team behind this                      |
 | [License](#license)                                 | License details.                               |
+
+## Stack Overview
+
+WIP
 
 ## High Level Architecture
 
