@@ -46,3 +46,25 @@ This is a screenshot of the parameters needed for the deployment.
 4) AMI STUFF
 
 ## Frontend Deployment
+
+## Requirements
+Before you deploy, you must have the following in place:
+*  [AWS Account](https://aws.amazon.com/account/) 
+*  [GitHub Account](https://github.com/) 
+*  [Node 10 or greater](https://nodejs.org/en/download/) 
+*  [Amplify CLI 4.13.1 or greater installed and configured](https://aws-amplify.github.io/docs/cli-toolchain/quickstart#quickstart) 
+
+## Steps
+In this step we will use the Amplify console to deploy and build the front-end application automatically. 
+
+[![One-click deployment](https://oneclick.amplifyapp.com/button.svg)](https://console.aws.amazon.com/amplify/home#/deploy?repo=https://github.com/UBC-CIC/pcma-cic/tree/master)
+
+1. Use the provided **1-click deployment** button below.
+2. Select **Connect to GitHub**, and then you will be asked to connect to your GitHub account. Amplify Console will fork this repository into your GitHub account before deploying.
+3. Select your AWS service role in the dropdown. If you don't have one configured, Select 'Create new role' and quickly create one using the default settings.
+4. Click Save and Deploy, and wait for deployment to complete in the Amplify console. This may take some time to complete.
+
+## Logging in
+
+Cognito is used for user authentication. Users will need to input their email address and a password to create an account.
+After account creation, users will need to verify their account by inputting the 6-digit verification code that was sent to their provided email address before being able to log in to the system.
