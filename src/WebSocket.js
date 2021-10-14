@@ -87,7 +87,7 @@ function WebSocketProvider (props) {
 
     // listening for error
     clientWebSocket.current.onerror = (error) => {
-        console.log("Error")
+        console.log("Error", error)
     }
   };
 
