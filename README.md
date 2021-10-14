@@ -31,7 +31,7 @@ sources, and persist them into:
 
 ## Application Screenshots
 
-![login page](./docs/LoginPage.png)
+![login page](./docs/login_page.png)
 
 <h6 align="center">Application Login Page</h6>
 
