@@ -27,7 +27,7 @@ and passes updates of the room, including room status, ip address, and number of
 
 ## High Level Architecture
 
-![alt text](docs/images/architecture_diagram.png)
+![alt text](docs/images/readme/architecture_diagram.png)
 
 <h6 align="center">Architecture Diagram</h6>
 

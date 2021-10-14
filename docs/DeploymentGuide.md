@@ -68,7 +68,7 @@ This is a screenshot of the parameters needed for the deployment.
 -   DeployedRegion: Put the regions you want to deploy Jacktrip servers to. Write the regions separated by comma.
 -   ExecutionRoleName: If your StackSet execution role name is different from the default one, please insert it here, otherwise you can keep the default value.
 
-![sam deploy 2](./images/sam_deploy2.png)  
+![sam deploy 2](./images/deployment/sam_deploy2.png)  
 For the rest of the options above you can press ENTER and use the default value.
 
 3. AMI STUFF
@@ -101,4 +101,5 @@ Cognito is used for user authentication. Users will need to input their email ad
 After account creation, users will need to verify their account by inputting the 6-digit verification code that was sent to their provided email address before being able to log in to the system.
 
 ## Last Step
+
 Redeploy backend with WebAppUrl after frontend deployment
