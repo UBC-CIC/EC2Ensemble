@@ -68,7 +68,7 @@ This is a screenshot of the parameters needed for the deployment.
 -   DeployedRegion: Put the regions you want to deploy Jacktrip servers to. Write the regions separated by comma.
 -   ExecutionRoleName: If your StackSet execution role name is different from the default one, please insert it here, otherwise you can keep the default value.
 
-![sam deploy 2](./sam_deploy2.png)  
+![sam deploy 2](./images/sam_deploy2.png)  
 For the rest of the options above you can press ENTER and use the default value.
 
 3. AMI STUFF

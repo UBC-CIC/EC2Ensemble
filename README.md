@@ -25,7 +25,7 @@ sources, and persist them into:
 
 ## High Level Architecture
 
-![alt text](docs/ArchitectureDiagram.png)
+![alt text](docs/images/architecture_diagram.png)
 
 <h6 align="center">Architecture Diagram</h6>
 
