@@ -72,6 +72,7 @@ export default function CreateEditRoomForm(props) {
   useEffect(() => {
     // when the form is opened time, calculate recommended region to set the server
       (async () => {
+        console.log(process.env.REACT_APP_REGION_SELECTION, process.env.REACT_APP_REGION_SELECTION.split(","), roomFormInfo.region)
         const list = await recommendRegionList;
         setRecommendRegion(list);
         setRoomFormInfo({...roomFormInfo, region: list[0]})
