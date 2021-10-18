@@ -72,7 +72,6 @@ export default function CreateEditRoomForm(props) {
   useEffect(() => {
     // when the form is opened time, calculate recommended region to set the server
       (async () => {
-        console.log(process.env.REACT_APP_REGION_SELECTION, process.env.REACT_APP_REGION_SELECTION.split(","), roomFormInfo.region)
         const list = await recommendRegionList;
         setRecommendRegion(list);
         setRoomFormInfo({...roomFormInfo, region: list[0]})
@@ -123,6 +122,7 @@ export default function CreateEditRoomForm(props) {
   const recommendRegionList = useMemo(async () => {
     let returnValue = [];
     const regions = FormOptions.region;
+    const numberOfRegions = FormOptions.region.length();
 
     /*
     * checkLatencies 4 times
@@ -130,8 +130,8 @@ export default function CreateEditRoomForm(props) {
     * because first ping to site is usually high
     */
     await checkLatency(regions);
-    let tempLatencies = Array(3).fill(0);
-    for (let i = 0; i < 3; i++) {
+    let tempLatencies = Array(numberOfRegions).fill(0);
+    for (let i = 0; i < numberOfRegions; i++) {
       const newLatencies = await checkLatency(regions);
       tempLatencies = tempLatencies.map((elem, idx) => elem + newLatencies[idx]);
     }
