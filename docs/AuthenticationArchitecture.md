@@ -2,7 +2,7 @@
 
 Amazon Cognito user pools and identity pools which have predefined roles and policies allow guest users and authenticated users to access the AWS services that are used in the Web App.
 
-## What is Amazon Cognito User Pools and Identity Pools?
+## What are Amazon Cognito User Pools and Identity Pools?
 
 In short, Taken from *[What's the difference between Amazon Cognito user pools and identity pools?](https://aws.amazon.com/premiumsupport/knowledge-center/cognito-user-pools-identity-pools/)*
 

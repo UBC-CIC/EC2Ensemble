@@ -72,6 +72,7 @@ export default function CreateEditRoomForm(props) {
   useEffect(() => {
     // when the form is opened time, calculate recommended region to set the server
       (async () => {
+        console.log(process.env.REACT_APP_REGION_SELECTION, process.env.REACT_APP_REGION_SELECTION.split(","), roomFormInfo.region)
         const list = await recommendRegionList;
         setRecommendRegion(list);
         setRoomFormInfo({...roomFormInfo, region: list[0]})
@@ -293,7 +294,7 @@ export default function CreateEditRoomForm(props) {
 // the first one in the list is the default value that the user will see
 const FormOptions = {
   type: ["AWS", "External Setup"],
-  region: ["ca-central-1", "us-west-1", "us-west-2"],
+  region: process.env.REACT_APP_REGION_SELECTION.split(","),
   size: [2,3,4,5],
   frequency: [32000,44100,48000,88200,96000],
   buffer: [32,64,128,256,512,1024,2048,4096]

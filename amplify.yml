@@ -19,6 +19,8 @@ frontend:
         - export REACT_APP_AWS_API_BASE=$(aws ssm get-parameter --name /amplify/ActionHandlerURL --query Parameter.Value --output text)/actions
         - export REACT_APP_AWS_USERDB_BASE=$(aws ssm get-parameter --name /amplify/ActionHandlerURL --query Parameter.Value --output text)
         - export REACT_APP_WS_BASE=$(aws ssm get-parameter --name /amplify/WebSocketURL --query Parameter.Value --output text)
+        - export REACT_APP_REGION_SELECTION=$(aws ssm get-parameter --name /amplify/RegionSelection --query Parameter.Value --output text)
+
         - yarn run build
   artifacts:
     baseDirectory: build

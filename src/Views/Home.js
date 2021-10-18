@@ -7,7 +7,7 @@ import { Auth } from 'aws-amplify';
 
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
-import { Button, Container, Grid } from '@material-ui/core/';
+import { Button, Grid } from '@material-ui/core/';
 
 // internal imports
 import Room from './Room';
