@@ -7,27 +7,25 @@ Globals:
     Runtime: nodejs14.x
 
 Parameters:
-  ContactWebSocketFunctionName:
+  CentralRegion:
     Type: String
 
 Resources:
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security Group for all EC2 instances running Jacktrip
+      GroupDescription: Security Group for all EC2 instances running Jacktrip (see Network Ports at https://ccrma.stanford.edu/docs/common/IETF.html)
       VpcId: !Ref RegionalVpc
       SecurityGroupIngress:
-        - IpProtocol: icmp
-          FromPort: 8
-          ToPort: -1
+        - IpProtocol: udp
+          Description: Allows udp connection to port 61002 to 62000 for each client connection
+          FromPort: 61002
+          ToPort: 62000
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 65535
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: udp
-          FromPort: 0
-          ToPort: 65535
+          Description: Allows tcp ingress on port 4464 for client handshake
+          FromPort: 4464
+          ToPort: 4464
           CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - Description: Allow all outbound traffic
@@ -131,9 +129,10 @@ Resources:
       Type: String
       Value: !Ref RunJacktripDocument
 
-  ContactWebsocketLambdaSSM:
+  JacktripCentralRegion:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: ContactWebSocketFunctionName
+      Name: JacktripCentralRegion
       Type: String
-      Value: !Ref ContactWebSocketFunctionName
+      Value: !Ref CentralRegion
+# END of regional.yaml
