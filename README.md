@@ -22,9 +22,9 @@ Jacktrip Hub Servers in multiple AWS regions.
 
 ## Stack Overview
 
--   Frontend - ReactJS Web Application
+-   [Frontend](./docs/FrontendArchitecture.md) - ReactJS Web Application
 -   Data - All data is saved in Amazon DynamoDB
--   Auth - AWS Amplify and Cognito provides unique user login and authentication.
+-   [Auth](./docs/AuthenticationArchitecture.md) - AWS Amplify and Cognito provides unique user login and authentication.
 -   Backend - API calls are made to AWS API Gateway and handled by AWS Lambda functions orchestrated by AWS Step Functions. Jacktrip Servers are hosted in Amazon EC2 instances.
 
 ## High Level Architecture
@@ -97,11 +97,6 @@ Once a room is successfully created, you can either (from right to left)
 ![home page](./docs/images/readme/shared_room.png)
 
 <h6 align="center">A privately accessed page that shows the information of a specific room</h6>
-
-## Stack Details
-
--   [Authentication](./docs/AuthenticationArchitecture.md)
--   [Frontend User Interface](./docs/FrontendArchitecture.md)
 
 ## Deployment
 
