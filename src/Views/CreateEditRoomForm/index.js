@@ -122,7 +122,7 @@ export default function CreateEditRoomForm(props) {
   const recommendRegionList = useMemo(async () => {
     let returnValue = [];
     const regions = FormOptions.region;
-    const numberOfRegions = FormOptions.region.length();
+    const numberOfRegions = regions.length;
 
     /*
     * checkLatencies 4 times
