@@ -88,7 +88,7 @@ Before you deploy, you must have the following in place:
 
 In this step we will use the Amplify console to deploy and build the front-end application automatically.
 
-[![One-click deployment](https://oneclick.amplifyapp.com/button.svg)](https://console.aws.amazon.com/amplify/home#/deploy?repo=https://github.com/UBC-CIC/pcma-cic/tree/master)
+[![One-click deployment](https://oneclick.amplifyapp.com/button.svg)](https://console.aws.amazon.com/amplify/home#/deploy?repo=https://github.com/UBC-CIC/EC2Ensemble/tree/master)
 
 1. Use the provided **1-click deployment** button below.
 2. Select **Connect to GitHub**, and then you will be asked to connect to your GitHub account. Amplify Console will fork this repository into your GitHub account before deploying.
