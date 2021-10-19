@@ -5,7 +5,7 @@ import { makeStyles, withStyles } from '@material-ui/core/styles';
 import {  Grid, TextField } from '@material-ui/core/';
 
 // internal
-import { FormSelect } from '.';
+import { FormSelect } from './FormControls';
 
 const GrowGrid = withStyles({
   root: {

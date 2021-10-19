@@ -19,7 +19,7 @@ import RefreshIcon from '@material-ui/icons/Refresh';
 // actions
 import { changeRoomParams, deleteRoom, restartJackTrip, restartRoom, terminateRoom } from '../../Actions/roomActions';
 
-// components
+// internal components
 import CreateEditRoomForm from '../CreateEditRoomForm';
 import ShareRoomModal from '../ShareRooms'
 import { DisabledButton } from '../../Components/Buttons';
@@ -128,7 +128,7 @@ const DefaultButton = withStyles((theme) => ({
 	},
 }))(SmallOutlinedButton);
 
-function Room(props) {
+export default function Room(props) {
 	const classes = useStyles();
 	const {
 		roomName,
@@ -262,7 +262,6 @@ function Room(props) {
 		// close the modal
 		handleModalClose();
 	};
-
 
 	const handleAlertOpen = () => {
 		navigator.clipboard.writeText(ipAddress)
@@ -479,6 +478,3 @@ function Room(props) {
 		</Grid>
 	);
 }
-
-
-export default Room;

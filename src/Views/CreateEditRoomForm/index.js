@@ -4,14 +4,15 @@ import { v4 as uuidv4 } from 'uuid';
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import { Button, CircularProgress, Modal } from '@material-ui/core';
-import { FormButtonGroup, FormInput, FormSelect } from '../../Components';
+
+// internal
+import { FormButtonGroup, FormInput, FormSelect } from '../../Components/FormControls';
 
 
 const useStyles = makeStyles((theme) => ({
   paper: {
     width: 400,
     backgroundColor: "whitesmoke",
-    // border: '2px solid #000',
     boxShadow: theme.shadows[5],
     padding: theme.spacing(2, 4, 3),
     
