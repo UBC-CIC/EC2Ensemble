@@ -68,7 +68,7 @@ function App(props) {
                                                 * [disableSignUp: true, false]
                                                 * */
                                                 <Login  logo={"custom"} type={"image"} themeColor={"standard"} animateTitle={true}
-                                                        title={"PCMA CIC"} darkMode={true}
+                                                        title={"EC2Ensemble"} darkMode={true}
                                                         disableSignUp={false}
                                                 />
                                             } />
