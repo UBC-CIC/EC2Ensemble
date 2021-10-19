@@ -1,5 +1,6 @@
 cli.txt
 *.sh
+amplify.yml
 .aws-sam*/
 stacksetpolicy.json
 AWSCloudFormationStackSet*.yml
