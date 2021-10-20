@@ -1,6 +1,11 @@
 cli.txt
+<<<<<<< HEAD
 ami_copy.sh
 test.sh
+=======
+*.sh
+amplify.yml
+>>>>>>> cda47bff421087cecca944bfd14cf27a9c6f14dc
 .aws-sam*/
 stacksetpolicy.json
 packaged.yaml

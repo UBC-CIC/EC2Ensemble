@@ -27,7 +27,7 @@ import { green, red } from '@material-ui/core/colors';
 
 // internal
 import {updateLoginState} from "../../Actions/loginActions";
-import TextFieldStartAdornment from "./TextFieldStartAdornment";
+import TextFieldStartAdornment from "../../Components/TextFieldStartAdornment";
 import "./Login.css";
 
 
@@ -58,9 +58,6 @@ const useStyles = makeStyles((theme) => ({
         justifyContent: "flex-end", 
         fontWeight: 500, 
         lineHeight: 1.75, 
-    },
-    themeColor: {
-        backgroundColor: "#012144", 
     },
     errorMessage: {
         color: "red",

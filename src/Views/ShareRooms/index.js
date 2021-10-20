@@ -6,7 +6,7 @@ import { Button, Modal } from '@material-ui/core';
 import Alert from '@material-ui/lab/Alert';
 
 // internal
-import { FormInput } from '../../Components';
+import { FormInput } from '../../Components/FormControls';
 
 // icons
 import FileCopyIcon from '@material-ui/icons/FileCopy';

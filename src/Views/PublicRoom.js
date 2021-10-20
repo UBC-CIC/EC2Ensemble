@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import AWS from 'aws-sdk';
 import awsExports from '../aws-exports';
 
-
 // materialUI
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import Alert from '@material-ui/lab/Alert';
@@ -16,44 +15,14 @@ import FileCopyIcon from '@material-ui/icons/FileCopy';
 
 
 const useStyles = makeStyles((theme) => ({
-  root: {
-    minWidth: '80vw',
-    maxWidth: '80vw',
-    minHeight: 273,
-    maxHeight: 273,
-    '& > .MuiButtonBase-root': {
-        minWidth: '80vw',
-        maxWidth: '80vw',
-        minHeight: 273,
-        maxHeight: 273,
-    }
-  },
-  flexEnd: {
-    marginLeft: "auto",
-  },
   margin_vertical2: {
     margin: theme.spacing(2, 'auto')
-  },
-  margin_vertical3: {
-    margin: theme.spacing(3, 'auto')
-  },
-  underlineText: {
-    textDecoration: "underline",
-    textUnderlineOffset: "0.1em"
-  },
-  navBar: {
-    height: '50px',
-    background: '#c4c4c4',
-    padding: theme.spacing(0, 2)
   },
   flex: {
     display: 'flex'
   },
   alignCenter: {
     alignItems: 'center'
-  },
-  columnTitle: {
-    width: 130,
   },
   full: {
     height: '100vh'
@@ -88,7 +57,7 @@ const DefaultButton = withStyles((theme) => ({
 }))(SmallOutlinedButton);
 
 
-function PublicRoom(props) {
+export default function PublicRoom(props) {
   const classes = useStyles();
   const [alert, handleAlert] = useState(false);
   const [loading, handleLoading] = useState(true);
@@ -224,8 +193,6 @@ function PublicRoom(props) {
     </Grid>
   );
 }
-
-export default PublicRoom;
 
 
 // function to query room
