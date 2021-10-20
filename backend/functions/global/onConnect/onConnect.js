@@ -4,7 +4,7 @@ const ddb = new AWS.DynamoDB.DocumentClient();
 exports.handler = async (event) => {
 	console.log(event);
 	console.log(event.requestContext);
-	const { connectionId, domainName, stage } = event.requestContext;
+	const { connectionId } = event.requestContext;
 	const user = event.queryStringParameters.user;
 
 	if (!user) {
@@ -19,8 +19,6 @@ exports.handler = async (event) => {
 		Item: {
 			connectionId,
 			user,
-			domainName,
-			stage,
 			expiration: Math.floor(Date.now() / 1000) + 3600,
 		},
 	};

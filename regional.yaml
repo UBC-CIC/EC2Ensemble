@@ -9,6 +9,8 @@ Globals:
 Parameters:
   CentralRegion:
     Type: String
+  ParentStackName:
+    Type: String
 
 Resources:
   EC2SecurityGroup:
@@ -111,28 +113,28 @@ Resources:
   SubnetIdSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: JacktripSubnetId
+      Name: !Sub /${ParentStackName}/SubnetId
       Type: String
       Value: !Ref PublicSubnet
 
   SecurityGroupIdSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: JacktripSecurityGroupId
+      Name: !Sub /${ParentStackName}/JacktripSecurityGroupId
       Type: String
       Value: !Ref EC2SecurityGroup
 
   DocumentNameSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: JacktripDocumentName
+      Name: !Sub /${ParentStackName}/JacktripDocumentName
       Type: String
       Value: !Ref RunJacktripDocument
 
   JacktripCentralRegion:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: JacktripCentralRegion
+      Name: !Sub /${ParentStackName}/CentralRegion
       Type: String
       Value: !Ref CentralRegion
 # END of regional.yaml

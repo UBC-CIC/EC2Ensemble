@@ -5,7 +5,9 @@ exports.handler = async (event) => {
 	const ssm = new AWS.SSM({ region: event.region });
 
 	const documentName = await ssm
-		.getParameter({ Name: 'JacktripDocumentName' })
+		.getParameter({
+			Name: `/${process.env.stackName}/JacktripDocumentName`,
+		})
 		.promise();
 
 	try {

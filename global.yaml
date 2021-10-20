@@ -287,6 +287,7 @@ Resources:
       Environment:
         Variables:
           instanceProfileName: !Ref EC2InstanceProfile
+          stackName: !Ref AWS::StackName
 
   TerminateServerLambda:
     Type: AWS::Serverless::Function
@@ -355,6 +356,9 @@ Resources:
       Handler: runJacktrip.handler
       Policies:
         - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+      Environment:
+        Variables:
+          userServerTableName: !Ref UserServerTable
 
   ContactWebSocketLambda:
     Type: AWS::Serverless::Function
@@ -419,8 +423,8 @@ Resources:
         - AttributeName: serverId
           KeyType: RANGE
       ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
   WebSocketConnectionsTable:
     Type: AWS::DynamoDB::Table
@@ -443,11 +447,11 @@ Resources:
           Projection:
             ProjectionType: ALL
           ProvisionedThroughput:
-            ReadCapacityUnits: 1
-            WriteCapacityUnits: 1
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
       ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
       TimeToLiveSpecification:
         AttributeName: expiration
         Enabled: true
@@ -729,6 +733,8 @@ Resources:
       Parameters:
         - ParameterKey: CentralRegion
           ParameterValue: !Ref AWS::Region
+        - ParameterKey: ParentStackName
+          ParameterValue: !Ref AWS::StackName
       StackInstancesGroup:
         - Regions: !Ref DeployedRegion
           DeploymentTargets:
@@ -746,6 +752,8 @@ Resources:
         Parameters:
           CentralRegion:
             Type: String
+          ParentStackName:
+            Type: String
 
         Resources:
           EC2SecurityGroup:
@@ -755,17 +763,12 @@ Resources:
               VpcId: !Ref RegionalVpc
               SecurityGroupIngress:
                 - IpProtocol: udp
-                  Description: Allows UDP ingress on port 61002 to 62000 for each client connectiona (Jacktrip Hub mode)
+                  Description: Allows udp connection to port 61002 to 62000 for each client connection
                   FromPort: 61002
                   ToPort: 62000
                   CidrIp: 0.0.0.0/0
                 - IpProtocol: tcp
-                  Description: Allows TCP ingress on port 4464 for client handshake (Jacktrip Hub mode)
-                  FromPort: 4464
-                  ToPort: 4464
-                  CidrIp: 0.0.0.0/0
-                - IpProtocol: udp
-                  Descriptin: Allows UDP ingress on port 4464 for Jacktrip P2P mode
+                  Description: Allows tcp ingress on port 4464 for client handshake
                   FromPort: 4464
                   ToPort: 4464
                   CidrIp: 0.0.0.0/0
@@ -853,28 +856,28 @@ Resources:
           SubnetIdSSM:
             Type: AWS::SSM::Parameter
             Properties:
-              Name: JacktripSubnetId
+              Name: !Sub /${ParentStackName}/SubnetId
               Type: String
               Value: !Ref PublicSubnet
 
           SecurityGroupIdSSM:
             Type: AWS::SSM::Parameter
             Properties:
-              Name: JacktripSecurityGroupId
+              Name: !Sub /${ParentStackName}/JacktripSecurityGroupId
               Type: String
               Value: !Ref EC2SecurityGroup
 
           DocumentNameSSM:
             Type: AWS::SSM::Parameter
             Properties:
-              Name: JacktripDocumentName
+              Name: !Sub /${ParentStackName}/JacktripDocumentName
               Type: String
               Value: !Ref RunJacktripDocument
 
           JacktripCentralRegion:
             Type: AWS::SSM::Parameter
             Properties:
-              Name: JacktripCentralRegion
+              Name: !Sub /${ParentStackName}/CentralRegion
               Type: String
               Value: !Ref CentralRegion
         # END of regional.yaml
@@ -883,31 +886,31 @@ Resources:
   SSMParamUserServerTableName:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /amplify/UserServerTableName
+      Name: !Sub /amplify/${AWS::StackName}/UserServerTableName
       Type: String
       Value: !Ref UserServerTable
   SSMParamUserPoolId:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /amplify/Cognito-UserPoolId
+      Name: !Sub /amplify/${AWS::StackName}/Cognito-UserPoolId
       Type: String
       Value: !Ref UserPool
   SSMParamUserPoolClientWebId:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /amplify/Cognito-UserPoolClientWebId
+      Name: !Sub /amplify/${AWS::StackName}/Cognito-UserPoolClientWebId
       Type: String
       Value: !Ref UserPoolClientWeb
   SSMParamIdentityPoolId:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /amplify/Cognito-IdentityPoolId
+      Name: !Sub /amplify/${AWS::StackName}/Cognito-IdentityPoolId
       Type: String
       Value: !Ref IdentityPool
   SSMParamWebSocketURL:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /amplify/WebSocketURL
+      Name: !Sub /amplify/${AWS::StackName}/WebSocketURL
       Type: String
       Value:
         !Join [
@@ -924,7 +927,7 @@ Resources:
   SSMParamActionHandlerURL:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /amplify/ActionHandlerURL
+      Name: !Sub /amplify/${AWS::StackName}/ActionHandlerURL
       Type: String
       Value:
         !Join [
@@ -941,14 +944,14 @@ Resources:
   SSMDeployedRegion:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /amplify/RegionSelection
+      Name: !Sub /amplify/${AWS::StackName}/RegionSelection
       Type: StringList
       Value: !Join [',', !Ref DeployedRegion]
 
   ContactWebsocketLambdaSSM:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: ContactWebSocketFunctionName
+      Name: !Sub /${AWS::StackName}/ContactWebSocketFunctionName
       Type: String
       Value: !Ref ContactWebSocketLambda
 
