@@ -16,7 +16,7 @@ Some system installation requirements before starting deployment:
 ### Deployment Steps
 
 1. You will need to create two IAM roles in order to create a StackSet which we are using in this solution.
-   Following official [AWS instructions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html) with their provided yaml files.  
+   Following official [AWS instructions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html) with their provided yaml files:  
    Please run this command to create an IAM role named AWSCloudFormationStackSetAdministrationRole.
    (This exact role with the same name and permissions needs to exist in your AWS account).
     ```bash

@@ -20,12 +20,17 @@ Resources:
       VpcId: !Ref RegionalVpc
       SecurityGroupIngress:
         - IpProtocol: udp
-          Description: Allows udp connection to port 61002 to 62000 for each client connection
+          Description: Allows udp connection to port 61002 to 62000 (Jacktrip Hub mode)
           FromPort: 61002
           ToPort: 62000
           CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          Description: Allows udp ingress to port 4464 (Jacktrip P2P mode)
+          FromPort: 4464
+          ToPort: 4464
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          Description: Allows tcp ingress on port 4464 for client handshake
+          Description: Allows tcp ingress on port 4464 for client handshake (Jacktrip Hub mode)
           FromPort: 4464
           ToPort: 4464
           CidrIp: 0.0.0.0/0

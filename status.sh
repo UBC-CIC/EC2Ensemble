@@ -13,16 +13,18 @@ instance_id=`wget -qO- http://instance-data/latest/meta-data/instance-id`
 
 # Get user and serverId from instance tag
 tags=$(aws ec2 describe-tags --filters "Name=resource-id,Values=${instance_id}" --region ${ec2_region} --query 'Tags[?Key == `user` || Key == `serverId` || Key == `cfnstack` ].Value' --output text)
+echo tags
 server_id=$(echo $tags | awk '{print $1}')
 user=$(echo $tags | awk '{print $2}')
+stack_name=$(echo $tags | awk '{print $3}')
 
 # Get ContactWebSocket lambda function name
-get_param_central=$(aws ssm get-parameter --name "JacktripCentralRegion" --region $ec2_region --output text)
+get_param_central=$(aws ssm get-parameter --name "${stack_name}/CentralRegion" --region $ec2_region --output text)
 central_region=`echo $get_param_central | awk -F'String ' '{print $2}' | awk '{print $1}'`
 echo $central_region
 
 # Get ContactWebSocket lambda function name
-get_param_function=$(aws ssm get-parameter --name "ContactWebSocketFunctionName" --region $central_region --output text)
+get_param_function=$(aws ssm get-parameter --name "${stack_name}/ContactWebSocketFunctionName" --region $central_region --output text)
 function_name=`echo $get_param_function | awk -F'String ' '{print $2}' | awk '{print $1}'`
 echo $function_name
 
