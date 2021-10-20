@@ -94,8 +94,8 @@ In this step we will use the Amplify console to deploy and build the front-end a
 2. Select **Connect to GitHub**, and then you will be asked to connect to your GitHub account. Amplify Console will fork this repository into your GitHub account before deploying.
 3. Select your AWS service role in the dropdown. If you don't have one configured, Select 'Create new role' and quickly create one using the default settings.
 4. At the bottom of the page, click on the triangle button beside Environment variables to expand the Environment variables view. 
-1) Under **Key**, enter USER_GLOBAL_STACKNAME; 
-2) Under **Value**, enter the custom stack name you chose in the backend deployment. 
+	- Under **Key**, enter USER_GLOBAL_STACKNAME; 
+	- Under **Value**, enter the custom stack name you chose in the backend deployment. 
 
 ![Enter Environmental Variable](./images/deployment/one-click-deploy-envvar.png)
 
