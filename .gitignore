@@ -1,5 +1,4 @@
 utils/
-amplify.yml
 .aws-sam*/
 node_modules
 
