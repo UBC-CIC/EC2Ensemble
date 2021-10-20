@@ -55,3 +55,43 @@ This should be printed:
   Copyright (c) 2008-2020 Juan-Pablo Caceres, Chris Chafe.
   SoundWIRE group at CCRMA, Stanford University
 ```
+
+### Users Connected Count
+
+In order for the users connected count to function properly, there must be a script that counts the number of users connected and send that information to the ContactWebSocket Lambda. Then we can add a cronjob that runs the script periodically. This is what we have done during our prototyping:
+
+-   Create a shell script file just like in the home directory [status.sh](../status.sh).
+-   Create a cronjob by running
+    ```bash
+    crontab -e
+    ```
+-   In the file, add this line to execute [status.sh](../status.sh) every minute
+    ```bash
+    * * * * * ./status.sh
+    ```
+
+### Creating the AMI
+
+You can close your SSH connection now. Go back to the EC2 web console, right-click the instance that you just made, go to Image and templates -> Create image.  
+Enter the image name (can be anything) and keep everything else as is, then press Create image.
+
+### Copying the AMI to other regions
+
+AMIs are tied to the AWS region they are created in. Thus, we would need to copy the AMI we just made to all the other regions our solution is deployed into.  
+To do this, in the EC2 web console go to Images -> AMI on the sidebar. Find and right-click the AMI, then select Copy AMI. Select the destination region and you can keep everything else as is.
+
+Or you can use AWS CLI:
+
+```bash
+	aws ec2 copy-image --source-image-id SOURCE_AMI_ID --source-region SOURCE_REGION --name NEW_NAME --region NEW_REGION
+```
+
+### Creating SSM parameters
+
+In order for the solution to use the correct AMI, we would need to create a SSM parameter called JacktripAMIId, containing the AMI ID. A SSM parameter is needed for every copy of the AMI in all the regions.  
+You can use the [web console](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-create-console.html)  
+Or the CLI:
+
+```bash
+	aws ssm put-parameter --name JacktripAMIId --value AMI_ID --type String --region REGION --overwrite
+```

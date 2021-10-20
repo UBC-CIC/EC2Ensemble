@@ -94,7 +94,6 @@ exports.handler = async (event) => {
 			body: JSON.stringify(res),
 		};
 	} catch (error) {
-		// TODO: Delete ddb entry to cleanup?
 		return createResponse(false, error);
 	}
 };
@@ -119,7 +118,6 @@ const createServer = async (body) => {
 			region: body.region,
 			buffer: body.buffer,
 			frequency: body.frequency,
-			// size: body.size,
 			description: body.description,
 			status: 'creating',
 		},

@@ -1,8 +1,8 @@
 cli.txt
-*.sh
+ami_copy.sh
+test.sh
 .aws-sam*/
 stacksetpolicy.json
-AWSCloudFormationStackSet*.yml
 packaged.yaml
 bucket.yaml
 node_modules

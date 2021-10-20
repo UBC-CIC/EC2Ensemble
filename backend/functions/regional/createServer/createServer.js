@@ -7,17 +7,17 @@ exports.handler = async (event) => {
 
 	const ami = await ssm
 		.getParameter({
-			Name: 'JacktripAMIId',
+			Name: `/${process.env.stackName}/AMIId`,
 		})
 		.promise();
 	console.log(ami);
 	const subnetId = await ssm
-		.getParameter({ Name: 'JacktripSubnetId' })
+		.getParameter({ Name: `/${process.env.stackName}/SubnetId` })
 		.promise();
 	console.log(subnetId);
 	const securityGroupId = await ssm
 		.getParameter({
-			Name: 'JacktripSecurityGroupId',
+			Name: `/${process.env.stackName}/JacktripSecurityGroupId`,
 		})
 		.promise();
 	console.log(securityGroupId);
@@ -37,6 +37,10 @@ exports.handler = async (event) => {
 					{
 						Key: 'serverId',
 						Value: event.serverId,
+					},
+					{
+						Key: 'cfnstack',
+						Value: process.env.stackName,
 					},
 				],
 			},

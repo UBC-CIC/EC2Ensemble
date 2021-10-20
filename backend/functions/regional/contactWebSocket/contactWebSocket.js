@@ -1,13 +1,12 @@
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
+const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+	apiVersion: '2018-11-29',
+	endpoint: process.env.apiEndpoint,
+});
 
 exports.handler = async (event) => {
 	console.log(event);
-	const apigwManagementApi = new AWS.ApiGatewayManagementApi({
-		apiVersion: '2018-11-29',
-		//TODO
-		endpoint: process.env.apiEndpoint,
-	});
 
 	const { user, webSocketMessage } = event;
 	console.log(webSocketMessage);
