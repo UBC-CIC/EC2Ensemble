@@ -1,14 +1,7 @@
-cli.txt
-ami_copy.sh
-test.sh
+utils/
 amplify.yml
 .aws-sam*/
-stacksetpolicy.json
-packaged.yaml
-bucket.yaml
 node_modules
-/backend/functions/zipped
-
 
 # dependencies
 /node_modules
