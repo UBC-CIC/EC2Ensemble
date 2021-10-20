@@ -2,7 +2,8 @@
 
 This is a guide to setup an [Amazon Machine Image (AMI)](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) for running Jacktrip Servers.
 This guide will help you create the same AMI we used during the testing of our solution.  
-(Note: It is completely possible to use other AMIs to switch the functionality of the solution.)
+(Note: It is completely possible to use other AMIs to switch the functionality of the solution.)  
+If you want to use your own AMI, you can skip to the **Copying the AMI to other regions** step.
 
 ## Launching an EC2 instance
 

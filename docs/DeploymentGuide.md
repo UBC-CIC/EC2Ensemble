@@ -12,7 +12,6 @@ Some system installation requirements before starting deployment:
     (NOTE: The third step of installing Docker is only needed for testing the lambda functions in this app locally, it
     does not have to be installed for the sole purpose of deployment)
 -   AWS CLI installed for use on your system, details on the installation can be found [here](https://aws.amazon.com/cli/)
--   You have created an AMI that is purposed to be run in the EC2 instances created by the solution. [AMI guide](./AMISetup.md)
 
 ### Deployment Steps
 
@@ -71,7 +70,7 @@ This is a screenshot of the parameters needed for the deployment.
 ![sam deploy 2](./images/deployment/sam_deploy2.png)  
 For the rest of the options above you can press ENTER and use the default value.
 
-3. AMI STUFF
+3. Follow this [guide](AMISetup.md) to setup the AMI that the EC2 instance will run.
 
 ## Frontend Deployment
 
@@ -93,9 +92,9 @@ In this step we will use the Amplify console to deploy and build the front-end a
 1. Use the provided **1-click deployment** button below.
 2. Select **Connect to GitHub**, and then you will be asked to connect to your GitHub account. Amplify Console will fork this repository into your GitHub account before deploying.
 3. Select your AWS service role in the dropdown. If you don't have one configured, Select 'Create new role' and quickly create one using the default settings.
-4. At the bottom of the page, click on the triangle button beside Environment variables to expand the Environment variables view. 
-	- Under **Key**, enter USER_GLOBAL_STACKNAME; 
-	- Under **Value**, enter the custom stack name you chose in the backend deployment. 
+4. At the bottom of the page, click on the triangle button beside Environment variables to expand the Environment variables view.
+    - Under **Key**, enter USER_GLOBAL_STACKNAME;
+    - Under **Value**, enter the custom stack name you chose in the backend deployment.
 
 ![Enter Environmental Variable](./images/deployment/one-click-deploy-envvar.png)
 
