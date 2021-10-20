@@ -57,7 +57,7 @@ sam build --template-file global.yaml \
 && sam deploy -g --capabilities CAPABILITY_NAMED_IAM
 ```
 
-![App Screenshot](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+![sam params](./images/deployment/sam-params.png)
 
 This is a screenshot of the parameters needed for the deployment.
 
