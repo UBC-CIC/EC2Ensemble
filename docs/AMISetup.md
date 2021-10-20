@@ -2,23 +2,23 @@
 
 This is a guide to setup an [Amazon Machine Image (AMI)](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) for running Jacktrip Servers.
 This guide will help you create the same AMI we used during the testing of our solution.  
-(Note: It is completely possible to use other AMIs to switch the functionality of the solution.)
+(Note: It is completely possible to use other AMIs to switch the functionality of the solution.)  
+If you want to use your own AMI, you can skip to the **Copying the AMI to other regions** step.
 
 ## Launching an EC2 instance
 
 First, we will need to create an EC2 instance where we will start creating the AMI.
 One way to do this is through the AWS Web Console, go to the EC2 console in your AWS Web Console. It should look like this:
-![ec2 console](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+![ec2 console](./images/ami/ec2.png)
 Press the Launch Instances button on the top right of the screen, this will start the instance launch process.
 
 1. First is to select the base AMI of the instance, choose Ubuntu Server 20.04 LTS (HVM), SSD Volume Type, with the x86 version
-   ![ubuntu](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+   ![ubuntu](./images/ami/ubuntu.png)
 2. Choose t2.micro for the instance type, then click Next
 3. Skip this step and click Next.
 4. For the storage, we can keep the default value, 8 GB of General Purpose SSD (gp2). Click Next.
 5. You can skip adding tags. Click next to configure security group.
-6. Configure your security group like in the picture below.
-   ![security-group](https://via.placeholder.com/468x300?text=App+Screenshot+Here)
+6. Configure your security group to allow all traffic in both ingress and egress.
    (CAUTION: This security group rules are very lax and insecure! Do not use this in any instance used in production!)
 7. Review your instance configuration and you can press Launch.
 8. A window will come up asking you about key pair. This is needed for you to SSH into the EC2 instance. Please create one or use an existing key pair for the instance.  
@@ -88,10 +88,12 @@ Or you can use AWS CLI:
 
 ### Creating SSM parameters
 
-In order for the solution to use the correct AMI, we would need to create a SSM parameter called JacktripAMIId, containing the AMI ID. A SSM parameter is needed for every copy of the AMI in all the regions.  
+In order for the solution to use the correct AMI, we would need to create a SSM parameter called **_/STACK_NAME/AMIId_** (STACK_NAME must be the same with the name of the backend Cloudformation stack), containing the AMI ID. A SSM parameter is needed for every copy of the AMI in all the regions.  
 You can use the [web console](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-create-console.html)  
 Or the CLI:
 
 ```bash
 	aws ssm put-parameter --name JacktripAMIId --value AMI_ID --type String --region REGION --overwrite
 ```
+
+After the AMI is created you can terminate the EC2 instance that you used to create the AMI.
