@@ -119,3 +119,4 @@ The default CORS Allow-Origin is set to '\*', you will need to change this to th
 
 After the stack update is completed, you will need to redeploy the API. Go to your API settings in the web console, go to the Resources tab, click Action -> Deploy API.  
 Select Prod as the Deployment Stage and click Deploy. The API will be re-deployed with the updated CORS settings (may take a few minutes).
+![api_deploy](images/deployment/api_deploy.png)
