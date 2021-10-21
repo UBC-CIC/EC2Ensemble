@@ -105,7 +105,7 @@ After account creation, users will need to verify their account by inputting the
 
 ## Last Step
 
-The default CORS Allow-Origin is set to '\*' which allows all origin. You can change this to the deployed frontend URL, by changing the WebAppUrl parameter in the sam deploy process.
+The default CORS Allow-Origin is set to '\*', you will need to change this to the deployed frontend URL. This is done by changing the WebAppUrl parameter in the sam deploy process. (Note: You need to remove the trailing slash from the URL, for example https://master.abcdefghi.amplifyapp.com)
 
 -   If you saved your deployment parameters in a toml file, you can go and modify the parameter in the toml file itself.  
     ![parameter_override](images/deployment/parameter_override.png)
@@ -116,3 +116,6 @@ The default CORS Allow-Origin is set to '\*' which allows all origin. You can ch
 ```bash
 	sam deploy --config-env YOUR_CONFIG_ENV --parameter-overrides WebAppUrl=http://your-url-here
 ```
+
+After the stack update is completed, you will need to redeploy the API. Go to your API settings in the web console, go to the Resources tab, click Action -> Deploy API.  
+Select Prod as the Deployment Stage and click Deploy. The API will be re-deployed with the updated CORS settings (may take a few minutes).
