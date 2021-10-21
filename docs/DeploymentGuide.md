@@ -16,7 +16,7 @@ Some system installation requirements before starting deployment:
 ### Deployment Steps
 
 1. You will need to create two IAM roles in order to create a StackSet which we are using in this solution.
-   Following official [AWS instructions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html) with their provided yaml files.  
+   Following official [AWS instructions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html) with their provided yaml files:  
    Please run this command to create an IAM role named AWSCloudFormationStackSetAdministrationRole.
    (This exact role with the same name and permissions needs to exist in your AWS account).
     ```bash
@@ -105,4 +105,17 @@ After account creation, users will need to verify their account by inputting the
 
 ## Last Step
 
-Redeploy backend with WebAppUrl after frontend deployment
+The default CORS Allow-Origin is set to '\*', you will need to change this to the deployed frontend URL. This is done by changing the WebAppUrl parameter in the sam deploy process. (Note: You need to remove the trailing slash from the URL, for example https://master.abcdefghi.amplifyapp.com)
+
+-   If you saved your deployment parameters in a toml file, you can go and modify the parameter in the toml file itself.  
+    ![parameter_override](images/deployment/parameter_override.png)
+
+-   You can also call sam deploy in the guided mode (-g) again and change the parameters there.
+-   Or use:
+
+```bash
+	sam deploy --config-env YOUR_CONFIG_ENV --parameter-overrides WebAppUrl=http://your-url-here
+```
+
+After the stack update is completed, you will need to redeploy the API. Go to your API settings in the web console, go to the Resources tab, click Action -> Deploy API.  
+Select Prod as the Deployment Stage and click Deploy. The API will be re-deployed with the updated CORS settings (may take a few minutes).
