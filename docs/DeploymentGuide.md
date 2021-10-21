@@ -105,4 +105,14 @@ After account creation, users will need to verify their account by inputting the
 
 ## Last Step
 
-Redeploy backend with WebAppUrl after frontend deployment
+The default CORS Allow-Origin is set to '\*' which allows all origin. You can change this to the deployed frontend URL, by changing the WebAppUrl parameter in the sam deploy process.
+
+-   If you saved your deployment parameters in a toml file, you can go and modify the parameter in the toml file itself.  
+    ![parameter_override](images/deployment/parameter_override.png)
+
+-   You can also call sam deploy in the guided mode (-g) again and change the parameters there.
+-   Or use:
+
+```bash
+	sam deploy --config-env YOUR_CONFIG_ENV --parameter-overrides WebAppUrl=http://your-url-here
+```
