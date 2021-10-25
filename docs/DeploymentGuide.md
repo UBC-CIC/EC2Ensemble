@@ -56,19 +56,36 @@ sam build --template-file global.yaml \
 && sam deploy -g --capabilities CAPABILITY_NAMED_IAM
 ```
 
-![sam params](./images/deployment/sam-params.png)
-
-This is a screenshot of the parameters needed for the deployment.
+This will show a prompt where you enter parameters for the Cloudformation Stack, here are the details of the parameters:
 
 -   Stack Name: Put your desired stack name here
--   AWS Region: Put the region where you want the solution to be deployed
--   WebAppUrl: This should contain the URL to your web app (for CORS). Although since we are deploying the backend before the frontend, you can leave it empty for now.
-<!-- -   StackSetTemplateUrl: Put the URL of the regional.yaml file you uploaded to S3 here. -->
+-   AWS Region: Put the region where you want the solution to be deployed. This should be the same region where your frontend will be deployed.
+-   WebAppUrl: Put the URL of the frontend here (for CORS). Since we are deploying the backend before the frontend, leave this empty for now.
 -   DeployedRegion: Put the regions you want to deploy Jacktrip servers to. Write the regions separated by comma.
 -   ExecutionRoleName: If your StackSet execution role name is different from the default one, please insert it here, otherwise you can keep the default value.
+-   For the rest of the options below, you can press ENTER and use the default value.
 
-![sam deploy 2](./images/deployment/sam_deploy2.png)  
-For the rest of the options above you can press ENTER and use the default value.
+```bash
+Configuring SAM deploy
+======================
+
+        Looking for config file [samconfig.toml] :  Not found
+
+        Setting default arguments for 'sam deploy'
+        =========================================
+        Stack Name [sam-app]: yourstackname
+        AWS Region [us-east-1]:
+        Parameter WebAppUrl [*]:
+        Parameter ExecutionRoleName [AWSCloudFormationStackSetExecutionRole]:
+        Parameter DeployedRegion [ca-central-1, us-west-2]:
+        #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
+        Confirm changes before deploy [y/N]:
+        #SAM needs permission to be able to create roles to connect to the resources in your template
+        Allow SAM CLI IAM role creation [Y/n]:
+        Save arguments to configuration file [Y/n]:
+        SAM configuration file [samconfig.toml]:
+        SAM configuration environment [default]:
+```
 
 3. Follow this [guide](AMISetup.md) to setup the AMI that the EC2 instance will run.
 
@@ -103,9 +120,10 @@ In this step we will use the Amplify console to deploy and build the front-end a
 Cognito is used for user authentication. Users will need to input their email address and a password to create an account.
 After account creation, users will need to verify their account by inputting the 6-digit verification code that was sent to their provided email address before being able to log in to the system.
 
-## Last Step
+## Re-deploying backend with WebAppUrl
 
-The default CORS Allow-Origin is set to '\*', you will need to change this to the deployed frontend URL. This is done by changing the WebAppUrl parameter in the sam deploy process. (Note: You need to remove the trailing slash from the URL, for example https://master.abcdefghi.amplifyapp.com)
+The default CORS Allow-Origin is set to '\*', you will need to change this to the deployed frontend URL. This is done by changing the WebAppUrl parameter in the sam deploy process.  
+(Note: You need to remove the trailing slash from the URL, for example https://master.abcdefghi.amplifyapp.com)
 
 -   If you saved your deployment parameters in a toml file, you can go and modify the parameter in the toml file itself.  
     ![parameter_override](images/deployment/parameter_override.png)
