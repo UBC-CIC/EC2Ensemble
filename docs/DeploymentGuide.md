@@ -15,20 +15,10 @@ Some system installation requirements before starting deployment:
 
 ### Deployment Steps
 
-1. You will need to create two IAM roles in order to create a StackSet which we are using in this solution.
-   Following official [AWS instructions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html) with their provided yaml files:  
-   Please run this command to create an IAM role named AWSCloudFormationStackSetAdministrationRole.
-   (This exact role with the same name and permissions needs to exist in your AWS account).
-    ```bash
-     aws cloudformation deploy --stack-name stack-name-here \
-     --template-file AWSCloudFormationStackSetAdministrationRole.yml --capabilities CAPABILITY_NAMED_IAM
-    ```
-    Then you will need to create a service role named AWSCloudFormationStackSetExecutionRole that trusts the administrator account.
-    Please run this command while inserting your own AWS Account ID:
-    ```bash
-    aws cloudformation deploy --stack-name stackset-target-execution-role --template-file AWSCloudFormationStackSetExecutionRole.yml \
-    --capabilities CAPABILITY_NAMED_IAM --parameter-overrides AdministratorAccountId=YOUR_AWS_ACCOUNT_ID
-    ```
+1. Since we will be using [AWS Cloudformation StackSets](https://docs.aws.amazon.com/awscloudformation/latest/userguide/what-is-cfnstacksets.html) in our solution.
+   We will need to satisfy the prerequisites for creating a **self-managed** StackSets, official [AWS instructions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html) can be found here. We also have included the two template file shown in the documentation in the repo.  
+   You can run the script file [stackset-role-setup.sh](../stackset-role-setup.sh), to deploy the default Administration role and Target Execution role for Stacksets as described in [AWSCloudFormationStackSetAdministrationRole.yml](../AWSCloudFormationStackSetAdministrationRole.yml) and [AWSCloudFormationStackSetExecutionRole.yml](../AWSCloudFormationStackSetExecutionRole.yml).  
+   The script will use the default AWS profile and region set in env variables or credential file. It is recommended to set the wanted AWS profile and region in the [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the shell running the script.
 
 <!-- 2. Create an S3 bucket (or use an existing one) to hold the regional.yaml file. This can be achieved using the [AWS web console](https://aws.amazon.com),
    or running this command:
@@ -40,7 +30,7 @@ Some system installation requirements before starting deployment:
 
 Make sure your bucket is in the same region where you are going to deploy the solution to. You can also use an existing S3 bucket, just make sure to have the appropiate permissions.
 
-3. Upload the regional.yaml file to the S3 bucket. You can use the web console or run this command from the root of the repository.
+1. Upload the regional.yaml file to the S3 bucket. You can use the web console or run this command from the root of the repository.
 
 ```bash
   aws s3api put-object --bucket bucket-name --key regional.yaml --body regional.yaml
@@ -59,7 +49,7 @@ sam build --template-file global.yaml \
 This will show a prompt where you enter parameters for the Cloudformation Stack, here are the details of the parameters:
 
 -   Stack Name: Put your desired stack name here
--   AWS Region: Put the region where you want the solution to be deployed. This should be the same region where your frontend will be deployed.
+-   AWS Region: Put the region where you want the solution to be deployed. This should be the **same region where your frontend will be deployed**.
 -   WebAppUrl: Put the URL of the frontend here (for CORS). Since we are deploying the backend before the frontend, leave this empty for now.
 -   DeployedRegion: Put the regions you want to deploy Jacktrip servers to. Write the regions separated by comma.
 -   ExecutionRoleName: If your StackSet execution role name is different from the default one, please insert it here, otherwise you can keep the default value.
@@ -73,7 +63,7 @@ Configuring SAM deploy
 
         Setting default arguments for 'sam deploy'
         =========================================
-        Stack Name [sam-app]: yourstackname
+        Stack Name [sam-app]:
         AWS Region [us-east-1]:
         Parameter WebAppUrl [*]:
         Parameter ExecutionRoleName [AWSCloudFormationStackSetExecutionRole]:
@@ -128,12 +118,13 @@ The default CORS Allow-Origin is set to '\*', you will need to change this to th
 -   If you saved your deployment parameters in a toml file, you can go and modify the parameter in the toml file itself.  
     ![parameter_override](images/deployment/parameter_override.png)
 
--   You can also call sam deploy in the guided mode (-g) again and change the parameters there.
--   Or use:
+-   Or use (if you saved your parameters in a toml file):
 
 ```bash
 	sam deploy --config-env YOUR_CONFIG_ENV --parameter-overrides WebAppUrl=http://your-url-here
 ```
+
+-   You can also call sam deploy in the guided mode (-g) again and change the parameters there.
 
 After the stack update is completed, you will need to redeploy the API. Go to your API settings in the web console, go to the Resources tab, click Action -> Deploy API.  
 Select Prod as the Deployment Stage and click Deploy. The API will be re-deployed with the updated CORS settings (may take a few minutes).

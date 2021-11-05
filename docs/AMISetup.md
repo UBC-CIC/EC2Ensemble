@@ -18,8 +18,7 @@ Press the Launch Instances button on the top right of the screen, this will star
 3. Skip this step and click Next.
 4. For the storage, we can keep the default value, 8 GB of General Purpose SSD (gp2). Click Next.
 5. You can skip adding tags. Click next to configure security group.
-6. Configure your security group to allow all traffic in both ingress and egress.
-   (CAUTION: This security group rules are very lax and insecure! Do not use this in any instance used in production!)
+6. Configure your security group to allow SSH connection. (You can keep the default settings)
 7. Review your instance configuration and you can press Launch.
 8. A window will come up asking you about key pair. This is needed for you to SSH into the EC2 instance. Please create one or use an existing key pair for the instance.  
    If you choose to create one, enter a name for the key pair, make sure to download it and keep it somewhere safe. You can then launch the instance.
@@ -60,7 +59,7 @@ This should be printed:
 
 In order for the users connected count to function properly, there must be a script that counts the number of users connected and send that information to the ContactWebSocket Lambda. Then we can add a cronjob that runs the script periodically. This is what we have done during our prototyping:
 
--   Create a shell script file just like in the home directory [status.sh](../status.sh).
+-   Create a shell script file with the same content as [status.sh](../status.sh).
 -   Create a cronjob by running
     ```bash
     crontab -e

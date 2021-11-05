@@ -15,11 +15,9 @@ exports.handler = async (event) => {
 		ReturnValues: 'UPDATED_NEW',
 		ExpressionAttributeValues: {
 			':newStatus': `fail_${event.action}`,
-			// ':reason': event.errorInfo.Error,
 		},
 		ExpressionAttributeNames: {
 			'#status': 'status',
-			// '#reason': 'reason',
 		},
 	};
 	try {
