@@ -20,15 +20,17 @@ Press the Launch Instances button on the top right of the screen, this will star
 5. You can skip adding tags. Click next to configure security group.
 6. Configure your security group to allow SSH connection. (You can keep the default settings)
 7. Review your instance configuration and you can press Launch.
-8. A window will come up asking you about key pair. This is needed for you to SSH into the EC2 instance. Please create one or use an existing key pair for the instance.  
-   If you choose to create one, enter a name for the key pair, make sure to download it and keep it somewhere safe. You can then launch the instance.
+8. A window will come up asking you about key pair. This is not needed unless you are planning to connect to the EC2 instance without using the EC2 Instance Connect in the web console.
 
 ## SSH to EC2 instance
 
 Once the instance is launched, connect to it through SSH, there are multiple ways to do this and you are free to choose the ones that are most convenient.  
-This is one way to do so in [Windows machines (using PuTTY).](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html)
+The easiest way is to use EC2 Instance Connect in the web console. You can do this by clicking the Connect button in your instance page, then an option to connect using EC2 Instance Connect should appear. Insert ubuntu as the username then click Connect.
 
-Run these commands in your EC2 instance (press Yes for all options):
+You can also connect using traditional SSH methods, though you will need to create a key pair and assign it to the instance during creation.  
+This is an example of doing so in [Windows machines (using PuTTY).](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html)
+
+Once connected, run these commands in your EC2 instance (press Yes for all options):
 
 ```bash
   sudo apt-get update
@@ -60,6 +62,11 @@ This should be printed:
 In order for the users connected count to function properly, there must be a script that counts the number of users connected and send that information to the ContactWebSocket Lambda. Then we can add a cronjob that runs the script periodically. This is what we have done during our prototyping:
 
 -   Create a shell script file with the same content as [status.sh](../status.sh).
+    ```bash
+    	touch status.sh
+    	chmod +x status.sh
+    ```
+-   Open status.sh in the EC2 instance using a text editor (e.g Vim, nano), then paste over the content of [status.sh](../status.sh).
 -   Create a cronjob by running
     ```bash
     crontab -e
@@ -82,17 +89,17 @@ To do this, in the EC2 web console go to Images -> AMI on the sidebar. Find and 
 Or you can use AWS CLI:
 
 ```bash
-	aws ec2 copy-image --source-image-id SOURCE_AMI_ID --source-region SOURCE_REGION --name NEW_NAME --region NEW_REGION
+	aws ec2 copy-image --source-image-id <SOURCE_AMI_ID goes here> --source-region <SOURCE_REGION goes here> --name <NEW_AMI_NAME goes here> --region <NEW_AMI_REGION goes here>
 ```
 
 ### Creating SSM parameters
 
-In order for the solution to use the correct AMI, we would need to create a SSM parameter called **_/STACK_NAME/AMIId_** (STACK_NAME must be the same with the name of the backend Cloudformation stack), containing the AMI ID. A SSM parameter is needed for every copy of the AMI in all the regions.  
+In order for the solution to use the correct AMI, we would need to create a SSM parameter called **_/STACK_NAME/AMIId_** (STACK_NAME must be the same with the name of the backend Cloudformation stack), containing the AMI ID. A SSM parameter is needed for every copy of the AMI in all the regions you want the solution to be deployed (all the region under DeployedRegion in deployment parameters).  
 You can use the [web console](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-create-console.html)  
 Or the CLI:
 
 ```bash
-	aws ssm put-parameter --name JacktripAMIId --value AMI_ID --type String --region REGION --overwrite
+	aws ssm put-parameter --name /<STACK_NAME goes here>/AMIId --value <AMI_ID goes here> --type String --region <REGION goes here> --overwrite
 ```
 
 After the AMI is created you can terminate the EC2 instance that you used to create the AMI.
