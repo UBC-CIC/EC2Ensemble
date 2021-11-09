@@ -20,25 +20,6 @@ Some system installation requirements before starting deployment:
    You can run the script file [stackset-role-setup.sh](../stackset-role-setup.sh), to deploy the default Administration role and Target Execution role for Stacksets as described in [AWSCloudFormationStackSetAdministrationRole.yml](../AWSCloudFormationStackSetAdministrationRole.yml) and [AWSCloudFormationStackSetExecutionRole.yml](../AWSCloudFormationStackSetExecutionRole.yml).  
    The script will use the default AWS profile and region set in env variables or credential file. It is recommended to set the wanted AWS profile and region in the [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html) of the shell running the script.
 
-<!-- 2. Create an S3 bucket (or use an existing one) to hold the regional.yaml file. This can be achieved using the [AWS web console](https://aws.amazon.com),
-   or running this command:
-
-```bash
-  aws s3api create-bucket --bucket bucket-name --region region \
-  --create-bucket-configuration LocationConstraint=region
-```
-
-Make sure your bucket is in the same region where you are going to deploy the solution to. You can also use an existing S3 bucket, just make sure to have the appropiate permissions.
-
-1. Upload the regional.yaml file to the S3 bucket. You can use the web console or run this command from the root of the repository.
-
-```bash
-  aws s3api put-object --bucket bucket-name --key regional.yaml --body regional.yaml
-```
-
-Take note of the URL your uploaded file is assigned to.
-For example https://jacktriptestsourcebucket.s3.ca-central-1.amazonaws.com/regional.yaml -->
-
 2. Run this command to deploy the solution.
 
 ```bash

@@ -6,4 +6,4 @@ aws cloudformation deploy --stack-name stackset-admin-role \
  --template-file AWSCloudFormationStackSetAdministrationRole.yml --capabilities CAPABILITY_NAMED_IAM
 
 aws cloudformation deploy --stack-name stackset-target-execution-role --template-file AWSCloudFormationStackSetExecutionRole.yml \
---capabilities CAPABILITY_NAMED_IAM --parameter-overrides AdministratorAccountId=YOUR_AWS_ACCOUNT_ID
+--capabilities CAPABILITY_NAMED_IAM 
