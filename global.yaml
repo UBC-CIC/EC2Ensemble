@@ -5,19 +5,6 @@ Description: Template for Global resources
 Globals:
   Function:
     Runtime: nodejs14.x
-  Api:
-    Cors:
-      AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
-      AllowOrigin: !Join ['', ["'", !Ref WebAppUrl, "'"]]
-      AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
-      AllowCredentials: true
-    Auth:
-      AddDefaultAuthorizerToCorsPreflight: False
-      DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
-      Authorizers:
-        JacktripGlobalCognitoAuthorizer:
-          UserPoolArn:
-            - !GetAtt UserPool.Arn
 
 Parameters:
   WebAppUrl:
@@ -26,8 +13,6 @@ Parameters:
   ExecutionRoleName:
     Type: String
     Default: AWSCloudFormationStackSetExecutionRole
-  # StackSetTemplateUrl:
-  #   Type: String
   DeployedRegion:
     Type: CommaDelimitedList
     Default: ca-central-1, us-west-2
@@ -44,6 +29,7 @@ Resources:
     # Created upon user selection
     Type: AWS::Cognito::UserPool
     UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
     Properties:
       UserPoolName: !Join ['', [!Ref 'AWS::StackName', '-', 'cognito-userpool']]
       UsernameConfiguration:
@@ -157,6 +143,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
+            RestApiId: !Ref FrontendApi
             Method: post
             Path: /actions
             RequestParameters:
@@ -182,6 +169,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
+            RestApiId: !Ref FrontendApi
             Method: get
             Path: /user
             RequestParameters:
@@ -206,6 +194,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
+            RestApiId: !Ref FrontendApi
             Method: delete
             Path: /user/{user}/room/{serverId}
             RequestParameters:
@@ -230,6 +219,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
+            RestApiId: !Ref FrontendApi
             Method: post
             Path: /external
       Policies:
@@ -249,6 +239,7 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
+            RestApiId: !Ref FrontendApi
             Method: put
             Path: /user/{user}/external/{serverId}
             RequestParameters:
@@ -484,6 +475,30 @@ Resources:
       FunctionName: !Ref WebSocketAuthorizerFunction
       Principal: apigateway.amazonaws.com
 
+  FrontendApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Cors:
+        AllowHeaders: "'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent'"
+        AllowOrigin: !Join ['', ["'", !Ref WebAppUrl, "'"]]
+        AllowMethods: "'OPTIONS, POST, GET, DELETE, PUT'"
+        AllowCredentials: true
+      AccessLogSetting:
+        DestinationArn: !GetAtt FrontendApiAccessLogGroup.Arn
+        Format: "{ 'requestId':'$context.requestId', 'ip': '$context.identity.sourceIp', 'caller':'$context.identity.caller', 'user':'$context.identity.user','requestTime':'$context.requestTime', 'httpMethod':'$context.httpMethod','resourcePath':'$context.resourcePath', 'status':'$context.status','protocol':'$context.protocol', 'responseLength':'$context.responseLength' }"
+      Auth:
+        AddDefaultAuthorizerToCorsPreflight: False
+        DefaultAuthorizer: JacktripGlobalCognitoAuthorizer
+        Authorizers:
+          JacktripGlobalCognitoAuthorizer:
+            UserPoolArn:
+              - !GetAtt UserPool.Arn
+  FrontendApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+
   # Websocket API - heavily inspired from https://serverlessland.com/patterns/apigw-websocket-api-lambda
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
@@ -492,7 +507,7 @@ Resources:
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: '$request.body.route'
   # https://currentlyunnamed-theclassic.blogspot.com/2018/12/mastering-cloudformation-for-api.html
-  Deployment:
+  WebSocketDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
       - OnConnectRoute
@@ -507,10 +522,17 @@ Resources:
     Properties:
       StageName: dev
       Description: Dev Stage
-      DeploymentId: !Ref Deployment
+      DeploymentId: !Ref WebSocketDeployment
       ApiId: !Ref WebSocketApi
+      AccessLogSettings:
+        DestinationArn: !GetAtt WebSocketApiAccessLogGroup.Arn
+        Format: "{ 'requestId':'$context.requestId', 'ip': '$context.identity.sourceIp', 'caller':'$context.identity.caller', 'user':'$context.identity.user','requestTime':'$context.requestTime', 'httpMethod':'$context.httpMethod','resourcePath':'$context.resourcePath', 'status':'$context.status','protocol':'$context.protocol', 'responseLength':'$context.responseLength' }"
       DefaultRouteSettings:
         LoggingLevel: INFO
+  WebSocketApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
 
   # WebSocket Connect
   WebSocketOnConnectFunction:
@@ -936,11 +958,11 @@ Resources:
           '',
           [
             'https://',
-            !Ref ServerlessRestApi,
+            !Ref FrontendApi,
             '.execute-api.',
             !Ref 'AWS::Region',
             '.amazonaws.com/',
-            Prod,
+            dev,
           ],
         ]
   SSMDeployedRegion:
